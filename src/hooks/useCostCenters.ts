@@ -55,7 +55,9 @@ export const useActiveCostCenters = () => {
   return useQuery<CostCenter[]>({
     queryKey: ['cost-centers', 'active'],
     queryFn: costCentersService.getActiveCostCenters,
-    initialData: [],
+    // Não passamos `initialData` para que o React Query efetue a
+    // solicitação ao Firebase em vez de considerar os dados já
+    // preenchidos com um array vazio.
     ...queryOptions.static,
   });
 };

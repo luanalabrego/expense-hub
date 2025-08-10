@@ -53,7 +53,9 @@ export const useActiveVendors = () => {
   return useQuery<Vendor[]>({
     queryKey: ['vendors', 'active'],
     queryFn: vendorsService.getActiveVendors,
-    initialData: [],
+    // Não fornecemos `initialData` para garantir que o React Query
+    // realize a busca no Firebase em vez de considerar a query já
+    // resolvida com um array vazio.
     ...queryOptions.static,
   });
 };

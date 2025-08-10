@@ -1,0 +1,242 @@
+import React, { useState } from 'react';
+import { Plus, Search, MoreHorizontal, Edit, UserX, UserCheck, Shield, ShieldOff, Star } from 'lucide-react';
+import { useVendors, useDeactivateVendor, useReactivateVendor, useBlockVendor, useUnblockVendor } from '@/hooks/useVendors';
+import { formatCNPJ, formatPhone, formatDate } from '@/utils';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { useAuth } from '@/contexts/AuthContext';
+
+export const VendorsPage = () => {
+  const { hasAnyRole } = useAuth();
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const limit = 20;
+
+  const { data: vendorsData, isLoading, isError } = useVendors({ page, limit, search, status: statusFilter });
+  const deactivateVendor = useDeactivateVendor();
+  const reactivateVendor = useReactivateVendor();
+  const blockVendor = useBlockVendor();
+  const unblockVendor = useUnblockVendor();
+
+  const handleDeactivate = async (id) => {
+    if (window.confirm('Tem certeza que deseja desativar este fornecedor?')) {
+      await deactivateVendor.mutateAsync(id);
+    }
+  };
+
+  const handleReactivate = async (id) => {
+    if (window.confirm('Tem certeza que deseja reativar este fornecedor?')) {
+      await reactivateVendor.mutateAsync(id);
+    }
+  };
+
+  const handleBlock = async (id) => {
+    if (window.confirm('Tem certeza que deseja bloquear este fornecedor?')) {
+      await blockVendor.mutateAsync(id);
+    }
+  };
+
+  const handleUnblock = async (id) => {
+    if (window.confirm('Tem certeza que deseja desbloquear este fornecedor?')) {
+      await unblockVendor.mutateAsync(id);
+    }
+  };
+
+  const vendors = vendorsData?.data ?? [];
+
+  return (
+    <div className="space-y-6">
+      {/* Cabeçalho */}
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold tracking-tight">Fornecedores</h1>
+        {hasAnyRole(['admin', 'finance']) && (
+          <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+            <Plus className="w-4 h-4 mr-2" />
+            Novo Fornecedor
+          </button>
+        )}
+      </div>
+
+      {/* Filtros */}
+      <div className="bg-white p-6 rounded-lg border">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Buscar por nome, CNPJ ou e-mail..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          <div className="w-full sm:w-48">
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Todos os status</option>
+              <option value="active">Ativo</option>
+              <option value="inactive">Inativo</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabela */}
+      <div className="bg-white rounded-lg border overflow-hidden">
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <LoadingSpinner size="lg" />
+          </div>
+        ) : isError ? (
+          <div className="text-center py-12 text-red-500">Erro ao carregar fornecedores</div>
+        ) : vendors.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500">Nenhum fornecedor encontrado</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CNPJ</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">E-mail</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telefone</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tags</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Criado em</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {vendors.map((vendor) => (
+                  <tr key={vendor.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {vendor.name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatCNPJ(vendor.taxId)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {vendor.email || ''}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {vendor.phone ? formatPhone(vendor.phone) : ''}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex space-x-1">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <Star
+                            key={i}
+                            className={`w-4 h-4 ${
+                              vendor.rating && i <= vendor.rating
+                                ? 'text-yellow-400 fill-yellow-400'
+                                : 'text-gray-300'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-wrap gap-1">
+                        {vendor.tags?.map((tag) => (
+                          <Badge key={tag} variant="secondary">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {vendor.blocked ? (
+                        <Badge variant="destructive">Bloqueado</Badge>
+                      ) : vendor.status === 'inactive' ? (
+                        <Badge variant="secondary">Inativo</Badge>
+                      ) : (
+                        <Badge>Ativo</Badge>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatDate(vendor.createdAt)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      {hasAnyRole(['admin', 'finance']) && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="p-2 rounded-full hover:bg-gray-100">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => {}}>
+                              <Edit className="h-4 w-4" /> Editar
+                            </DropdownMenuItem>
+                            {vendor.status === 'active' ? (
+                              <DropdownMenuItem onClick={() => handleDeactivate(vendor.id)}>
+                                <UserX className="h-4 w-4" /> Desativar
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem onClick={() => handleReactivate(vendor.id)}>
+                                <UserCheck className="h-4 w-4" /> Reativar
+                              </DropdownMenuItem>
+                            )}
+                            {vendor.blocked ? (
+                              <DropdownMenuItem onClick={() => handleUnblock(vendor.id)}>
+                                <ShieldOff className="h-4 w-4" /> Desbloquear
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem onClick={() => handleBlock(vendor.id)}>
+                                <Shield className="h-4 w-4" /> Bloquear
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Paginação */}
+      {!isLoading && !isError && vendors.length > 0 && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-700">
+            Página {page} de {vendorsData?.totalPages || 1}
+          </div>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-3 py-1 text-sm border border-gray-300 rounded-md bg-white text-gray-700 disabled:opacity-50"
+            >
+              Anterior
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(vendorsData?.totalPages || 1, p + 1))}
+              disabled={page === vendorsData?.totalPages}
+              className="px-3 py-1 text-sm border border-gray-300 rounded-md bg-white text-gray-700 disabled:opacity-50"
+            >
+              Próxima
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+

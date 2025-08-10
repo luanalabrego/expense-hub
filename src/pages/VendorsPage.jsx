@@ -8,6 +8,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '@/contexts/AuthContext';
@@ -98,6 +99,9 @@ export const VendorsPage = () => {
               <option value="">Todos os status</option>
               <option value="active">Ativo</option>
               <option value="inactive">Inativo</option>
+              <option value="pending">Pendente</option>
+              <option value="needsInfo">Aguardando Info</option>
+              <option value="rejected">Rejeitado</option>
             </select>
           </div>
         </div>
@@ -174,6 +178,12 @@ export const VendorsPage = () => {
                         <Badge variant="destructive">Bloqueado</Badge>
                       ) : vendor.status === 'inactive' ? (
                         <Badge variant="secondary">Inativo</Badge>
+                      ) : vendor.status === 'pending' ? (
+                        <Badge variant="secondary">Pendente</Badge>
+                      ) : vendor.status === 'needsInfo' ? (
+                        <Badge variant="secondary">Aguardando Info</Badge>
+                      ) : vendor.status === 'rejected' ? (
+                        <Badge variant="destructive">Rejeitado</Badge>
                       ) : (
                         <Badge>Ativo</Badge>
                       )}
@@ -193,11 +203,12 @@ export const VendorsPage = () => {
                             <DropdownMenuItem onClick={() => {}}>
                               <Edit className="h-4 w-4" /> Editar
                             </DropdownMenuItem>
-                            {vendor.status === 'active' ? (
+                            {vendor.status === 'active' && (
                               <DropdownMenuItem onClick={() => handleDeactivate(vendor.id)}>
                                 <UserX className="h-4 w-4" /> Desativar
                               </DropdownMenuItem>
-                            ) : (
+                            )}
+                            {vendor.status === 'inactive' && (
                               <DropdownMenuItem onClick={() => handleReactivate(vendor.id)}>
                                 <UserCheck className="h-4 w-4" /> Reativar
                               </DropdownMenuItem>
@@ -261,12 +272,14 @@ const NewVendorDialog = ({ open, onOpenChange }) => {
       email: '',
       phone: '',
       rating: 0,
-      status: 'active',
-      blocked: false,
+      paymentTerms: '',
+      hasContract: false,
+      observations: '',
     },
   });
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
+  const [contractFile, setContractFile] = useState(null);
 
   const addTag = () => {
     const tag = tagInput.trim();
@@ -281,6 +294,16 @@ const NewVendorDialog = ({ open, onOpenChange }) => {
   };
 
   const onSubmit = async (values) => {
+    let contractUrl = '';
+    if (values.hasContract && contractFile) {
+      contractUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result?.toString() || '');
+        reader.onerror = reject;
+        reader.readAsDataURL(contractFile);
+      });
+    }
+
     await createVendor.mutateAsync({
       name: values.name,
       taxId: values.taxId.replace(/\D/g, ''),
@@ -288,12 +311,17 @@ const NewVendorDialog = ({ open, onOpenChange }) => {
       phone: values.phone ? values.phone.replace(/\D/g, '') : '',
       rating: values.rating,
       tags,
-      status: values.status,
-      blocked: values.blocked,
+      paymentTerms: values.paymentTerms,
+      hasContract: values.hasContract,
+      contractUrl,
+      observations: values.observations,
+      status: 'pending',
+      blocked: false,
     });
     form.reset();
     setTags([]);
     setTagInput('');
+    setContractFile(null);
     onOpenChange(false);
   };
 
@@ -411,78 +439,93 @@ const NewVendorDialog = ({ open, onOpenChange }) => {
                   </Badge>
                 ))}
               </div>
-              <div className="flex gap-2">
-                <Input
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ',') {
-                      e.preventDefault();
-                      addTag();
-                    }
-                  }}
-                  placeholder="Digite uma tag e pressione Enter"
-                />
-                <button
-                  type="button"
-                  className="px-3 py-2 border rounded-md text-sm"
-                  onClick={addTag}
-                >
-                  Adicionar
-                </button>
-              </div>
-            </div>
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <FormControl>
-                    <select
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      {...field}
-                    >
-                      <option value="active">Ativo</option>
-                      <option value="inactive">Inativo</option>
-                    </select>
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="blocked"
-              render={({ field }) => (
-                <FormItem className="flex items-center space-x-2 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormLabel className="mb-0">Bloqueado</FormLabel>
-                </FormItem>
-              )}
-            />
-            <DialogFooter>
+            <div className="flex gap-2">
+              <Input
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ',') {
+                    e.preventDefault();
+                    addTag();
+                  }
+                }}
+                placeholder="Digite uma tag e pressione Enter"
+              />
               <button
                 type="button"
-                className="px-4 py-2 border rounded-md"
-                onClick={() => onOpenChange(false)}
+                className="px-3 py-2 border rounded-md text-sm"
+                onClick={addTag}
               >
-                Cancelar
+                Adicionar
               </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                disabled={createVendor.isPending}
-              >
-                Salvar
-              </button>
-            </DialogFooter>
-          </form>
-        </Form>
+            </div>
+          </div>
+          <FormField
+            control={form.control}
+            name="paymentTerms"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Prazo de Pagamento</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="hasContract"
+            render={({ field }) => (
+              <FormItem className="flex items-center space-x-2 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <FormLabel className="mb-0">Possui contrato?</FormLabel>
+              </FormItem>
+            )}
+          />
+          {form.watch('hasContract') && (
+            <div>
+              <FormLabel>Arquivo do Contrato</FormLabel>
+              <Input
+                type="file"
+                onChange={(e) => setContractFile(e.target.files?.[0] || null)}
+              />
+            </div>
+          )}
+          <FormField
+            control={form.control}
+            name="observations"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Observações</FormLabel>
+                <FormControl>
+                  <Textarea {...field} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <DialogFooter>
+            <button
+              type="button"
+              className="px-4 py-2 border rounded-md"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              disabled={createVendor.isPending}
+            >
+              Salvar
+            </button>
+          </DialogFooter>
+        </form>
+      </Form>
       </DialogContent>
     </Dialog>
   );

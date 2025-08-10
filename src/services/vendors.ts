@@ -118,7 +118,12 @@ export const createVendor = async (vendorData: {
   phone?: string;
   rating?: number;
   tags?: string[];
-  status?: 'active' | 'inactive';
+  paymentTerms?: string;
+  hasContract?: boolean;
+  contractUrl?: string;
+  observations?: string;
+  approvalNotes?: string;
+  status?: 'pending' | 'needsInfo' | 'rejected' | 'active' | 'inactive';
   blocked?: boolean;
   contacts?: Array<{
     name: string;
@@ -139,7 +144,12 @@ export const createVendor = async (vendorData: {
       categories: vendorData.categories || [],
       rating: vendorData.rating ?? 0,
       blocked: vendorData.blocked ?? false,
-      status: vendorData.status || 'active',
+      paymentTerms: vendorData.paymentTerms || '',
+      hasContract: vendorData.hasContract ?? false,
+      contractUrl: vendorData.contractUrl || '',
+      observations: vendorData.observations || '',
+      approvalNotes: vendorData.approvalNotes || '',
+      status: vendorData.status || 'pending',
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -308,6 +318,51 @@ export const updateVendorRating = async (id: string, rating: number): Promise<vo
     });
   } catch (error) {
     console.error('Erro ao atualizar rating do fornecedor:', error);
+    throw error;
+  }
+};
+
+// Aprovar fornecedor
+export const approveVendor = async (id: string): Promise<void> => {
+  try {
+    await updateDoc(doc(db, COLLECTION_NAME, id), {
+      status: 'active',
+      approvalNotes: '',
+      updatedAt: new Date(),
+    });
+  } catch (error) {
+    console.error('Erro ao aprovar fornecedor:', error);
+    throw error;
+  }
+};
+
+// Reprovar fornecedor
+export const rejectVendor = async (id: string, reason: string): Promise<void> => {
+  try {
+    await updateDoc(doc(db, COLLECTION_NAME, id), {
+      status: 'rejected',
+      approvalNotes: reason,
+      updatedAt: new Date(),
+    });
+  } catch (error) {
+    console.error('Erro ao reprovar fornecedor:', error);
+    throw error;
+  }
+};
+
+// Solicitar mais informações do fornecedor
+export const requestMoreInfoVendor = async (
+  id: string,
+  info: string,
+): Promise<void> => {
+  try {
+    await updateDoc(doc(db, COLLECTION_NAME, id), {
+      status: 'needsInfo',
+      approvalNotes: info,
+      updatedAt: new Date(),
+    });
+  } catch (error) {
+    console.error('Erro ao solicitar mais informações do fornecedor:', error);
     throw error;
   }
 };

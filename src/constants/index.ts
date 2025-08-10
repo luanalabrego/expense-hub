@@ -11,7 +11,8 @@ export const ROLES = {
   FINANCE: 'finance',
   APPROVER: 'approver',
   REQUESTER: 'requester',
-  VIEWER: 'viewer'
+  VIEWER: 'viewer',
+  PROCUREMENT: 'procurement'
 } as const;
 
 // Status das solicitações
@@ -52,7 +53,8 @@ export const ROLE_LABELS = {
   [ROLES.FINANCE]: 'Financeiro',
   [ROLES.APPROVER]: 'Aprovador',
   [ROLES.REQUESTER]: 'Solicitante',
-  [ROLES.VIEWER]: 'Visualizador'
+  [ROLES.VIEWER]: 'Visualizador',
+  [ROLES.PROCUREMENT]: 'Compras'
 } as const;
 
 export const STATUS_LABELS = {
@@ -196,6 +198,7 @@ export const ROUTES = {
   NEW_REQUEST: '/requests/new',
   REQUEST_DETAIL: '/requests/:id',
   VENDORS: '/vendors',
+  VENDOR_APPROVALS: '/vendor-approvals',
   COST_CENTERS: '/cost-centers',
   CATEGORIES: '/categories',
   BUDGETS: '/budgets',

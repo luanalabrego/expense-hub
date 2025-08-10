@@ -47,6 +47,7 @@ export const AuthProvider = ({ children }) => {
   const [permissions, setPermissions] = useState({
     requests: ['admin', 'finance', 'user'],
     vendors: ['admin', 'finance'],
+    vendorApprovals: ['procurement'],
     users: ['admin'],
   });
 

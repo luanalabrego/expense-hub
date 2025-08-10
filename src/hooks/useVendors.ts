@@ -183,6 +183,65 @@ export const useUnblockVendor = () => {
   });
 };
 
+// Hook para aprovar fornecedor
+export const useApproveVendor = () => {
+  const queryClient = useQueryClient();
+  const { success, error } = useNotifications();
+
+  return useMutation({
+    mutationFn: vendorsService.approveVendor,
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.vendors });
+      queryClient.invalidateQueries({ queryKey: queryKeys.vendor(id) });
+      success('Fornecedor aprovado com sucesso!');
+    },
+    onError: (err: any) => {
+      console.error('Erro ao aprovar fornecedor:', err);
+      error('Erro ao aprovar fornecedor', err.message || 'Tente novamente.');
+    },
+  });
+};
+
+// Hook para reprovar fornecedor
+export const useRejectVendor = () => {
+  const queryClient = useQueryClient();
+  const { success, error } = useNotifications();
+
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      vendorsService.rejectVendor(id, reason),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.vendors });
+      queryClient.invalidateQueries({ queryKey: queryKeys.vendor(id) });
+      success('Fornecedor reprovado com sucesso!');
+    },
+    onError: (err: any) => {
+      console.error('Erro ao reprovar fornecedor:', err);
+      error('Erro ao reprovar fornecedor', err.message || 'Tente novamente.');
+    },
+  });
+};
+
+// Hook para solicitar mais informações do fornecedor
+export const useRequestMoreInfoVendor = () => {
+  const queryClient = useQueryClient();
+  const { success, error } = useNotifications();
+
+  return useMutation({
+    mutationFn: ({ id, info }: { id: string; info: string }) =>
+      vendorsService.requestMoreInfoVendor(id, info),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.vendors });
+      queryClient.invalidateQueries({ queryKey: queryKeys.vendor(id) });
+      success('Solicitação de informações enviada!');
+    },
+    onError: (err: any) => {
+      console.error('Erro ao solicitar informações:', err);
+      error('Erro ao solicitar informações', err.message || 'Tente novamente.');
+    },
+  });
+};
+
 // Hook para atualizar rating
 export const useUpdateVendorRating = () => {
   const queryClient = useQueryClient();

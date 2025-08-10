@@ -40,7 +40,12 @@ export interface Vendor {
   blocked: boolean;
   contacts: Contact[];
   categories: string[];
-  status: 'active' | 'inactive';
+  paymentTerms?: string;
+  hasContract: boolean;
+  contractUrl?: string;
+  observations?: string;
+  approvalNotes?: string;
+  status: 'pending' | 'needsInfo' | 'rejected' | 'active' | 'inactive';
   createdAt: Date;
   updatedAt: Date;
 }

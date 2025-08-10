@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { RequestsPage } from '../pages/RequestsPage';
 import { VendorsPage } from '../pages/VendorsPage';
+import { VendorApprovalsPage } from '../pages/VendorApprovalsPage';
 import { UsersPage } from '../pages/UsersPage';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -18,6 +19,10 @@ export const AppRoutes = () => {
         <Route
           path="vendors"
           element={hasPageAccess('vendors') ? <VendorsPage /> : <Navigate to="/" replace />}
+        />
+        <Route
+          path="vendor-approvals"
+          element={hasPageAccess('vendorApprovals') ? <VendorApprovalsPage /> : <Navigate to="/" replace />}
         />
         <Route
           path="users"

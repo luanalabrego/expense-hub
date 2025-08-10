@@ -26,8 +26,16 @@ export const AppRoutes = () => {
           element={
             hasPageAccess('cost-centers') ? <CostCentersPage /> : <Navigate to="/" replace />
           }
+        />
+        <Route
           path="vendor-approvals"
-          element={hasPageAccess('vendorApprovals') ? <VendorApprovalsPage /> : <Navigate to="/" replace />}
+          element={
+            hasPageAccess('vendorApprovals') ? (
+              <VendorApprovalsPage />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
         />
         <Route
           path="users"

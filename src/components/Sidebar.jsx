@@ -1,10 +1,11 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useUIStore } from '../stores/ui';
 import { cn } from '../lib/utils';
+import { ROUTES } from '../constants';
 
 const navigation = [
-  { name: 'Solicitações', href: '/requests', icon: '📝' },
-  { name: 'Fornecedores', href: '/vendors', icon: '🏢' },
+  { name: 'Solicitações', href: ROUTES.REQUESTS, icon: '📝' },
+  { name: 'Fornecedores', href: ROUTES.VENDORS, icon: '🏢' },
 ];
 
 export const Sidebar = () => {

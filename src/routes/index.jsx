@@ -3,6 +3,7 @@ import { Layout } from '../components/Layout';
 import { RequestsPage } from '../pages/RequestsPage';
 import { VendorsPage } from '../pages/VendorsPage';
 import { VendorApprovalsPage } from '../pages/VendorApprovalsPage';
+import { VendorDossierPage } from '../pages/VendorDossierPage';
 import { UsersPage } from '../pages/UsersPage';
 import { CostCentersPage } from '../pages/CostCentersPage';
 import { useAuth } from '../contexts/AuthContext';
@@ -20,6 +21,10 @@ export const AppRoutes = () => {
         <Route
           path="vendors"
           element={hasPageAccess('vendors') ? <VendorsPage /> : <Navigate to="/" replace />}
+        />
+        <Route
+          path="vendors/:id"
+          element={hasPageAccess('vendors') ? <VendorDossierPage /> : <Navigate to="/" replace />}
         />
         <Route
           path="cost-centers"

@@ -24,7 +24,15 @@ export const useVendors = (
   } = { page: 1, limit: 20 }
 ) => {
   return useQuery({
-    queryKey: ['vendors', 'list', params],
+    queryKey: [
+      'vendors',
+      'list',
+      params.page,
+      params.limit,
+      params.status ?? '',
+      params.search ?? '',
+      params.tags ? [...params.tags].sort().join(',') : '',
+    ],
     queryFn: () => vendorsService.getVendors(params),
     ...queryOptions.dynamic,
   });

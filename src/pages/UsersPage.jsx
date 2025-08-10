@@ -9,10 +9,10 @@ export const UsersPage = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.email) return;
-    addUser(form);
+    await addUser(form);
     setForm({ name: '', email: '', role: 'user' });
   };
 

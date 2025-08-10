@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { db } from '@/services/firebase';
+import { collection, addDoc, getDocs } from 'firebase/firestore';
 
 const AuthContext = createContext({});
 
@@ -25,14 +27,21 @@ export const AuthProvider = ({ children }) => {
     updatedAt: new Date(),
   };
 
-  const [users, setUsers] = useState([
-    { id: '1', name: 'Administrador', email: 'admin@empresa.com', role: 'admin' },
-    { id: '2', name: 'Financeiro', email: 'finance@empresa.com', role: 'finance' },
-    { id: '3', name: 'Usuário Padrão', email: 'user@empresa.com', role: 'user' },
-  ]);
+  const [users, setUsers] = useState([]);
 
-  const addUser = (user) => {
-    setUsers((prev) => [...prev, { id: String(Date.now()), ...user }]);
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const snapshot = await getDocs(collection(db, 'users'));
+      const usersList = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setUsers(usersList);
+    };
+
+    fetchUsers();
+  }, []);
+
+  const addUser = async (user) => {
+    const docRef = await addDoc(collection(db, 'users'), user);
+    setUsers((prev) => [...prev, { id: docRef.id, ...user }]);
   };
 
   const [permissions, setPermissions] = useState({

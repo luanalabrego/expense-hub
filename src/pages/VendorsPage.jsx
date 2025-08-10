@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import { Plus, Search, MoreHorizontal, Edit, UserX, UserCheck, Shield, ShieldOff, Star } from 'lucide-react';
-import { useVendors, useDeactivateVendor, useReactivateVendor, useBlockVendor, useUnblockVendor } from '@/hooks/useVendors';
+import { useVendors, useDeactivateVendor, useReactivateVendor, useBlockVendor, useUnblockVendor, useCreateVendor } from '@/hooks/useVendors';
 import { formatCNPJ, formatPhone, formatDate } from '@/utils';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const VendorsPage = () => {
@@ -19,6 +24,7 @@ export const VendorsPage = () => {
   const reactivateVendor = useReactivateVendor();
   const blockVendor = useBlockVendor();
   const unblockVendor = useUnblockVendor();
+  const [isNewVendorOpen, setIsNewVendorOpen] = useState(false);
 
   const handleDeactivate = async (id) => {
     if (window.confirm('Tem certeza que deseja desativar este fornecedor?')) {
@@ -47,12 +53,17 @@ export const VendorsPage = () => {
   const vendors = vendorsData?.data ?? [];
 
   return (
-    <div className="space-y-6">
+    <>
+      <NewVendorDialog open={isNewVendorOpen} onOpenChange={setIsNewVendorOpen} />
+      <div className="space-y-6">
       {/* Cabeçalho */}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Fornecedores</h1>
         {hasAnyRole(['admin', 'finance']) && (
-          <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+          <button
+            onClick={() => setIsNewVendorOpen(true)}
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
             <Plus className="w-4 h-4 mr-2" />
             Novo Fornecedor
           </button>
@@ -236,7 +247,244 @@ export const VendorsPage = () => {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
+  );
+};
+
+const NewVendorDialog = ({ open, onOpenChange }) => {
+  const createVendor = useCreateVendor();
+  const form = useForm({
+    defaultValues: {
+      name: '',
+      taxId: '',
+      email: '',
+      phone: '',
+      rating: 0,
+      status: 'active',
+      blocked: false,
+    },
+  });
+  const [tags, setTags] = useState([]);
+  const [tagInput, setTagInput] = useState('');
+
+  const addTag = () => {
+    const tag = tagInput.trim();
+    if (tag && !tags.includes(tag)) {
+      setTags([...tags, tag]);
+    }
+    setTagInput('');
+  };
+
+  const removeTag = (tag) => {
+    setTags(tags.filter((t) => t !== tag));
+  };
+
+  const onSubmit = async (values) => {
+    await createVendor.mutateAsync({
+      name: values.name,
+      taxId: values.taxId.replace(/\D/g, ''),
+      email: values.email || '',
+      phone: values.phone ? values.phone.replace(/\D/g, '') : '',
+      rating: values.rating,
+      tags,
+      status: values.status,
+      blocked: values.blocked,
+    });
+    form.reset();
+    setTags([]);
+    setTagInput('');
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Novo Fornecedor</DialogTitle>
+          <DialogDescription>Preencha os dados do fornecedor</DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              rules={{ required: 'Nome é obrigatório' }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="taxId"
+              rules={{ required: 'CNPJ é obrigatório' }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>CNPJ</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      value={field.value}
+                      onChange={(e) => field.onChange(formatCNPJ(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>E-mail</FormLabel>
+                  <FormControl>
+                    <Input type="email" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Telefone</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="rating"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Rating</FormLabel>
+                  <FormControl>
+                    <div className="flex space-x-1">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <button
+                          type="button"
+                          key={i}
+                          onClick={() => field.onChange(i)}
+                        >
+                          <Star
+                            className={`w-5 h-5 ${
+                              i <= field.value
+                                ? 'text-yellow-400 fill-yellow-400'
+                                : 'text-gray-300'
+                            }`}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <div>
+              <FormLabel>Tags</FormLabel>
+              <div className="flex flex-wrap gap-1 mb-2">
+                {tags.map((tag) => (
+                  <Badge key={tag} variant="secondary">
+                    {tag}
+                    <button
+                      type="button"
+                      className="ml-1 text-xs"
+                      onClick={() => removeTag(tag)}
+                    >
+                      ×
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ',') {
+                      e.preventDefault();
+                      addTag();
+                    }
+                  }}
+                  placeholder="Digite uma tag e pressione Enter"
+                />
+                <button
+                  type="button"
+                  className="px-3 py-2 border rounded-md text-sm"
+                  onClick={addTag}
+                >
+                  Adicionar
+                </button>
+              </div>
+            </div>
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <FormControl>
+                    <select
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      {...field}
+                    >
+                      <option value="active">Ativo</option>
+                      <option value="inactive">Inativo</option>
+                    </select>
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="blocked"
+              render={({ field }) => (
+                <FormItem className="flex items-center space-x-2 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormLabel className="mb-0">Bloqueado</FormLabel>
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <button
+                type="button"
+                className="px-4 py-2 border rounded-md"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                disabled={createVendor.isPending}
+              >
+                Salvar
+              </button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
 };
 

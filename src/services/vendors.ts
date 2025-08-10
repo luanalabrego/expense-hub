@@ -116,7 +116,10 @@ export const createVendor = async (vendorData: {
   taxId: string;
   email?: string;
   phone?: string;
+  rating?: number;
   tags?: string[];
+  status?: 'active' | 'inactive';
+  blocked?: boolean;
   contacts?: Array<{
     name: string;
     email: string;
@@ -134,9 +137,9 @@ export const createVendor = async (vendorData: {
       tags: vendorData.tags || [],
       contacts: vendorData.contacts || [],
       categories: vendorData.categories || [],
-      rating: 0,
-      blocked: false,
-      status: 'active',
+      rating: vendorData.rating ?? 0,
+      blocked: vendorData.blocked ?? false,
+      status: vendorData.status || 'active',
       createdAt: new Date(),
       updatedAt: new Date()
     };

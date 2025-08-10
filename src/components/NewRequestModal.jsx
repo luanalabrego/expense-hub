@@ -12,12 +12,9 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export const NewRequestModal = ({ open, onClose }) => {
   const { user } = useAuth();
-  const { data: vendorsData } = useActiveVendors();
-  const { data: costCentersData } = useActiveCostCenters();
+  const { data: vendors = [] } = useActiveVendors();
+  const { data: costCenters = [] } = useActiveCostCenters();
   const createRequest = useCreateRequest();
-
-  const vendors = vendorsData?.data || vendorsData || [];
-  const costCenters = costCentersData?.data || costCentersData || [];
 
   const [expenseName, setExpenseName] = useState('');
   const [vendorId, setVendorId] = useState('');

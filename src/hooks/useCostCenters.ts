@@ -52,9 +52,10 @@ export const useChildCostCenters = (parentId: string) => {
 
 // Hook para obter centros de custo ativos
 export const useActiveCostCenters = () => {
-  return useQuery({
+  return useQuery<CostCenter[]>({
     queryKey: ['cost-centers', 'active'],
     queryFn: costCentersService.getActiveCostCenters,
+    initialData: [],
     ...queryOptions.static,
   });
 };

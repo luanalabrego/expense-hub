@@ -681,7 +681,7 @@ export const seedBudgets = [
 
 // Função para gerar solicitações de demonstração
 export const generateSeedRequests = () => {
-  const statuses = ['draft', 'pending', 'approved', 'paid', 'rejected', 'cancelled'];
+  const statuses = ['pending_approval', 'pending_payment', 'paid', 'rejected', 'cancelled'];
   const priorities = ['low', 'medium', 'high', 'urgent'];
   const paymentMethods = ['transfer', 'check', 'cash', 'card'];
   
@@ -715,7 +715,7 @@ export const generateSeedRequests = () => {
       dueDate: status !== 'draft' ? randomDate(new Date(), new Date(2024, 11, 31)) : null,
       notes: `Observações da solicitação ${i}`,
       attachments: [],
-      approvals: status === 'approved' || status === 'paid' ? [
+      approvals: status === 'pending_payment' || status === 'paid' ? [
         {
           level: 1,
           approverId: 'approver-001',

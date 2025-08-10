@@ -17,12 +17,10 @@ export const ROLES = {
 
 // Status das solicitações
 export const REQUEST_STATUS = {
-  DRAFT: 'draft',
-  SUBMITTED: 'submitted',
-  IN_APPROVAL: 'in_approval',
-  APPROVED: 'approved',
+  PENDING_APPROVAL: 'pending_approval',
+  PENDING_PAYMENT: 'pending_payment',
   REJECTED: 'rejected',
-  SCHEDULED: 'scheduled',
+  CANCELLED: 'cancelled',
   PAID: 'paid'
 } as const;
 
@@ -58,13 +56,11 @@ export const ROLE_LABELS = {
 } as const;
 
 export const STATUS_LABELS = {
-  [REQUEST_STATUS.DRAFT]: 'Rascunho',
-  [REQUEST_STATUS.SUBMITTED]: 'Submetida',
-  [REQUEST_STATUS.IN_APPROVAL]: 'Em Aprovação',
-  [REQUEST_STATUS.APPROVED]: 'Aprovada',
+  [REQUEST_STATUS.PENDING_APPROVAL]: 'Ag. aprovação',
+  [REQUEST_STATUS.PENDING_PAYMENT]: 'Ag. pagamento',
   [REQUEST_STATUS.REJECTED]: 'Rejeitada',
-  [REQUEST_STATUS.SCHEDULED]: 'Agendada',
-  [REQUEST_STATUS.PAID]: 'Paga'
+  [REQUEST_STATUS.CANCELLED]: 'Cancelada',
+  [REQUEST_STATUS.PAID]: 'Pagamento realizado'
 } as const;
 
 export const STEP_STATUS_LABELS = {
@@ -87,13 +83,11 @@ export const DOCUMENT_TYPE_LABELS = {
 
 // Cores para status
 export const STATUS_COLORS = {
-  [REQUEST_STATUS.DRAFT]: 'gray',
-  [REQUEST_STATUS.SUBMITTED]: 'blue',
-  [REQUEST_STATUS.IN_APPROVAL]: 'yellow',
-  [REQUEST_STATUS.APPROVED]: 'green',
+  [REQUEST_STATUS.PENDING_APPROVAL]: 'yellow',
+  [REQUEST_STATUS.PENDING_PAYMENT]: 'blue',
   [REQUEST_STATUS.REJECTED]: 'red',
-  [REQUEST_STATUS.SCHEDULED]: 'purple',
-  [REQUEST_STATUS.PAID]: 'emerald'
+  [REQUEST_STATUS.CANCELLED]: 'gray',
+  [REQUEST_STATUS.PAID]: 'green'
 } as const;
 
 export const STEP_STATUS_COLORS = {

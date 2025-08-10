@@ -2,14 +2,20 @@
 
 export type Role = 'admin' | 'finance' | 'approver' | 'requester' | 'viewer';
 
-export type RequestStatus = 
-  | 'draft' 
-  | 'submitted' 
-  | 'in_approval' 
-  | 'approved' 
-  | 'rejected' 
-  | 'scheduled' 
+export type RequestStatus =
+  | 'pending_approval'
+  | 'pending_payment'
+  | 'rejected'
+  | 'cancelled'
   | 'paid';
+
+export interface StatusHistoryEntry {
+  status: RequestStatus;
+  changedBy: string;
+  changedByName: string;
+  timestamp: Date;
+  reason?: string;
+}
 
 export type StepStatus = 'pending' | 'approved' | 'rejected';
 
@@ -102,6 +108,7 @@ export interface PaymentRequest {
   // Workflow
   status: RequestStatus;
   steps: ApprovalStep[];
+  statusHistory: StatusHistoryEntry[];
   
   // Metadados
   createdBy: string;

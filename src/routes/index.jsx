@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { RequestsPage } from '../pages/RequestsPage';
+import { RequestDetailsPage } from '../pages/RequestDetailsPage';
 import { VendorsPage } from '../pages/VendorsPage';
 import { VendorApprovalsPage } from '../pages/VendorApprovalsPage';
 import { VendorDossierPage } from '../pages/VendorDossierPage';
@@ -17,6 +18,10 @@ export const AppRoutes = () => {
         <Route
           path="requests"
           element={hasPageAccess('requests') ? <RequestsPage /> : <Navigate to="/" replace />}
+        />
+        <Route
+          path="requests/:id"
+          element={hasPageAccess('requests') ? <RequestDetailsPage /> : <Navigate to="/" replace />}
         />
         <Route
           path="vendors"

@@ -50,9 +50,10 @@ export const useVendorsByTag = (tag: string) => {
 
 // Hook para obter fornecedores ativos
 export const useActiveVendors = () => {
-  return useQuery({
+  return useQuery<Vendor[]>({
     queryKey: ['vendors', 'active'],
     queryFn: vendorsService.getActiveVendors,
+    initialData: [],
     ...queryOptions.static,
   });
 };

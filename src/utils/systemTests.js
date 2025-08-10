@@ -1,13 +1,11 @@
 // Sistema de testes automatizados para validação do sistema
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs, 
-  doc, 
-  getDoc,
+import {
+  collection,
+  query,
+  where,
+  getDocs,
   orderBy,
-  limit 
+  limit
 } from 'firebase/firestore';
 import { db } from '../services/firebase';
 

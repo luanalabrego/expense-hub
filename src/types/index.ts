@@ -1,10 +1,10 @@
 // Tipos principais do sistema de aprovação de pagamentos
 
-export type Role = 'admin' | 'finance' | 'approver' | 'requester' | 'viewer';
+export type Role = 'finance' | 'cost_center_owner' | 'user';
 
 export type RequestStatus =
-  | 'pending_approval'
-  | 'pending_payment'
+  | 'pending_owner_approval'
+  | 'pending_payment_approval'
   | 'rejected'
   | 'cancelled'
   | 'paid';

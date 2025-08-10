@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
     id: 'demo-user-123',
     name: 'Usuário Demonstração',
     email: 'demo@empresa.com',
-    role: 'admin',
+    role: 'finance',
     active: true,
     phone: '(11) 99999-9999',
     approvalLimit: 100000,
@@ -45,11 +45,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const [permissions, setPermissions] = useState({
-    requests: ['admin', 'finance', 'user'],
-    vendors: ['admin', 'finance'],
-    vendorApprovals: ['procurement'],
-    users: ['admin'],
-    'cost-centers': ['admin', 'finance'],
+    requests: ['finance', 'cost_center_owner', 'user'],
+    vendors: ['finance'],
+    vendorApprovals: ['finance'],
+    users: ['finance'],
+    'cost-centers': ['finance', 'cost_center_owner'],
   });
 
   const updatePermissions = (page, roles) => {
@@ -57,7 +57,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const hasPageAccess = (page) =>
-    permissions[page]?.includes(mockUser.role) || mockUser.role === 'admin';
+    permissions[page]?.includes(mockUser.role) || mockUser.role === 'finance';
 
   const authValue = {
     user: mockUser,
@@ -70,8 +70,8 @@ export const AuthProvider = ({ children }) => {
     isLoading: false,
     login: () => {},
     logout: () => {},
-    hasRole: (role) => mockUser.role === role || mockUser.role === 'admin',
-    hasAnyRole: (roles) => roles.includes(mockUser.role) || mockUser.role === 'admin',
+    hasRole: (role) => mockUser.role === role || mockUser.role === 'finance',
+    hasAnyRole: (roles) => roles.includes(mockUser.role) || mockUser.role === 'finance',
   };
 
   return (

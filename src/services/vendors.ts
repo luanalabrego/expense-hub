@@ -285,20 +285,27 @@ export const checkTaxIdExists = async (taxId: string, excludeId?: string): Promi
 // Obter fornecedores ativos
 export const getActiveVendors = async (): Promise<Vendor[]> => {
   try {
+    // Buscar fornecedores ativos do Firestore. O filtro "blocked" foi
+    // removido da query para evitar problemas quando o campo não está
+    // definido em alguns documentos. A ordenação é feita em memória para
+    // não exigir índices compostos no Firebase.
     const q = query(
       collection(db, COLLECTION_NAME),
-      where('status', '==', 'active'),
-      where('blocked', '==', false),
-      orderBy('name')
+      where('status', '==', 'active')
     );
 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate() || new Date(),
-      updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-    })) as Vendor[];
+    return snapshot.docs
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+      }))
+      // Excluir fornecedores bloqueados ou sem informação do campo
+      // "blocked" e ordenar pelo nome.
+      .filter(vendor => vendor.blocked !== true)
+      .sort((a, b) => a.name.localeCompare(b.name)) as Vendor[];
   } catch (error) {
     console.error('Erro ao buscar fornecedores ativos:', error);
     throw error;

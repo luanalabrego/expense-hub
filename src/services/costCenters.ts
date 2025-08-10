@@ -283,19 +283,22 @@ export const checkCodeExists = async (code: string, excludeId?: string): Promise
 // Obter centros de custo ativos
 export const getActiveCostCenters = async (): Promise<CostCenter[]> => {
   try {
+    // Buscar centros de custo ativos no Firestore. A ordenação é realizada
+    // em memória para evitar necessidade de índices compostos.
     const q = query(
       collection(db, COLLECTION_NAME),
-      where('status', '==', 'active'),
-      orderBy('name')
+      where('status', '==', 'active')
     );
 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate() || new Date(),
-      updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-    })) as CostCenter[];
+    return snapshot.docs
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name)) as CostCenter[];
   } catch (error) {
     console.error('Erro ao buscar centros de custo ativos:', error);
     throw error;

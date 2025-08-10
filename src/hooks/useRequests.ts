@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys, queryOptions } from '../lib/react-query';
 import { useNotifications } from '../stores/ui';
 import * as requestsService from '../services/requests';
-import type { PaymentRequest, PaginationParams, RequestStatus } from '../types';
+import type { PaymentRequest, RequestStatus } from '../types';
 
 // Hook para obter solicitação por ID
 export const useRequest = (id: string) => {
@@ -15,28 +15,48 @@ export const useRequest = (id: string) => {
   });
 };
 
-// Hook para listar solicitações
-export const useRequests = (
-  params: PaginationParams & {
+// Hook para listar solicitações com paginação e filtros
+export const useRequestsList = (
+  params: {
+    page: number;
+    limit: number;
+    search?: string;
     status?: RequestStatus;
-    requesterId?: string;
-    approverId?: string;
     vendorId?: string;
     costCenterId?: string;
     categoryId?: string;
-    search?: string;
-    dateFrom?: Date;
-    dateTo?: Date;
-    amountFrom?: number;
-    amountTo?: number;
+    orderBy?: 'createdAt' | 'dueDate' | 'amount' | 'status' | 'priority';
+    orderDir?: 'asc' | 'desc';
+    minAmount?: number;
+    maxAmount?: number;
+    fromDate?: Date;
+    toDate?: Date;
   } = { page: 1, limit: 20 }
 ) => {
   return useQuery({
     queryKey: ['requests', 'list', params],
-    queryFn: () => requestsService.getRequests(params),
+    queryFn: () =>
+      requestsService.getRequests({
+        page: params.page,
+        limit: params.limit,
+        status: params.status,
+        vendorId: params.vendorId,
+        costCenterId: params.costCenterId,
+        categoryId: params.categoryId,
+        search: params.search,
+        dateFrom: params.fromDate,
+        dateTo: params.toDate,
+        amountFrom: params.minAmount,
+        amountTo: params.maxAmount,
+        sortBy: params.orderBy,
+        sortOrder: params.orderDir,
+      }),
     ...queryOptions.dynamic,
   });
 };
+
+// Alias para compatibilidade retroativa
+export const useRequests = useRequestsList;
 
 // Hook para obter solicitações por status
 export const useRequestsByStatus = (status: RequestStatus) => {

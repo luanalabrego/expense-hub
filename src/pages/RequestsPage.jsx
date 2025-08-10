@@ -1,75 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, MoreHorizontal, Edit, Eye, CheckCircle, XCircle, Clock, DollarSign, AlertTriangle } from 'lucide-react';
-
-// Dados mockados para demonstração
-const mockRequests = [
-  {
-    id: 'REQ-001',
-    number: '202401001',
-    description: 'Licenças de software Microsoft Office',
-    amount: 15000,
-    status: 'pending',
-    priority: 'high',
-    vendor: { name: 'Microsoft Brasil' },
-    costCenter: { name: 'TI', code: 'CC-001' },
-    category: { name: 'Software' },
-    requester: { name: 'João Silva' },
-    dueDate: new Date('2024-02-15'),
-    createdAt: new Date('2024-01-15'),
-    paymentMethod: 'transfer'
-  },
-  {
-    id: 'REQ-002',
-    number: '202401002',
-    description: 'Material de escritório',
-    amount: 2500,
-    status: 'approved',
-    priority: 'medium',
-    vendor: { name: 'Papelaria Central' },
-    costCenter: { name: 'Administrativo', code: 'CC-002' },
-    category: { name: 'Material de Escritório' },
-    requester: { name: 'Maria Santos' },
-    dueDate: new Date('2024-02-20'),
-    createdAt: new Date('2024-01-20'),
-    paymentMethod: 'check'
-  },
-  {
-    id: 'REQ-003',
-    number: '202401003',
-    description: 'Consultoria jurídica',
-    amount: 8000,
-    status: 'paid',
-    priority: 'urgent',
-    vendor: { name: 'Advocacia & Consultoria' },
-    costCenter: { name: 'Jurídico', code: 'CC-003' },
-    category: { name: 'Consultoria' },
-    requester: { name: 'Carlos Oliveira' },
-    dueDate: new Date('2024-01-30'),
-    createdAt: new Date('2024-01-10'),
-    paymentMethod: 'transfer'
-  },
-  {
-    id: 'REQ-004',
-    number: '202401004',
-    description: 'Equipamentos de TI',
-    amount: 25000,
-    status: 'rejected',
-    priority: 'low',
-    vendor: { name: 'Tech Solutions' },
-    costCenter: { name: 'TI', code: 'CC-001' },
-    category: { name: 'Equipamentos' },
-    requester: { name: 'Ana Costa' },
-    dueDate: new Date('2024-03-01'),
-    createdAt: new Date('2024-01-25'),
-    paymentMethod: 'transfer'
-  }
-];
+import { Plus, Search, Edit, Eye, CheckCircle, XCircle, Clock, DollarSign } from 'lucide-react';
+import { useRequestsList, useRequestStats } from '../hooks/useRequests';
+import { useNotifications } from '../stores/ui';
 
 export const RequestsPage = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const limit = 10;
+  const [orderBy, setOrderBy] = useState('createdAt');
+  const [orderDir, setOrderDir] = useState('desc');
+  const { error: notifyError } = useNotifications();
+  const { data, isLoading, isError, error } = useRequestsList({
+    page,
+    limit,
+    search,
+    status: statusFilter || undefined,
+    orderBy,
+    orderDir,
+  });
+  const { data: stats } = useRequestStats();
+  const requests = data?.data || [];
+  const total = data?.total || 0;
+  const totalPages = data?.totalPages || 1;
+
+  useEffect(() => {
+    if (isError) {
+      notifyError('Erro ao carregar solicitações', error?.message);
+    }
+  }, [isError, error, notifyError]);
+
+  const handlePrevPage = () => setPage((p) => Math.max(1, p - 1));
+  const handleNextPage = () => setPage((p) => Math.min(totalPages, p + 1));
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -122,17 +86,6 @@ export const RequestsPage = () => {
     return labels[priority] || priority;
   };
 
-  const filteredRequests = mockRequests.filter(request => {
-    const matchesSearch = !search || 
-      request.description.toLowerCase().includes(search.toLowerCase()) ||
-      request.number.toLowerCase().includes(search.toLowerCase()) ||
-      request.vendor.name.toLowerCase().includes(search.toLowerCase());
-    
-    const matchesStatus = !statusFilter || request.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -161,7 +114,7 @@ export const RequestsPage = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total</p>
-              <p className="text-2xl font-bold">{mockRequests.length}</p>
+              <p className="text-2xl font-bold">{stats?.total ?? 0}</p>
             </div>
           </div>
         </div>
@@ -173,9 +126,7 @@ export const RequestsPage = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Pendentes</p>
-              <p className="text-2xl font-bold">
-                {mockRequests.filter(r => r.status === 'pending').length}
-              </p>
+              <p className="text-2xl font-bold">{stats?.byStatus?.pending ?? 0}</p>
             </div>
           </div>
         </div>
@@ -187,9 +138,7 @@ export const RequestsPage = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Aprovadas</p>
-              <p className="text-2xl font-bold">
-                {mockRequests.filter(r => r.status === 'approved').length}
-              </p>
+              <p className="text-2xl font-bold">{stats?.byStatus?.approved ?? 0}</p>
             </div>
           </div>
         </div>
@@ -201,9 +150,7 @@ export const RequestsPage = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Valor Total</p>
-              <p className="text-2xl font-bold">
-                {formatCurrency(mockRequests.reduce((sum, r) => sum + r.amount, 0))}
-              </p>
+              <p className="text-2xl font-bold">{formatCurrency(stats?.totalAmount ?? 0)}</p>
             </div>
           </div>
         </div>
@@ -236,6 +183,31 @@ export const RequestsPage = () => {
               <option value="approved">Aprovado</option>
               <option value="rejected">Rejeitado</option>
               <option value="paid">Pago</option>
+            </select>
+          </div>
+
+          <div className="w-full sm:w-48">
+            <select
+              value={orderBy}
+              onChange={(e) => setOrderBy(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="createdAt">Criada em</option>
+              <option value="dueDate">Vencimento</option>
+              <option value="amount">Valor</option>
+              <option value="status">Status</option>
+              <option value="priority">Prioridade</option>
+            </select>
+          </div>
+
+          <div className="w-full sm:w-32">
+            <select
+              value={orderDir}
+              onChange={(e) => setOrderDir(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="desc">Desc</option>
+              <option value="asc">Asc</option>
             </select>
           </div>
         </div>
@@ -271,85 +243,120 @@ export const RequestsPage = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredRequests.map((request) => (
-                <tr key={request.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {request.number}
-                      </div>
-                      <div className="text-sm text-gray-500 max-w-xs truncate">
-                        {request.description}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{request.vendor.name}</div>
-                    <div className="text-sm text-gray-500">{request.costCenter.name}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {formatCurrency(request.amount)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(request.status)}`}>
-                      {getStatusLabel(request.status)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(request.priority)}`}>
-                      {getPriorityLabel(request.priority)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatDate(request.dueDate)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => navigate(`/requests/${request.id}`)}
-                        className="text-blue-600 hover:text-blue-900"
-                        title="Visualizar"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      {request.status === 'pending' && (
-                        <>
+              {isLoading
+                ? Array.from({ length: limit }).map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                        <div className="h-3 bg-gray-200 rounded w-32"></div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                        <div className="h-3 bg-gray-200 rounded w-20"></div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="h-4 bg-gray-200 rounded w-16"></div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="h-4 bg-gray-200 rounded w-12"></div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="h-4 bg-gray-200 rounded w-12"></div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="h-4 bg-gray-200 rounded w-20"></div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="h-4 bg-gray-200 rounded w-20"></div>
+                      </td>
+                    </tr>
+                  ))
+                : requests.map((request) => (
+                    <tr key={request.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {request.requestNumber || request.number}
+                          </div>
+                          <div className="text-sm text-gray-500 max-w-xs truncate">
+                            {request.description}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{request.vendorName || ''}</div>
+                        <div className="text-sm text-gray-500">{request.costCenterName || request.costCenterId || ''}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {formatCurrency(request.amount)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(request.status)}`}>
+                          {getStatusLabel(request.status)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(request.priority)}`}>
+                          {getPriorityLabel(request.priority)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {request.dueDate ? formatDate(request.dueDate) : '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex space-x-2">
                           <button
-                            onClick={() => alert('Aprovar solicitação (Demo)')}
-                            className="text-green-600 hover:text-green-900"
-                            title="Aprovar"
+                            onClick={() => navigate(`/requests/${request.id}`)}
+                            className="text-blue-600 hover:text-blue-900"
+                            title="Visualizar"
                           >
-                            <CheckCircle className="w-4 h-4" />
+                            <Eye className="w-4 h-4" />
                           </button>
+                          {request.status === 'pending' && (
+                            <>
+                              <button
+                                onClick={() => alert('Aprovar solicitação (Demo)')}
+                                className="text-green-600 hover:text-green-900"
+                                title="Aprovar"
+                              >
+                                <CheckCircle className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => alert('Rejeitar solicitação (Demo)')}
+                                className="text-red-600 hover:text-red-900"
+                                title="Rejeitar"
+                              >
+                                <XCircle className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
                           <button
-                            onClick={() => alert('Rejeitar solicitação (Demo)')}
-                            className="text-red-600 hover:text-red-900"
-                            title="Rejeitar"
+                            onClick={() => navigate(`/requests/${request.id}/edit`)}
+                            className="text-gray-600 hover:text-gray-900"
+                            title="Editar"
                           >
-                            <XCircle className="w-4 h-4" />
+                            <Edit className="w-4 h-4" />
                           </button>
-                        </>
-                      )}
-                      <button
-                        onClick={() => navigate(`/requests/${request.id}/edit`)}
-                        className="text-gray-600 hover:text-gray-900"
-                        title="Editar"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
             </tbody>
           </table>
         </div>
         
-        {filteredRequests.length === 0 && (
+        {!isLoading && requests.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500">Nenhuma solicitação encontrada</p>
+            <button
+              onClick={() => navigate('/requests/new')}
+              className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nova Solicitação
+            </button>
           </div>
         )}
       </div>
@@ -357,18 +364,20 @@ export const RequestsPage = () => {
       {/* Paginação */}
       <div className="flex items-center justify-between">
         <div className="text-sm text-gray-700">
-          Mostrando {filteredRequests.length} de {mockRequests.length} solicitações
+          Mostrando {requests.length} de {total} solicitações
         </div>
         <div className="flex space-x-2">
           <button
-            disabled
-            className="px-3 py-1 text-sm border border-gray-300 rounded-md bg-gray-100 text-gray-400 cursor-not-allowed"
+            onClick={handlePrevPage}
+            disabled={page === 1}
+            className="px-3 py-1 text-sm border border-gray-300 rounded-md bg-white disabled:bg-gray-100 disabled:text-gray-400"
           >
             Anterior
           </button>
           <button
-            disabled
-            className="px-3 py-1 text-sm border border-gray-300 rounded-md bg-gray-100 text-gray-400 cursor-not-allowed"
+            onClick={handleNextPage}
+            disabled={page === totalPages}
+            className="px-3 py-1 text-sm border border-gray-300 rounded-md bg-white disabled:bg-gray-100 disabled:text-gray-400"
           >
             Próximo
           </button>

@@ -1,16 +1,13 @@
 // Dados de seed para demonstração do sistema
-import { 
-  collection, 
-  doc, 
-  setDoc, 
-  addDoc, 
+import {
+  collection,
+  doc,
+  setDoc,
+  addDoc,
   serverTimestamp,
-  Timestamp 
+  Timestamp
 } from 'firebase/firestore';
 import { db } from '../services/firebase';
-
-// Função para gerar IDs únicos
-const generateId = () => Math.random().toString(36).substr(2, 9);
 
 // Função para gerar datas aleatórias
 const randomDate = (start, end) => {

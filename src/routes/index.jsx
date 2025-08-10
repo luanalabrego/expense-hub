@@ -4,6 +4,7 @@ import { RequestsPage } from '../pages/RequestsPage';
 import { VendorsPage } from '../pages/VendorsPage';
 import { VendorApprovalsPage } from '../pages/VendorApprovalsPage';
 import { UsersPage } from '../pages/UsersPage';
+import { CostCentersPage } from '../pages/CostCentersPage';
 import { useAuth } from '../contexts/AuthContext';
 
 export const AppRoutes = () => {
@@ -21,6 +22,10 @@ export const AppRoutes = () => {
           element={hasPageAccess('vendors') ? <VendorsPage /> : <Navigate to="/" replace />}
         />
         <Route
+          path="cost-centers"
+          element={
+            hasPageAccess('cost-centers') ? <CostCentersPage /> : <Navigate to="/" replace />
+          }
           path="vendor-approvals"
           element={hasPageAccess('vendorApprovals') ? <VendorApprovalsPage /> : <Navigate to="/" replace />}
         />

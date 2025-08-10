@@ -49,6 +49,7 @@ export const AuthProvider = ({ children }) => {
     vendors: ['admin', 'finance'],
     vendorApprovals: ['procurement'],
     users: ['admin'],
+    'cost-centers': ['admin', 'finance'],
   });
 
   const updatePermissions = (page, roles) => {

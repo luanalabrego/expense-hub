@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 const navigation = [
   { name: 'Solicitações', href: '/requests', icon: '📝', page: 'requests' },
   { name: 'Fornecedores', href: '/vendors', icon: '🏢', page: 'vendors' },
+  { name: 'Centros de Custo', href: '/cost-centers', icon: '💰', page: 'cost-centers' },
   { name: 'Aprovação Forn.', href: '/vendor-approvals', icon: '✅', page: 'vendorApprovals' },
   { name: 'Usuários', href: '/users', icon: '👥', page: 'users' },
 ];

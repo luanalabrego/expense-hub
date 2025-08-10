@@ -27,17 +27,22 @@ export const getRequestById = async (id: string): Promise<PaymentRequest | null>
     const requestDoc = await getDoc(doc(db, COLLECTION_NAME, id));
     if (!requestDoc.exists()) return null;
 
+    const data = requestDoc.data();
     return {
       id: requestDoc.id,
-      ...requestDoc.data(),
-      createdAt: requestDoc.data().createdAt?.toDate() || new Date(),
-      updatedAt: requestDoc.data().updatedAt?.toDate() || new Date(),
-      dueDate: requestDoc.data().dueDate?.toDate() || null,
-      invoiceDate: requestDoc.data().invoiceDate?.toDate() || null,
-      competenceDate: requestDoc.data().competenceDate?.toDate() || null,
-      approvedAt: requestDoc.data().approvedAt?.toDate() || null,
-      rejectedAt: requestDoc.data().rejectedAt?.toDate() || null,
-      paidAt: requestDoc.data().paidAt?.toDate() || null,
+      ...data,
+      createdAt: data.createdAt?.toDate() || new Date(),
+      updatedAt: data.updatedAt?.toDate() || new Date(),
+      dueDate: data.dueDate?.toDate() || null,
+      invoiceDate: data.invoiceDate?.toDate() || null,
+      competenceDate: data.competenceDate?.toDate() || null,
+      approvedAt: data.approvedAt?.toDate() || null,
+      rejectedAt: data.rejectedAt?.toDate() || null,
+      paidAt: data.paidAt?.toDate() || null,
+      statusHistory: (data.statusHistory || []).map((h: any) => ({
+        ...h,
+        timestamp: h.timestamp?.toDate ? h.timestamp.toDate() : new Date(h.timestamp),
+      })),
     } as PaymentRequest;
   } catch (error) {
     console.error('Erro ao buscar solicitação:', error);
@@ -103,18 +108,25 @@ export const getRequests = async (
     }
 
     const snapshot = await getDocs(q);
-    let requests = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate() || new Date(),
-      updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-      dueDate: doc.data().dueDate?.toDate() || null,
-      invoiceDate: doc.data().invoiceDate?.toDate() || null,
-      competenceDate: doc.data().competenceDate?.toDate() || null,
-      approvedAt: doc.data().approvedAt?.toDate() || null,
-      rejectedAt: doc.data().rejectedAt?.toDate() || null,
-      paidAt: doc.data().paidAt?.toDate() || null,
-    })) as PaymentRequest[];
+    let requests = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+        dueDate: data.dueDate?.toDate() || null,
+        invoiceDate: data.invoiceDate?.toDate() || null,
+        competenceDate: data.competenceDate?.toDate() || null,
+        approvedAt: data.approvedAt?.toDate() || null,
+        rejectedAt: data.rejectedAt?.toDate() || null,
+        paidAt: data.paidAt?.toDate() || null,
+        statusHistory: (data.statusHistory || []).map((h: any) => ({
+          ...h,
+          timestamp: h.timestamp?.toDate ? h.timestamp.toDate() : new Date(h.timestamp),
+        })),
+      } as PaymentRequest;
+    });
 
     // Aplicar offset simulado
     if (params.page > 1) {
@@ -217,10 +229,18 @@ export const createRequest = async (requestData: {
       priority: requestData.priority,
       paymentMethod: requestData.paymentMethod,
       attachments: requestData.attachments || [],
-      status: 'draft' as RequestStatus,
+      status: 'pending_approval' as RequestStatus,
       currentApproverId: null,
       approvalLevel: 0,
       approvalHistory: [],
+      statusHistory: [
+        {
+          status: 'pending_approval',
+          changedBy: requestData.requesterId,
+          changedByName: requestData.requesterName,
+          timestamp: new Date(),
+        },
+      ],
       createdAt: new Date(),
       updatedAt: new Date(),
       approvedAt: null,
@@ -259,11 +279,23 @@ export const updateRequest = async (
 };
 
 // Submeter solicitação para aprovação
-export const submitRequest = async (id: string): Promise<void> => {
+export const submitRequest = async (
+  id: string,
+  userId: string,
+  userName: string
+): Promise<void> => {
   try {
+    const request = await getRequestById(id);
+    const now = new Date();
     await updateDoc(doc(db, COLLECTION_NAME, id), {
       status: 'pending_approval',
-      updatedAt: new Date()
+      statusHistory: [...(request?.statusHistory || []), {
+        status: 'pending_approval',
+        changedBy: userId,
+        changedByName: userName,
+        timestamp: now,
+      }],
+      updatedAt: now
     });
   } catch (error) {
     console.error('Erro ao submeter solicitação:', error);
@@ -282,13 +314,21 @@ export const approveRequest = async (
     const request = await getRequestById(id);
     if (!request) throw new Error('Solicitação não encontrada');
 
+    const now = new Date();
     const approvalEntry = {
       approverId,
       approverName,
       action: 'approved' as const,
       comments: comments || '',
-      timestamp: new Date(),
+      timestamp: now,
       level: request.approvalLevel + 1
+    };
+
+    const statusEntry = {
+      status: 'pending_payment' as RequestStatus,
+      changedBy: approverId,
+      changedByName: approverName,
+      timestamp: now,
     };
 
     const batch = writeBatch(db);
@@ -296,11 +336,12 @@ export const approveRequest = async (
 
     // Atualizar solicitação
     batch.update(requestRef, {
-      status: 'approved',
+      status: 'pending_payment',
       approvalLevel: increment(1),
       approvalHistory: [...request.approvalHistory, approvalEntry],
-      approvedAt: new Date(),
-      updatedAt: new Date()
+      statusHistory: [...(request.statusHistory || []), statusEntry],
+      approvedAt: now,
+      updatedAt: now
     });
 
     // Atualizar centro de custo (comprometer valor)
@@ -330,20 +371,30 @@ export const rejectRequest = async (
     const request = await getRequestById(id);
     if (!request) throw new Error('Solicitação não encontrada');
 
+    const now = new Date();
     const approvalEntry = {
       approverId,
       approverName,
       action: 'rejected' as const,
       comments: reason,
-      timestamp: new Date(),
+      timestamp: now,
       level: request.approvalLevel + 1
+    };
+
+    const statusEntry = {
+      status: 'rejected' as RequestStatus,
+      changedBy: approverId,
+      changedByName: approverName,
+      timestamp: now,
+      reason,
     };
 
     await updateDoc(doc(db, COLLECTION_NAME, id), {
       status: 'rejected',
       approvalHistory: [...request.approvalHistory, approvalEntry],
-      rejectedAt: new Date(),
-      updatedAt: new Date()
+      statusHistory: [...(request.statusHistory || []), statusEntry],
+      rejectedAt: now,
+      updatedAt: now
     });
   } catch (error) {
     console.error('Erro ao rejeitar solicitação:', error);
@@ -369,6 +420,14 @@ export const markAsPaid = async (
     const batch = writeBatch(db);
     const requestRef = doc(db, COLLECTION_NAME, id);
 
+    const now = new Date();
+    const statusEntry = {
+      status: 'paid' as RequestStatus,
+      changedBy: paymentDetails.paidBy,
+      changedByName: paymentDetails.paidByName,
+      timestamp: now,
+    };
+
     // Atualizar solicitação
     batch.update(requestRef, {
       status: 'paid',
@@ -377,7 +436,8 @@ export const markAsPaid = async (
       paymentNotes: paymentDetails.notes || '',
       paidBy: paymentDetails.paidBy,
       paidByName: paymentDetails.paidByName,
-      updatedAt: new Date()
+      statusHistory: [...(request.statusHistory || []), statusEntry],
+      updatedAt: now
     });
 
     // Atualizar centro de custo (mover de comprometido para gasto)
@@ -386,7 +446,7 @@ export const markAsPaid = async (
       batch.update(costCenterRef, {
         spent: increment(request.amount),
         committed: increment(-request.amount),
-        updatedAt: new Date()
+        updatedAt: now
       });
     }
 
@@ -398,7 +458,12 @@ export const markAsPaid = async (
 };
 
 // Cancelar solicitação
-export const cancelRequest = async (id: string, reason: string): Promise<void> => {
+export const cancelRequest = async (
+  id: string,
+  reason: string,
+  cancelledBy: string,
+  cancelledByName: string
+): Promise<void> => {
   try {
     const request = await getRequestById(id);
     if (!request) throw new Error('Solicitação não encontrada');
@@ -406,19 +471,29 @@ export const cancelRequest = async (id: string, reason: string): Promise<void> =
     const batch = writeBatch(db);
     const requestRef = doc(db, COLLECTION_NAME, id);
 
+    const now = new Date();
+    const statusEntry = {
+      status: 'cancelled' as RequestStatus,
+      changedBy: cancelledBy,
+      changedByName: cancelledByName,
+      timestamp: now,
+      reason,
+    };
+
     // Atualizar solicitação
     batch.update(requestRef, {
       status: 'cancelled',
       cancellationReason: reason,
-      updatedAt: new Date()
+      statusHistory: [...(request.statusHistory || []), statusEntry],
+      updatedAt: now
     });
 
-    // Se estava aprovada, liberar valor comprometido
-    if (request.status === 'approved' && request.costCenterId) {
+    // Se estava pendente de pagamento, liberar valor comprometido
+    if (request.status === 'pending_payment' && request.costCenterId) {
       const costCenterRef = doc(db, 'cost-centers', request.costCenterId);
       batch.update(costCenterRef, {
         committed: increment(-request.amount),
-        updatedAt: new Date()
+        updatedAt: now
       });
     }
 
@@ -439,18 +514,25 @@ export const getRequestsByStatus = async (status: RequestStatus): Promise<Paymen
     );
 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate() || new Date(),
-      updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-      dueDate: doc.data().dueDate?.toDate() || null,
-      invoiceDate: doc.data().invoiceDate?.toDate() || null,
-      competenceDate: doc.data().competenceDate?.toDate() || null,
-      approvedAt: doc.data().approvedAt?.toDate() || null,
-      rejectedAt: doc.data().rejectedAt?.toDate() || null,
-      paidAt: doc.data().paidAt?.toDate() || null,
-    })) as PaymentRequest[];
+    return snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+        dueDate: data.dueDate?.toDate() || null,
+        invoiceDate: data.invoiceDate?.toDate() || null,
+        competenceDate: data.competenceDate?.toDate() || null,
+        approvedAt: data.approvedAt?.toDate() || null,
+        rejectedAt: data.rejectedAt?.toDate() || null,
+        paidAt: data.paidAt?.toDate() || null,
+        statusHistory: (data.statusHistory || []).map((h: any) => ({
+          ...h,
+          timestamp: h.timestamp?.toDate ? h.timestamp.toDate() : new Date(h.timestamp),
+        })),
+      } as PaymentRequest;
+    }) as PaymentRequest[];
   } catch (error) {
     console.error('Erro ao buscar solicitações por status:', error);
     throw error;
@@ -467,18 +549,25 @@ export const getRequestsByUser = async (userId: string): Promise<PaymentRequest[
     );
 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate() || new Date(),
-      updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-      dueDate: doc.data().dueDate?.toDate() || null,
-      invoiceDate: doc.data().invoiceDate?.toDate() || null,
-      competenceDate: doc.data().competenceDate?.toDate() || null,
-      approvedAt: doc.data().approvedAt?.toDate() || null,
-      rejectedAt: doc.data().rejectedAt?.toDate() || null,
-      paidAt: doc.data().paidAt?.toDate() || null,
-    })) as PaymentRequest[];
+    return snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+        dueDate: data.dueDate?.toDate() || null,
+        invoiceDate: data.invoiceDate?.toDate() || null,
+        competenceDate: data.competenceDate?.toDate() || null,
+        approvedAt: data.approvedAt?.toDate() || null,
+        rejectedAt: data.rejectedAt?.toDate() || null,
+        paidAt: data.paidAt?.toDate() || null,
+        statusHistory: (data.statusHistory || []).map((h: any) => ({
+          ...h,
+          timestamp: h.timestamp?.toDate ? h.timestamp.toDate() : new Date(h.timestamp),
+        })),
+      } as PaymentRequest;
+    }) as PaymentRequest[];
   } catch (error) {
     console.error('Erro ao buscar solicitações por usuário:', error);
     throw error;
@@ -496,18 +585,25 @@ export const getPendingRequestsForApprover = async (approverId: string): Promise
     );
 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate() || new Date(),
-      updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-      dueDate: doc.data().dueDate?.toDate() || null,
-      invoiceDate: doc.data().invoiceDate?.toDate() || null,
-      competenceDate: doc.data().competenceDate?.toDate() || null,
-      approvedAt: doc.data().approvedAt?.toDate() || null,
-      rejectedAt: doc.data().rejectedAt?.toDate() || null,
-      paidAt: doc.data().paidAt?.toDate() || null,
-    })) as PaymentRequest[];
+    return snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+        dueDate: data.dueDate?.toDate() || null,
+        invoiceDate: data.invoiceDate?.toDate() || null,
+        competenceDate: data.competenceDate?.toDate() || null,
+        approvedAt: data.approvedAt?.toDate() || null,
+        rejectedAt: data.rejectedAt?.toDate() || null,
+        paidAt: data.paidAt?.toDate() || null,
+        statusHistory: (data.statusHistory || []).map((h: any) => ({
+          ...h,
+          timestamp: h.timestamp?.toDate ? h.timestamp.toDate() : new Date(h.timestamp),
+        })),
+      } as PaymentRequest;
+    }) as PaymentRequest[];
   } catch (error) {
     console.error('Erro ao buscar solicitações pendentes:', error);
     throw error;

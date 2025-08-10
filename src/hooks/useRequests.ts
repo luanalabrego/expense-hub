@@ -153,8 +153,9 @@ export const useSubmitRequest = () => {
   const { success, error } = useNotifications();
 
   return useMutation({
-    mutationFn: requestsService.submitRequest,
-    onSuccess: (_, id) => {
+    mutationFn: ({ id, userId, userName }: { id: string; userId: string; userName: string }) =>
+      requestsService.submitRequest(id, userId, userName),
+    onSuccess: (_, { id }) => {
       // Invalidar queries relacionadas
       queryClient.invalidateQueries({ queryKey: queryKeys.requests });
       queryClient.invalidateQueries({ queryKey: queryKeys.request(id) });
@@ -273,8 +274,8 @@ export const useCancelRequest = () => {
   const { success, error } = useNotifications();
 
   return useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
-      requestsService.cancelRequest(id, reason),
+    mutationFn: ({ id, reason, userId, userName }: { id: string; reason: string; userId: string; userName: string }) =>
+      requestsService.cancelRequest(id, reason, userId, userName),
     onSuccess: (_, { id }) => {
       // Invalidar queries relacionadas
       queryClient.invalidateQueries({ queryKey: queryKeys.requests });

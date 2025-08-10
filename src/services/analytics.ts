@@ -133,9 +133,9 @@ export const getDashboardKPIs = async (
     // Calcular KPIs financeiros
     const totalRequests = requests.length;
     const totalAmount = requests.reduce((sum, r) => sum + r.amount, 0);
-    const approvedRequests = requests.filter(r => ['approved', 'paid'].includes(r.status));
-    const pendingRequests = requests.filter(r => ['submitted', 'in_approval'].includes(r.status));
-    const rejectedRequests = requests.filter(r => r.status === 'rejected');
+    const approvedRequests = requests.filter(r => ['pending_payment', 'paid'].includes(r.status));
+    const pendingRequests = requests.filter(r => r.status === 'pending_approval');
+    const rejectedRequests = requests.filter(r => ['rejected', 'cancelled'].includes(r.status));
     const paidRequests = requests.filter(r => r.status === 'paid');
     
     const approvedAmount = approvedRequests.reduce((sum, r) => sum + r.amount, 0);
@@ -259,21 +259,19 @@ export const getRequestsByStatus = async (
     }, {} as Record<string, number>);
     
     const statusLabels = {
-      draft: 'Rascunho',
-      submitted: 'Enviado',
-      in_approval: 'Em Aprovação',
-      approved: 'Aprovado',
+      pending_approval: 'Ag. aprovação',
+      pending_payment: 'Ag. pagamento',
       rejected: 'Rejeitado',
-      paid: 'Pago',
+      cancelled: 'Cancelado',
+      paid: 'Pagamento realizado',
     };
-    
+
     const statusColors = {
-      draft: '#94a3b8',
-      submitted: '#3b82f6',
-      in_approval: '#f59e0b',
-      approved: '#10b981',
+      pending_approval: '#f59e0b',
+      pending_payment: '#3b82f6',
       rejected: '#ef4444',
-      paid: '#8b5cf6',
+      cancelled: '#6b7280',
+      paid: '#10b981',
     };
     
     return Object.entries(statusCounts).map(([status, count]) => ({
@@ -351,11 +349,11 @@ export const getTimeSeriesData = async (
       acc[periodKey].requests += 1;
       acc[periodKey].amount += request.amount;
       
-      if (['approved', 'paid'].includes(request.status)) {
+      if (['pending_payment', 'paid'].includes(request.status)) {
         acc[periodKey].approved += 1;
-      } else if (request.status === 'rejected') {
+      } else if (['rejected', 'cancelled'].includes(request.status)) {
         acc[periodKey].rejected += 1;
-      } else if (['submitted', 'in_approval'].includes(request.status)) {
+      } else if (request.status === 'pending_approval') {
         acc[periodKey].pending += 1;
       }
       

@@ -1,15 +1,18 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useUIStore } from '../stores/ui';
 import { cn } from '../lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 const navigation = [
-  { name: 'Solicitações', href: '/requests', icon: '📝' },
-  { name: 'Fornecedores', href: '/vendors', icon: '🏢' },
+  { name: 'Solicitações', href: '/requests', icon: '📝', page: 'requests' },
+  { name: 'Fornecedores', href: '/vendors', icon: '🏢', page: 'vendors' },
+  { name: 'Usuários', href: '/users', icon: '👥', page: 'users' },
 ];
 
 export const Sidebar = () => {
   const location = useLocation();
   const { sidebarOpen, sidebarCollapsed } = useUIStore();
+  const { hasPageAccess } = useAuth();
 
   if (!sidebarOpen) return null;
 
@@ -35,7 +38,7 @@ export const Sidebar = () => {
 
         {/* Navegação */}
         <nav className="flex-1 px-2 py-4 space-y-1">
-          {navigation.map((item) => {
+          {navigation.filter((item) => hasPageAccess(item.page)).map((item) => {
             const isActive = location.pathname === item.href;
             return (
               <Link

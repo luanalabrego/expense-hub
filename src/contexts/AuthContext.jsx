@@ -50,6 +50,8 @@ export const AuthProvider = ({ children }) => {
     vendorApprovals: ['finance'],
     users: ['finance'],
     'cost-centers': ['finance', 'cost_center_owner'],
+    financialApprovals: ['finance'],
+    payments: ['finance'],
   });
 
   const updatePermissions = (page, roles) => {

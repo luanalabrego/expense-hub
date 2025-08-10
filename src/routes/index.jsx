@@ -7,6 +7,8 @@ import { VendorApprovalsPage } from '../pages/VendorApprovalsPage';
 import { VendorDossierPage } from '../pages/VendorDossierPage';
 import { UsersPage } from '../pages/UsersPage';
 import { CostCentersPage } from '../pages/CostCentersPage';
+import { FinancialApprovalsPage } from '../pages/FinancialApprovalsPage';
+import { PaymentManagementPage } from '../pages/PaymentManagementPage';
 import { useAuth } from '../contexts/AuthContext';
 
 export const AppRoutes = () => {
@@ -42,6 +44,26 @@ export const AppRoutes = () => {
           element={
             hasPageAccess('vendorApprovals') ? (
               <VendorApprovalsPage />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route
+          path="financial-approvals"
+          element={
+            hasPageAccess('financialApprovals') ? (
+              <FinancialApprovalsPage />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route
+          path="payments"
+          element={
+            hasPageAccess('payments') ? (
+              <PaymentManagementPage />
             ) : (
               <Navigate to="/" replace />
             )

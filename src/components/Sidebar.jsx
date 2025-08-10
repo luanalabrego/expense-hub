@@ -4,6 +4,7 @@ import { cn } from '../lib/utils';
 
 const navigation = [
   { name: 'Solicitações', href: '/requests', icon: '📝' },
+  { name: 'Fornecedores', href: '/vendors', icon: '🏢' },
 ];
 
 export const Sidebar = () => {

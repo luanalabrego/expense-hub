@@ -33,6 +33,8 @@ export const getRequestById = async (id: string): Promise<PaymentRequest | null>
       createdAt: requestDoc.data().createdAt?.toDate() || new Date(),
       updatedAt: requestDoc.data().updatedAt?.toDate() || new Date(),
       dueDate: requestDoc.data().dueDate?.toDate() || null,
+      invoiceDate: requestDoc.data().invoiceDate?.toDate() || null,
+      competenceDate: requestDoc.data().competenceDate?.toDate() || null,
       approvedAt: requestDoc.data().approvedAt?.toDate() || null,
       rejectedAt: requestDoc.data().rejectedAt?.toDate() || null,
       paidAt: requestDoc.data().paidAt?.toDate() || null,
@@ -107,6 +109,8 @@ export const getRequests = async (
       createdAt: doc.data().createdAt?.toDate() || new Date(),
       updatedAt: doc.data().updatedAt?.toDate() || new Date(),
       dueDate: doc.data().dueDate?.toDate() || null,
+      invoiceDate: doc.data().invoiceDate?.toDate() || null,
+      competenceDate: doc.data().competenceDate?.toDate() || null,
       approvedAt: doc.data().approvedAt?.toDate() || null,
       rejectedAt: doc.data().rejectedAt?.toDate() || null,
       paidAt: doc.data().paidAt?.toDate() || null,
@@ -176,8 +180,13 @@ export const createRequest = async (requestData: {
   vendorName: string;
   costCenterId: string;
   categoryId: string;
+  costType?: 'CAPEX' | 'OPEX' | 'CPO';
+  invoiceDate?: Date;
+  competenceDate?: Date;
   dueDate?: Date;
   notes?: string;
+  isExtraordinary?: boolean;
+  extraordinaryReason?: string;
   requesterId: string;
   requesterName: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
@@ -196,8 +205,13 @@ export const createRequest = async (requestData: {
       vendorName: requestData.vendorName,
       costCenterId: requestData.costCenterId,
       categoryId: requestData.categoryId,
+      costType: requestData.costType || null,
+      invoiceDate: requestData.invoiceDate || null,
+      competenceDate: requestData.competenceDate || null,
       dueDate: requestData.dueDate || null,
       notes: requestData.notes || '',
+      isExtraordinary: requestData.isExtraordinary || false,
+      extraordinaryReason: requestData.extraordinaryReason || '',
       requesterId: requestData.requesterId,
       requesterName: requestData.requesterName,
       priority: requestData.priority,
@@ -431,6 +445,8 @@ export const getRequestsByStatus = async (status: RequestStatus): Promise<Paymen
       createdAt: doc.data().createdAt?.toDate() || new Date(),
       updatedAt: doc.data().updatedAt?.toDate() || new Date(),
       dueDate: doc.data().dueDate?.toDate() || null,
+      invoiceDate: doc.data().invoiceDate?.toDate() || null,
+      competenceDate: doc.data().competenceDate?.toDate() || null,
       approvedAt: doc.data().approvedAt?.toDate() || null,
       rejectedAt: doc.data().rejectedAt?.toDate() || null,
       paidAt: doc.data().paidAt?.toDate() || null,
@@ -457,6 +473,8 @@ export const getRequestsByUser = async (userId: string): Promise<PaymentRequest[
       createdAt: doc.data().createdAt?.toDate() || new Date(),
       updatedAt: doc.data().updatedAt?.toDate() || new Date(),
       dueDate: doc.data().dueDate?.toDate() || null,
+      invoiceDate: doc.data().invoiceDate?.toDate() || null,
+      competenceDate: doc.data().competenceDate?.toDate() || null,
       approvedAt: doc.data().approvedAt?.toDate() || null,
       rejectedAt: doc.data().rejectedAt?.toDate() || null,
       paidAt: doc.data().paidAt?.toDate() || null,
@@ -484,6 +502,8 @@ export const getPendingRequestsForApprover = async (approverId: string): Promise
       createdAt: doc.data().createdAt?.toDate() || new Date(),
       updatedAt: doc.data().updatedAt?.toDate() || new Date(),
       dueDate: doc.data().dueDate?.toDate() || null,
+      invoiceDate: doc.data().invoiceDate?.toDate() || null,
+      competenceDate: doc.data().competenceDate?.toDate() || null,
       approvedAt: doc.data().approvedAt?.toDate() || null,
       rejectedAt: doc.data().rejectedAt?.toDate() || null,
       paidAt: doc.data().paidAt?.toDate() || null,
@@ -502,8 +522,8 @@ const generateRequestNumber = async (): Promise<string> => {
   // Buscar último número do mês
   const q = query(
     collection(db, COLLECTION_NAME),
-    where('requestNumber', '>=', `${year}${month}`),
-    where('requestNumber', '<', `${year}${month}Z`),
+    where('requestNumber', '>=', `RD${year}${month}`),
+    where('requestNumber', '<', `RD${year}${month}Z`),
     orderBy('requestNumber', 'desc'),
     limit(1)
   );
@@ -517,7 +537,7 @@ const generateRequestNumber = async (): Promise<string> => {
     nextNumber = lastNumber + 1;
   }
 
-  return `${year}${month}${String(nextNumber).padStart(4, '0')}`;
+  return `RD${year}${month}${String(nextNumber).padStart(4, '0')}`;
 };
 
 // Estatísticas de solicitações

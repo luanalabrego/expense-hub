@@ -15,6 +15,8 @@ export type StepStatus = 'pending' | 'approved' | 'rejected';
 
 export type CategoryType = 'OPEX' | 'CAPEX';
 
+export type CostType = 'CAPEX' | 'OPEX' | 'CPO';
+
 export type DocumentType = 'invoice' | 'receipt' | 'contract' | 'other';
 
 export interface User {
@@ -88,7 +90,14 @@ export interface PaymentRequest {
   costCenterId: string;
   categoryId: string;
   vendorId: string;
+  vendorName?: string;
+  requestNumber?: string;
   dueDate: Date;
+  costType?: CostType;
+  invoiceDate?: Date | null;
+  competenceDate?: Date | null;
+  isExtraordinary?: boolean;
+  extraordinaryReason?: string;
   
   // Workflow
   status: RequestStatus;
@@ -188,7 +197,13 @@ export interface CreateRequestForm {
   costCenterId: string;
   categoryId: string;
   vendorId: string;
+  vendorName?: string;
+  costType?: CostType;
+  invoiceDate?: string;
+  competenceDate?: string;
   dueDate: string;
+  isExtraordinary?: boolean;
+  extraordinaryReason?: string;
 }
 
 export interface CreateVendorForm {

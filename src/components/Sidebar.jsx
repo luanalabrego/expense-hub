@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useUIStore } from '../stores/ui';
 import { cn } from '../lib/utils';
+import { ROUTES } from '../constants';
 import { useAuth } from '@/contexts/AuthContext';
 
 const navigation = [

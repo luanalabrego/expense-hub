@@ -108,12 +108,12 @@ export const importTemplates: Record<string, ImportTemplate> = {
     columns: [
       { key: 'name', label: 'Nome', required: true, type: 'string', example: 'João Silva' },
       { key: 'email', label: 'Email', required: true, type: 'email', example: 'joao@empresa.com' },
-      { key: 'roles', label: 'Papéis', required: true, type: 'string', example: 'approver,requester' },
+      { key: 'roles', label: 'Papéis', required: true, type: 'string', example: 'cost_center_owner,user' },
       { key: 'approvalLimit', label: 'Limite de Aprovação', required: false, type: 'number', example: '50000' },
       { key: 'costCenterCodes', label: 'Centros de Custo', required: false, type: 'string', example: 'CC001,CC002' },
     ],
     instructions: [
-      'Papéis válidos: admin, finance, approver, requester, viewer',
+      'Papéis válidos: finance, cost_center_owner, user',
       'Papéis devem ser separados por vírgula',
       'Centros de custo devem ser códigos existentes, separados por vírgula',
       'Limite de aprovação deve ser um valor numérico',

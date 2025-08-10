@@ -23,7 +23,6 @@ interface AuthState {
   hasAnyRole: (roles: string[]) => boolean;
   canApprove: (costCenterId?: string) => boolean;
   canManageCostCenter: (costCenterId: string) => boolean;
-  isAdmin: () => boolean;
   isFinance: () => boolean;
 }
 
@@ -73,37 +72,32 @@ export const useAuthStore = create<AuthState>()(
       canApprove: (costCenterId) => {
         const { user } = get();
         if (!user) return false;
-        
-        // Admin e Finance podem aprovar qualquer coisa
-        if (user.roles.includes('admin') || user.roles.includes('finance')) {
+
+        // Finance pode aprovar qualquer solicitação
+        if (user.roles.includes('finance')) {
           return true;
         }
-        
-        // Approver pode aprovar se tem acesso ao centro de custo
-        if (user.roles.includes('approver')) {
-          if (!costCenterId) return true; // Pode aprovar em geral
+
+        // Dono de centro de custos pode aprovar solicitações do seu centro
+        if (user.roles.includes('cost_center_owner')) {
+          if (!costCenterId) return true;
           return user.ccScope.includes(costCenterId);
         }
-        
+
         return false;
       },
-      
+
       canManageCostCenter: (costCenterId) => {
         const { user } = get();
         if (!user) return false;
-        
-        // Admin pode gerenciar qualquer centro de custo
-        if (user.roles.includes('admin')) return true;
-        
-        // Usuário pode gerenciar se está no escopo
+
+        // Finance pode gerenciar qualquer centro de custo
+        if (user.roles.includes('finance')) return true;
+
+        // Dono de centro de custos pode gerenciar se está no escopo
         return user.ccScope.includes(costCenterId);
       },
-      
-      isAdmin: () => {
-        const { user } = get();
-        return user?.roles.includes('admin') ?? false;
-      },
-      
+
       isFinance: () => {
         const { user } = get();
         return user?.roles.includes('finance') ?? false;

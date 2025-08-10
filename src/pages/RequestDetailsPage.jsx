@@ -3,8 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { useRequest } from '@/hooks/useRequests';
 
 const statusLabels = {
-  pending_approval: 'Ag. aprovação',
-  pending_payment: 'Ag. pagamento',
+  pending_owner_approval: 'Ag. aprovação do owner',
+  pending_payment_approval: 'Ag. aprovação de pagamento',
   rejected: 'Rejeitado',
   cancelled: 'Cancelado',
   paid: 'Pagamento realizado',

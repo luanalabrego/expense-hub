@@ -229,13 +229,13 @@ export const createRequest = async (requestData: {
       priority: requestData.priority,
       paymentMethod: requestData.paymentMethod,
       attachments: requestData.attachments || [],
-      status: 'pending_approval' as RequestStatus,
+      status: 'pending_owner_approval' as RequestStatus,
       currentApproverId: null,
       approvalLevel: 0,
       approvalHistory: [],
       statusHistory: [
         {
-          status: 'pending_approval',
+          status: 'pending_owner_approval',
           changedBy: requestData.requesterId,
           changedByName: requestData.requesterName,
           timestamp: new Date(),
@@ -288,9 +288,9 @@ export const submitRequest = async (
     const request = await getRequestById(id);
     const now = new Date();
     await updateDoc(doc(db, COLLECTION_NAME, id), {
-      status: 'pending_approval',
+      status: 'pending_owner_approval',
       statusHistory: [...(request?.statusHistory || []), {
-        status: 'pending_approval',
+        status: 'pending_owner_approval',
         changedBy: userId,
         changedByName: userName,
         timestamp: now,
@@ -325,7 +325,7 @@ export const approveRequest = async (
     };
 
     const statusEntry = {
-      status: 'pending_payment' as RequestStatus,
+      status: 'pending_payment_approval' as RequestStatus,
       changedBy: approverId,
       changedByName: approverName,
       timestamp: now,
@@ -336,7 +336,7 @@ export const approveRequest = async (
 
     // Atualizar solicitação
     batch.update(requestRef, {
-      status: 'pending_payment',
+      status: 'pending_payment_approval',
       approvalLevel: increment(1),
       approvalHistory: [...request.approvalHistory, approvalEntry],
       statusHistory: [...(request.statusHistory || []), statusEntry],
@@ -489,7 +489,7 @@ export const cancelRequest = async (
     });
 
     // Se estava pendente de pagamento, liberar valor comprometido
-    if (request.status === 'pending_payment' && request.costCenterId) {
+    if (request.status === 'pending_payment_approval' && request.costCenterId) {
       const costCenterRef = doc(db, 'cost-centers', request.costCenterId);
       batch.update(costCenterRef, {
         committed: increment(-request.amount),
@@ -580,7 +580,7 @@ export const getPendingRequestsForApprover = async (approverId: string): Promise
     const q = query(
       collection(db, COLLECTION_NAME),
       where('currentApproverId', '==', approverId),
-      where('status', '==', 'pending_approval'),
+      where('status', '==', 'pending_owner_approval'),
       orderBy('createdAt', 'asc')
     );
 

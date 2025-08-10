@@ -49,7 +49,7 @@ export const seedUsers = [
     id: 'approver-001',
     name: 'Carlos Oliveira',
     email: 'carlos.oliveira@empresa.com',
-    role: 'approver',
+    role: 'cost_center_owner',
     active: true,
     phone: '(11) 99999-0003',
     approvalLimit: 100000,
@@ -61,7 +61,7 @@ export const seedUsers = [
     id: 'approver-002',
     name: 'Ana Costa',
     email: 'ana.costa@empresa.com',
-    role: 'approver',
+    role: 'cost_center_owner',
     active: true,
     phone: '(11) 99999-0004',
     approvalLimit: 75000,
@@ -73,7 +73,7 @@ export const seedUsers = [
     id: 'requester-001',
     name: 'Pedro Almeida',
     email: 'pedro.almeida@empresa.com',
-    role: 'requester',
+    role: 'user',
     active: true,
     phone: '(11) 99999-0005',
     approvalLimit: 0,
@@ -85,7 +85,7 @@ export const seedUsers = [
     id: 'requester-002',
     name: 'Lucia Ferreira',
     email: 'lucia.ferreira@empresa.com',
-    role: 'requester',
+    role: 'user',
     active: true,
     phone: '(11) 99999-0006',
     approvalLimit: 0,
@@ -97,7 +97,7 @@ export const seedUsers = [
     id: 'viewer-001',
     name: 'Roberto Lima',
     email: 'roberto.lima@empresa.com',
-    role: 'viewer',
+    role: 'user',
     active: true,
     phone: '(11) 99999-0007',
     approvalLimit: 0,
@@ -681,7 +681,7 @@ export const seedBudgets = [
 
 // Função para gerar solicitações de demonstração
 export const generateSeedRequests = () => {
-  const statuses = ['pending_approval', 'pending_payment', 'paid', 'rejected', 'cancelled'];
+  const statuses = ['pending_owner_approval', 'pending_payment_approval', 'paid', 'rejected', 'cancelled'];
   const priorities = ['low', 'medium', 'high', 'urgent'];
   const paymentMethods = ['transfer', 'check', 'cash', 'card'];
   
@@ -715,7 +715,7 @@ export const generateSeedRequests = () => {
       dueDate: status !== 'draft' ? randomDate(new Date(), new Date(2024, 11, 31)) : null,
       notes: `Observações da solicitação ${i}`,
       attachments: [],
-      approvals: status === 'pending_payment' || status === 'paid' ? [
+      approvals: status === 'pending_payment_approval' || status === 'paid' ? [
         {
           level: 1,
           approverId: 'approver-001',

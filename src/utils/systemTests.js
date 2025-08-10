@@ -366,31 +366,31 @@ export class SystemTester {
   // Teste de segurança básica
   async testBasicSecurity() {
     try {
-      // Verificar se existem usuários admin
-      const adminQuery = query(
+      // Verificar se existem usuários do financeiro
+      const financeQuery = query(
         collection(db, 'users'),
-        where('role', '==', 'admin'),
+        where('role', '==', 'finance'),
         where('active', '==', true)
       );
-      const adminSnapshot = await getDocs(adminQuery);
-      
-      if (adminSnapshot.empty) {
+      const financeSnapshot = await getDocs(financeQuery);
+
+      if (financeSnapshot.empty) {
         this.addResult(
-          'Security - Admin Users',
+          'Security - Finance Users',
           false,
-          'Nenhum usuário admin ativo encontrado'
+          'Nenhum usuário finance ativo encontrado'
         );
       } else {
         this.addResult(
-          'Security - Admin Users',
+          'Security - Finance Users',
           true,
-          `${adminSnapshot.size} usuário(s) admin ativo(s) encontrado(s)`
+          `${financeSnapshot.size} usuário(s) finance ativo(s) encontrado(s)`
         );
       }
-      
+
       // Verificar se existem usuários com papéis válidos
       const usersSnapshot = await getDocs(collection(db, 'users'));
-      const validRoles = ['admin', 'finance', 'approver', 'requester', 'viewer'];
+      const validRoles = ['finance', 'cost_center_owner', 'user'];
       let invalidRoles = 0;
       
       usersSnapshot.forEach(doc => {

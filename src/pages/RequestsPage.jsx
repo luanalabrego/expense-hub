@@ -50,8 +50,8 @@ export const RequestsPage = () => {
 
   const getStatusColor = (status) => {
     const colors = {
-      pending_approval: 'bg-yellow-100 text-yellow-800',
-      pending_payment: 'bg-purple-100 text-purple-800',
+      pending_owner_approval: 'bg-yellow-100 text-yellow-800',
+      pending_payment_approval: 'bg-purple-100 text-purple-800',
       rejected: 'bg-red-100 text-red-800',
       cancelled: 'bg-gray-200 text-gray-800',
       paid: 'bg-green-100 text-green-800',
@@ -61,8 +61,8 @@ export const RequestsPage = () => {
 
   const getStatusLabel = (status) => {
     const labels = {
-      pending_approval: 'Ag. aprovação',
-      pending_payment: 'Ag. pagamento',
+      pending_owner_approval: 'Ag. aprovação do owner',
+      pending_payment_approval: 'Ag. aprovação de pagamento',
       rejected: 'Rejeitado',
       cancelled: 'Cancelado',
       paid: 'Pagamento realizado',
@@ -130,7 +130,7 @@ export const RequestsPage = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Ag. aprovação</p>
-              <p className="text-2xl font-bold">{stats?.byStatus?.pending_approval ?? 0}</p>
+              <p className="text-2xl font-bold">{stats?.byStatus?.pending_owner_approval ?? 0}</p>
             </div>
           </div>
         </div>
@@ -142,7 +142,7 @@ export const RequestsPage = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Ag. pagamento</p>
-              <p className="text-2xl font-bold">{stats?.byStatus?.pending_payment ?? 0}</p>
+              <p className="text-2xl font-bold">{stats?.byStatus?.pending_payment_approval ?? 0}</p>
             </div>
           </div>
         </div>
@@ -183,8 +183,8 @@ export const RequestsPage = () => {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">Todos os status</option>
-              <option value="pending_approval">Ag. aprovação</option>
-              <option value="pending_payment">Ag. pagamento</option>
+              <option value="pending_owner_approval">Ag. aprovação do owner</option>
+              <option value="pending_payment_approval">Ag. aprovação de pagamento</option>
               <option value="rejected">Rejeitado</option>
               <option value="cancelled">Cancelado</option>
               <option value="paid">Pagamento realizado</option>
@@ -319,7 +319,7 @@ export const RequestsPage = () => {
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          {request.status === 'pending_approval' && (
+                          {request.status === 'pending_owner_approval' && (
                             <>
                               <button
                                 onClick={() => alert('Aprovar solicitação (Demo)')}

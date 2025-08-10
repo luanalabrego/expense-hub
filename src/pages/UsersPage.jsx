@@ -16,7 +16,7 @@ export const UsersPage = () => {
     setForm({ name: '', email: '', role: 'user' });
   };
 
-  const roles = ['admin', 'finance', 'user'];
+  const roles = ['finance', 'cost_center_owner', 'user'];
   const pages = Object.keys(permissions);
   const pageLabels = {
     requests: 'Solicitações',

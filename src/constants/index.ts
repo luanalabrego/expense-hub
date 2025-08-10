@@ -7,18 +7,15 @@ export const CURRENCY = 'BRL';
 
 // Papéis do sistema
 export const ROLES = {
-  ADMIN: 'admin',
-  FINANCE: 'finance',
-  APPROVER: 'approver',
-  REQUESTER: 'requester',
-  VIEWER: 'viewer',
-  PROCUREMENT: 'procurement'
+  USER: 'user',
+  COST_CENTER_OWNER: 'cost_center_owner',
+  FINANCE: 'finance'
 } as const;
 
 // Status das solicitações
 export const REQUEST_STATUS = {
-  PENDING_APPROVAL: 'pending_approval',
-  PENDING_PAYMENT: 'pending_payment',
+  PENDING_OWNER_APPROVAL: 'pending_owner_approval',
+  PENDING_PAYMENT_APPROVAL: 'pending_payment_approval',
   REJECTED: 'rejected',
   CANCELLED: 'cancelled',
   PAID: 'paid'
@@ -47,17 +44,14 @@ export const DOCUMENT_TYPES = {
 
 // Labels para exibição
 export const ROLE_LABELS = {
-  [ROLES.ADMIN]: 'Administrador',
-  [ROLES.FINANCE]: 'Financeiro',
-  [ROLES.APPROVER]: 'Aprovador',
-  [ROLES.REQUESTER]: 'Solicitante',
-  [ROLES.VIEWER]: 'Visualizador',
-  [ROLES.PROCUREMENT]: 'Compras'
+  [ROLES.USER]: 'Usuário',
+  [ROLES.COST_CENTER_OWNER]: 'Dono de Centro de Custos',
+  [ROLES.FINANCE]: 'Financeiro'
 } as const;
 
 export const STATUS_LABELS = {
-  [REQUEST_STATUS.PENDING_APPROVAL]: 'Ag. aprovação',
-  [REQUEST_STATUS.PENDING_PAYMENT]: 'Ag. pagamento',
+  [REQUEST_STATUS.PENDING_OWNER_APPROVAL]: 'Ag. aprovação do owner',
+  [REQUEST_STATUS.PENDING_PAYMENT_APPROVAL]: 'Ag. aprovação de pagamento',
   [REQUEST_STATUS.REJECTED]: 'Rejeitada',
   [REQUEST_STATUS.CANCELLED]: 'Cancelada',
   [REQUEST_STATUS.PAID]: 'Pagamento realizado'
@@ -83,8 +77,8 @@ export const DOCUMENT_TYPE_LABELS = {
 
 // Cores para status
 export const STATUS_COLORS = {
-  [REQUEST_STATUS.PENDING_APPROVAL]: 'yellow',
-  [REQUEST_STATUS.PENDING_PAYMENT]: 'blue',
+  [REQUEST_STATUS.PENDING_OWNER_APPROVAL]: 'yellow',
+  [REQUEST_STATUS.PENDING_PAYMENT_APPROVAL]: 'blue',
   [REQUEST_STATUS.REJECTED]: 'red',
   [REQUEST_STATUS.CANCELLED]: 'gray',
   [REQUEST_STATUS.PAID]: 'green'

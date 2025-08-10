@@ -1,6 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { db } from '@/services/firebase';
-import { collection, addDoc, getDocs } from 'firebase/firestore';
+import {
+  collection,
+  addDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  doc,
+} from 'firebase/firestore';
 
 const AuthContext = createContext({});
 
@@ -44,6 +51,18 @@ export const AuthProvider = ({ children }) => {
     setUsers((prev) => [...prev, { id: docRef.id, ...user }]);
   };
 
+  const updateUserRole = async (id, role) => {
+    await updateDoc(doc(db, 'users', id), { role });
+    setUsers((prev) =>
+      prev.map((u) => (u.id === id ? { ...u, role } : u))
+    );
+  };
+
+  const deleteUser = async (id) => {
+    await deleteDoc(doc(db, 'users', id));
+    setUsers((prev) => prev.filter((u) => u.id !== id));
+  };
+
   const [permissions, setPermissions] = useState({
     requests: ['finance', 'cost_center_owner', 'user'],
     vendors: ['finance'],
@@ -63,6 +82,8 @@ export const AuthProvider = ({ children }) => {
     user: mockUser,
     users,
     addUser,
+    updateUserRole,
+    deleteUser,
     permissions,
     updatePermissions,
     hasPageAccess,

@@ -2,14 +2,27 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { RequestsPage } from '../pages/RequestsPage';
 import { VendorsPage } from '../pages/VendorsPage';
+import { UsersPage } from '../pages/UsersPage';
+import { useAuth } from '../contexts/AuthContext';
 
 export const AppRoutes = () => {
+  const { hasPageAccess } = useAuth();
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
         <Route index element={<Navigate to="requests" replace />} />
-        <Route path="requests" element={<RequestsPage />} />
-        <Route path="vendors" element={<VendorsPage />} />
+        <Route
+          path="requests"
+          element={hasPageAccess('requests') ? <RequestsPage /> : <Navigate to="/" replace />}
+        />
+        <Route
+          path="vendors"
+          element={hasPageAccess('vendors') ? <VendorsPage /> : <Navigate to="/" replace />}
+        />
+        <Route
+          path="users"
+          element={hasPageAccess('users') ? <UsersPage /> : <Navigate to="/" replace />}
+        />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

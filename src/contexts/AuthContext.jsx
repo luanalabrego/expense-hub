@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 const AuthContext = createContext({});
 
@@ -25,8 +25,36 @@ export const AuthProvider = ({ children }) => {
     updatedAt: new Date(),
   };
 
+  const [users, setUsers] = useState([
+    { id: '1', name: 'Administrador', email: 'admin@empresa.com', role: 'admin' },
+    { id: '2', name: 'Financeiro', email: 'finance@empresa.com', role: 'finance' },
+    { id: '3', name: 'Usuário Padrão', email: 'user@empresa.com', role: 'user' },
+  ]);
+
+  const addUser = (user) => {
+    setUsers((prev) => [...prev, { id: String(Date.now()), ...user }]);
+  };
+
+  const [permissions, setPermissions] = useState({
+    requests: ['admin', 'finance', 'user'],
+    vendors: ['admin', 'finance'],
+    users: ['admin'],
+  });
+
+  const updatePermissions = (page, roles) => {
+    setPermissions((prev) => ({ ...prev, [page]: roles }));
+  };
+
+  const hasPageAccess = (page) =>
+    permissions[page]?.includes(mockUser.role) || mockUser.role === 'admin';
+
   const authValue = {
     user: mockUser,
+    users,
+    addUser,
+    permissions,
+    updatePermissions,
+    hasPageAccess,
     isAuthenticated: true,
     isLoading: false,
     login: () => {},

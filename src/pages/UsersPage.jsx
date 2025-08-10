@@ -2,7 +2,14 @@ import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const UsersPage = () => {
-  const { users, addUser, permissions, updatePermissions } = useAuth();
+  const {
+    users,
+    addUser,
+    permissions,
+    updatePermissions,
+    updateUserRole,
+    deleteUser,
+  } = useAuth();
   const [form, setForm] = useState({ name: '', email: '', role: 'user' });
 
   const handleChange = (e) => {
@@ -94,6 +101,7 @@ export const UsersPage = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">E-mail</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -101,7 +109,27 @@ export const UsersPage = () => {
                 <tr key={u.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{u.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{u.email}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{u.role}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <select
+                      value={u.role}
+                      onChange={(e) => updateUserRole(u.id, e.target.value)}
+                      className="px-2 py-1 border border-gray-300 rounded-md"
+                    >
+                      {roles.map((r) => (
+                        <option key={r} value={r}>
+                          {r}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <button
+                      onClick={() => deleteUser(u.id)}
+                      className="text-red-600 hover:underline"
+                    >
+                      Excluir
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

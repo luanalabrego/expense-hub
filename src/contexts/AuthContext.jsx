@@ -48,6 +48,7 @@ export const AuthProvider = ({ children }) => {
     requests: ['admin', 'finance', 'user'],
     vendors: ['admin', 'finance'],
     users: ['admin'],
+    'cost-centers': ['admin', 'finance'],
   });
 
   const updatePermissions = (page, roles) => {

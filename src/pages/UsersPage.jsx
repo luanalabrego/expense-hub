@@ -18,7 +18,12 @@ export const UsersPage = () => {
 
   const roles = ['admin', 'finance', 'user'];
   const pages = Object.keys(permissions);
-  const pageLabels = { requests: 'Solicitações', vendors: 'Fornecedores', users: 'Usuários' };
+  const pageLabels = {
+    requests: 'Solicitações',
+    vendors: 'Fornecedores',
+    users: 'Usuários',
+    'cost-centers': 'Centros de Custo',
+  };
 
   const handlePermissionToggle = (page, role) => {
     const roleList = permissions[page] || [];

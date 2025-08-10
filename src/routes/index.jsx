@@ -3,6 +3,7 @@ import { Layout } from '../components/Layout';
 import { RequestsPage } from '../pages/RequestsPage';
 import { VendorsPage } from '../pages/VendorsPage';
 import { UsersPage } from '../pages/UsersPage';
+import { CostCentersPage } from '../pages/CostCentersPage';
 import { useAuth } from '../contexts/AuthContext';
 
 export const AppRoutes = () => {
@@ -18,6 +19,12 @@ export const AppRoutes = () => {
         <Route
           path="vendors"
           element={hasPageAccess('vendors') ? <VendorsPage /> : <Navigate to="/" replace />}
+        />
+        <Route
+          path="cost-centers"
+          element={
+            hasPageAccess('cost-centers') ? <CostCentersPage /> : <Navigate to="/" replace />
+          }
         />
         <Route
           path="users"

@@ -1,12 +1,48 @@
+import { useEffect, useState } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { useAuthStore } from '../stores/auth';
 import { useUIStore } from '../stores/ui';
+import { useUnreadNotificationsCount } from '../hooks/useNotifications';
 import { Button } from './ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
+import { Avatar, AvatarFallback } from './ui/avatar';
+import { Badge } from './ui/badge';
+import { Bell } from 'lucide-react';
 
 export const Header = () => {
   const { user } = useAuthStore();
   const { toggleSidebar, toggleSidebarCollapse } = useUIStore();
+  const { data: unreadCount = 0 } = useUnreadNotificationsCount(user?.id || '');
+
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formattedDate = currentTime.toLocaleDateString('pt-BR');
+  const formattedTime = currentTime.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+
+  const userInitials = user?.name
+    ? user.name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+    : 'U';
 
   const handleLogout = async () => {
     try {
@@ -38,20 +74,44 @@ export const Header = () => {
         </Button>
       </div>
 
-      {/* Informações do usuário */}
+      {/* Data/Hora, Notificações e Perfil do Usuário */}
       <div className="flex items-center space-x-4">
-        <div className="text-sm">
-          <div className="font-medium text-gray-900">{user?.name}</div>
-          <div className="text-gray-500">{user?.email}</div>
+        <div className="text-sm text-gray-600">
+          {formattedDate} {formattedTime}
         </div>
-        
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleLogout}
-        >
-          Sair
-        </Button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative"
+            >
+              <Bell className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <Badge className="absolute -top-1 -right-1 rounded-full px-1 py-0 text-[10px]">
+                  {unreadCount}
+                </Badge>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>Notificações</DropdownMenuLabel>
+            <DropdownMenuItem disabled>Nenhuma notificação</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Avatar className="cursor-pointer">
+              <AvatarFallback>{userInitials}</AvatarFallback>
+            </Avatar>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>{user?.name}</DropdownMenuLabel>
+            <DropdownMenuItem onClick={handleLogout}>Sair</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

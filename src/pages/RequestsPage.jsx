@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Edit, Eye, CheckCircle, XCircle, Clock, DollarSign } from 'lucide-react';
 import { useRequestsList, useRequestStats } from '../hooks/useRequests';
 import { useNotifications } from '../stores/ui';
+import NewRequestModal from '../components/NewRequestModal';
 
 export const RequestsPage = () => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ export const RequestsPage = () => {
   const limit = 10;
   const [orderBy, setOrderBy] = useState('createdAt');
   const [orderDir, setOrderDir] = useState('desc');
+  const [showNewRequest, setShowNewRequest] = useState(false);
   const { error: notifyError } = useNotifications();
   const { data, isLoading, isError, error } = useRequestsList({
     page,
@@ -97,7 +99,7 @@ export const RequestsPage = () => {
           </p>
         </div>
         <button
-          onClick={() => navigate('/requests/new')}
+          onClick={() => setShowNewRequest(true)}
           className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -351,7 +353,7 @@ export const RequestsPage = () => {
           <div className="text-center py-12">
             <p className="text-gray-500">Nenhuma solicitação encontrada</p>
             <button
-              onClick={() => navigate('/requests/new')}
+              onClick={() => setShowNewRequest(true)}
               className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -383,6 +385,7 @@ export const RequestsPage = () => {
           </button>
         </div>
       </div>
+      <NewRequestModal open={showNewRequest} onClose={() => setShowNewRequest(false)} />
     </div>
   );
 };

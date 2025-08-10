@@ -6,7 +6,7 @@ export const CostCentersPage = () => {
   const [costCenters, setCostCenters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({ code: '', name: '', managerId: '', budget: 0 });
+  const [form, setForm] = useState({ name: '', managerId: '', budget: 0 });
   const { users } = useAuth();
 
   const fetchCostCenters = async () => {
@@ -33,13 +33,12 @@ export const CostCentersPage = () => {
     e.preventDefault();
     try {
       await createCostCenter({
-        code: form.code,
         name: form.name,
         managerId: form.managerId,
         budget: Number(form.budget)
       });
       setShowModal(false);
-      setForm({ code: '', name: '', managerId: '', budget: 0 });
+      setForm({ name: '', managerId: '', budget: 0 });
       fetchCostCenters();
     } catch (error) {
       console.error('Erro ao criar centro de custo:', error);
@@ -107,16 +106,6 @@ export const CostCentersPage = () => {
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h2 className="text-lg font-semibold mb-4">Novo Centro de Custo</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Código</label>
-                <input
-                  name="code"
-                  value={form.code}
-                  onChange={handleChange}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Nome</label>
                 <input

@@ -215,9 +215,8 @@ export interface CreateVendorForm {
 }
 
 export interface CreateCostCenterForm {
-  code: string;
   name: string;
-  ownerUserId: string;
+  managerId: string;
 }
 
 export interface CreateCategoryForm {

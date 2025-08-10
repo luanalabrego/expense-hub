@@ -1,18 +1,15 @@
 // Serviços para gestão de centros de custo
-import { 
-  collection, 
-  doc, 
-  getDocs, 
-  getDoc, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
+import {
+  collection,
+  doc,
+  getDocs,
+  getDoc,
+  addDoc,
+  updateDoc,
+  query,
+  where,
   orderBy,
-  limit,
-  startAfter,
-  DocumentSnapshot
+  limit
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { CostCenter, PaginationParams, PaginatedResponse } from '../types';
@@ -110,19 +107,43 @@ export const getCostCenters = async (
   }
 };
 
+// Gerar código sequencial do centro de custo com prefixo CC
+const generateCostCenterCode = async (): Promise<string> => {
+  const q = query(
+    collection(db, COLLECTION_NAME),
+    where('code', '>=', 'CC'),
+    where('code', '<', 'CD'),
+    orderBy('code', 'desc'),
+    limit(1)
+  );
+
+  const snapshot = await getDocs(q);
+  let nextNumber = 1;
+
+  if (!snapshot.empty) {
+    const lastCode = snapshot.docs[0].data().code as string;
+    const match = lastCode.match(/CC(\d+)/);
+    if (match) {
+      nextNumber = parseInt(match[1], 10) + 1;
+    }
+  }
+
+  return `CC${String(nextNumber).padStart(3, '0')}`;
+};
+
 // Criar centro de custo
 export const createCostCenter = async (ccData: {
   name: string;
-  code: string;
   description?: string;
   managerId: string;
   parentId?: string;
   budget?: number;
 }): Promise<CostCenter> => {
   try {
+    const code = await generateCostCenterCode();
     const ccDoc = {
       name: ccData.name,
-      code: ccData.code,
+      code,
       description: ccData.description || '',
       managerId: ccData.managerId,
       parentId: ccData.parentId || null,

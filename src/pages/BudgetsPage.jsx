@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveVendors } from '@/hooks/useVendors';
+import { useActiveCostCenters } from '@/hooks/useCostCenters';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 // Componente da página de Orçamento
 export const BudgetsPage = () => {
@@ -9,7 +17,9 @@ export const BudgetsPage = () => {
   const canEdit =
     user.role === 'cost_center_owner' || user.role === 'finance';
   const { data: vendorsData } = useActiveVendors();
+  const { data: costCentersData } = useActiveCostCenters();
   const vendors = vendorsData || [];
+  const costCenters = costCentersData || [];
 
   const emptyMonths = {
     1: 0,
@@ -28,6 +38,7 @@ export const BudgetsPage = () => {
 
   const [form, setForm] = useState({
     vendorId: '',
+    costCenterId: '',
     description: '',
     nature: 'fixo',
     costType: 'OPEX',
@@ -37,6 +48,7 @@ export const BudgetsPage = () => {
 
   const [items, setItems] = useState([]);
   const [editingIndex, setEditingIndex] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -53,6 +65,7 @@ export const BudgetsPage = () => {
   const resetForm = () => {
     setForm({
       vendorId: '',
+      costCenterId: '',
       description: '',
       nature: 'fixo',
       costType: 'OPEX',
@@ -72,11 +85,13 @@ export const BudgetsPage = () => {
       setItems((prev) => [...prev, form]);
     }
     resetForm();
+    setIsModalOpen(false);
   };
 
   const handleEdit = (index) => {
     setForm(items[index]);
     setEditingIndex(index);
+    setIsModalOpen(true);
   };
 
   const handleDelete = (index) => {
@@ -84,6 +99,7 @@ export const BudgetsPage = () => {
   };
 
   const getVendorName = (id) => vendors.find((v) => v.id === id)?.name || '';
+  const getCostCenterName = (id) => costCenters.find((c) => c.id === id)?.name || '';
 
   return (
     <div className="space-y-6">
@@ -92,11 +108,33 @@ export const BudgetsPage = () => {
           <h1 className="text-3xl font-bold tracking-tight">Orçamento</h1>
           <p className="text-muted-foreground">Previsão de gastos por fornecedor e mês</p>
         </div>
+        {canEdit && (
+          <button
+            onClick={() => {
+              resetForm();
+              setIsModalOpen(true);
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Registrar novo orçamento
+          </button>
+        )}
       </div>
-
-      {canEdit && (
-        <div className="bg-white p-6 rounded-lg border">
-          <h2 className="text-lg font-semibold mb-4">Adicionar linha</h2>
+      <Dialog
+        open={isModalOpen}
+        onOpenChange={(o) => {
+          if (!o) {
+            setIsModalOpen(false);
+            resetForm();
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingIndex !== null ? 'Editar orçamento' : 'Novo orçamento'}
+            </DialogTitle>
+          </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -110,7 +148,9 @@ export const BudgetsPage = () => {
                 >
                   <option value="">Selecione</option>
                   {vendors.map((v) => (
-                    <option key={v.id} value={v.id}>{v.name}</option>
+                    <option key={v.id} value={v.id}>
+                      {v.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -124,6 +164,23 @@ export const BudgetsPage = () => {
                   required
                 />
               </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Centro de Custo</label>
+              <select
+                name="costCenterId"
+                value={form.costCenterId}
+                onChange={handleChange}
+                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md"
+                required
+              >
+                <option value="">Selecione</option>
+                {costCenters.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
@@ -177,33 +234,34 @@ export const BudgetsPage = () => {
                 </div>
               ))}
             </div>
-            <div>
+            <DialogFooter>
+              <button
+                type="button"
+                onClick={() => {
+                  resetForm();
+                  setIsModalOpen(false);
+                }}
+                className="px-4 py-2 bg-gray-200 rounded-md"
+              >
+                Cancelar
+              </button>
               <button
                 type="submit"
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
                 {editingIndex !== null ? 'Atualizar' : 'Adicionar'}
               </button>
-              {editingIndex !== null && (
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="ml-2 px-4 py-2 bg-gray-200 rounded-md"
-                >
-                  Cancelar
-                </button>
-              )}
-            </div>
+            </DialogFooter>
           </form>
-        </div>
-      )}
-
+        </DialogContent>
+      </Dialog>
       <div className="bg-white p-6 rounded-lg border overflow-auto">
         <table className="min-w-full text-sm">
           <thead>
             <tr>
               <th className="px-2 py-2 text-left">Fornecedor</th>
               <th className="px-2 py-2 text-left">Descrição</th>
+              <th className="px-2 py-2 text-left">Centro de Custo</th>
               <th className="px-2 py-2 text-left">Natureza</th>
               <th className="px-2 py-2 text-left">Tipo</th>
               <th className="px-2 py-2 text-left">Ano</th>
@@ -220,6 +278,7 @@ export const BudgetsPage = () => {
               <tr key={idx} className="border-t">
                 <td className="px-2 py-2">{getVendorName(item.vendorId)}</td>
                 <td className="px-2 py-2">{item.description}</td>
+                <td className="px-2 py-2">{getCostCenterName(item.costCenterId)}</td>
                 <td className="px-2 py-2 capitalize">{item.nature}</td>
                 <td className="px-2 py-2">{item.costType}</td>
                 <td className="px-2 py-2">{item.year}</td>
@@ -252,7 +311,7 @@ export const BudgetsPage = () => {
             {items.length === 0 && (
               <tr>
                 <td
-                  colSpan={canEdit ? 17 : 16}
+                  colSpan={canEdit ? 18 : 17}
                   className="px-2 py-4 text-center text-gray-500"
                 >
                   Nenhuma linha adicionada

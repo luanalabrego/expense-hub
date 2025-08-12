@@ -97,6 +97,7 @@ export interface PaymentRequest {
   categoryId: string;
   vendorId: string;
   vendorName?: string;
+  invoiceNumber?: string;
   requestNumber?: string;
   dueDate: Date;
   costType?: CostType;
@@ -114,8 +115,9 @@ export interface PaymentRequest {
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
-  
+
   // Anexos e pagamento
+  attachments?: string[];
   attachmentsCount: number;
   hasInvoice: boolean;
   paymentDate?: Date;
@@ -205,6 +207,7 @@ export interface CreateRequestForm {
   categoryId: string;
   vendorId: string;
   vendorName?: string;
+  invoiceNumber?: string;
   costType?: CostType;
   invoiceDate?: string;
   competenceDate?: string;

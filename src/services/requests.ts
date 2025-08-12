@@ -188,6 +188,7 @@ export const getRequests = async (
 export const createRequest = async (requestData: {
   description: string;
   amount: number;
+  invoiceNumber?: string;
   vendorId: string;
   vendorName: string;
   costCenterId: string;
@@ -213,6 +214,7 @@ export const createRequest = async (requestData: {
       requestNumber,
       description: requestData.description,
       amount: requestData.amount,
+      invoiceNumber: requestData.invoiceNumber || null,
       vendorId: requestData.vendorId,
       vendorName: requestData.vendorName,
       costCenterId: requestData.costCenterId,

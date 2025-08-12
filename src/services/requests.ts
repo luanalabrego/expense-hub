@@ -17,6 +17,7 @@ import {
   increment
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { getCostCenterById } from './costCenters';
 import type { PaymentRequest, PaginationParams, PaginatedResponse, RequestStatus } from '../types';
 
 const COLLECTION_NAME = 'payment-requests';
@@ -208,47 +209,49 @@ export const createRequest = async (requestData: {
 }): Promise<PaymentRequest> => {
   try {
     // Gerar número da solicitação
-    const requestNumber = await generateRequestNumber();
+      const requestNumber = await generateRequestNumber();
+      const costCenter = await getCostCenterById(requestData.costCenterId);
+      const currentApproverId = costCenter?.managerId || null;
 
-    const requestDoc = {
-      requestNumber,
-      description: requestData.description,
-      amount: requestData.amount,
-      invoiceNumber: requestData.invoiceNumber || null,
-      vendorId: requestData.vendorId,
-      vendorName: requestData.vendorName,
-      costCenterId: requestData.costCenterId,
-      categoryId: requestData.categoryId,
-      costType: requestData.costType || null,
-      invoiceDate: requestData.invoiceDate || null,
-      competenceDate: requestData.competenceDate || null,
-      dueDate: requestData.dueDate || null,
-      notes: requestData.notes || '',
-      isExtraordinary: requestData.isExtraordinary || false,
-      extraordinaryReason: requestData.extraordinaryReason || '',
-      requesterId: requestData.requesterId,
-      requesterName: requestData.requesterName,
-      priority: requestData.priority,
-      paymentMethod: requestData.paymentMethod,
-      attachments: requestData.attachments || [],
-      status: 'pending_owner_approval' as RequestStatus,
-      currentApproverId: null,
-      approvalLevel: 0,
-      approvalHistory: [],
-      statusHistory: [
-        {
-          status: 'pending_owner_approval',
-          changedBy: requestData.requesterId,
-          changedByName: requestData.requesterName,
-          timestamp: new Date(),
-        },
-      ],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      approvedAt: null,
-      rejectedAt: null,
-      paidAt: null,
-    };
+      const requestDoc = {
+        requestNumber,
+        description: requestData.description,
+        amount: requestData.amount,
+        invoiceNumber: requestData.invoiceNumber || null,
+        vendorId: requestData.vendorId,
+        vendorName: requestData.vendorName,
+        costCenterId: requestData.costCenterId,
+        categoryId: requestData.categoryId,
+        costType: requestData.costType || null,
+        invoiceDate: requestData.invoiceDate || null,
+        competenceDate: requestData.competenceDate || null,
+        dueDate: requestData.dueDate || null,
+        notes: requestData.notes || '',
+        isExtraordinary: requestData.isExtraordinary || false,
+        extraordinaryReason: requestData.extraordinaryReason || '',
+        requesterId: requestData.requesterId,
+        requesterName: requestData.requesterName,
+        priority: requestData.priority,
+        paymentMethod: requestData.paymentMethod,
+        attachments: requestData.attachments || [],
+        status: 'pending_owner_approval' as RequestStatus,
+        currentApproverId,
+        approvalLevel: 0,
+        approvalHistory: [],
+        statusHistory: [
+          {
+            status: 'pending_owner_approval',
+            changedBy: requestData.requesterId,
+            changedByName: requestData.requesterName,
+            timestamp: new Date(),
+          },
+        ],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        approvedAt: null,
+        rejectedAt: null,
+        paidAt: null,
+      };
 
     const docRef = await addDoc(collection(db, COLLECTION_NAME), requestDoc);
 
@@ -281,29 +284,34 @@ export const updateRequest = async (
 };
 
 // Submeter solicitação para aprovação
-export const submitRequest = async (
-  id: string,
-  userId: string,
-  userName: string
-): Promise<void> => {
-  try {
-    const request = await getRequestById(id);
-    const now = new Date();
-    await updateDoc(doc(db, COLLECTION_NAME, id), {
-      status: 'pending_owner_approval',
-      statusHistory: [...(request?.statusHistory || []), {
+  export const submitRequest = async (
+    id: string,
+    userId: string,
+    userName: string
+  ): Promise<void> => {
+    try {
+      const request = await getRequestById(id);
+      const now = new Date();
+      const costCenter = request?.costCenterId
+        ? await getCostCenterById(request.costCenterId)
+        : null;
+      const currentApproverId = costCenter?.managerId || null;
+      await updateDoc(doc(db, COLLECTION_NAME, id), {
         status: 'pending_owner_approval',
-        changedBy: userId,
-        changedByName: userName,
-        timestamp: now,
-      }],
-      updatedAt: now
-    });
-  } catch (error) {
-    console.error('Erro ao submeter solicitação:', error);
-    throw error;
-  }
-};
+        currentApproverId,
+        statusHistory: [...(request?.statusHistory || []), {
+          status: 'pending_owner_approval',
+          changedBy: userId,
+          changedByName: userName,
+          timestamp: now,
+        }],
+        updatedAt: now
+      });
+    } catch (error) {
+      console.error('Erro ao submeter solicitação:', error);
+      throw error;
+    }
+  };
 
 // Aprovar solicitação
 export const approveRequest = async (

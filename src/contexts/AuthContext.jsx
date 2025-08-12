@@ -72,6 +72,7 @@ export const AuthProvider = ({ children }) => {
     'cost-centers': ['finance', 'cost_center_owner'],
     financialApprovals: ['finance'],
     payments: ['finance'],
+    reports: ['finance'],
   });
 
   const updatePermissions = (page, roles) => {

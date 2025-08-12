@@ -30,6 +30,7 @@ export const UsersPage = () => {
     vendors: 'Fornecedores',
     users: 'Usuários',
     'cost-centers': 'Centros de Custo',
+    reports: 'Relatórios',
   };
 
   const handlePermissionToggle = (page, role) => {

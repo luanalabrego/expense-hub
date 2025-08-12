@@ -192,6 +192,7 @@ export const ROUTES = {
   BUDGETS: '/budgets',
   POLICIES: '/policies',
   DOCUMENTS: '/documents',
+  REPORTS: '/reports',
   ADMIN: '/admin',
   AUDIT: '/admin/audit',
   PROFILE: '/profile',

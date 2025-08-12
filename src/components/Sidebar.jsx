@@ -12,6 +12,7 @@ const navigation = [
   { name: 'Aprov. Owner', href: '/owner-approvals', icon: '🧾', page: 'ownerApprovals' },
   { name: 'Aprov. Financeira', href: '/financial-approvals', icon: '💸', page: 'financialApprovals' },
   { name: 'Pagamentos', href: '/payments', icon: '💳', page: 'payments' },
+  { name: 'Relatórios', href: '/reports', icon: '📊', page: 'reports' },
   { name: 'Usuários', href: '/users', icon: '👥', page: 'users' },
 ];
 

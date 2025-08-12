@@ -11,6 +11,7 @@ const navigation = [
   { name: 'Aprovação Forn.', href: '/vendor-approvals', icon: '✅', page: 'vendorApprovals' },
   { name: 'Aprov. Financeira', href: '/financial-approvals', icon: '💸', page: 'financialApprovals' },
   { name: 'Pagamentos', href: '/payments', icon: '💳', page: 'payments' },
+  { name: 'Relatórios', href: '/reports', icon: '📊', page: 'reports' },
   { name: 'Usuários', href: '/users', icon: '👥', page: 'users' },
 ];
 

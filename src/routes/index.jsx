@@ -9,6 +9,7 @@ import { UsersPage } from '../pages/UsersPage';
 import { CostCentersPage } from '../pages/CostCentersPage';
 import { FinancialApprovalsPage } from '../pages/FinancialApprovalsPage';
 import { PaymentManagementPage } from '../pages/PaymentManagementPage';
+import { ReportsPage } from '../pages/ReportsPage';
 import { useAuth } from '../contexts/AuthContext';
 
 export const AppRoutes = () => {
@@ -64,6 +65,16 @@ export const AppRoutes = () => {
           element={
             hasPageAccess('payments') ? (
               <PaymentManagementPage />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route
+          path="reports"
+          element={
+            hasPageAccess('reports') ? (
+              <ReportsPage />
             ) : (
               <Navigate to="/" replace />
             )

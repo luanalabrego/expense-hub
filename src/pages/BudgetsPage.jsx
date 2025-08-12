@@ -5,7 +5,9 @@ import { useActiveVendors } from '@/hooks/useVendors';
 // Componente da página de Orçamento
 export const BudgetsPage = () => {
   const { user } = useAuth();
-  const canEdit = user.role === 'cost_center_owner';
+  // Permite que usuários com papel "finance" também editem o orçamento
+  const canEdit =
+    user.role === 'cost_center_owner' || user.role === 'finance';
   const { data: vendorsData } = useActiveVendors();
   const vendors = vendorsData || [];
 

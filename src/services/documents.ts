@@ -15,10 +15,10 @@ import {
   Timestamp,
   writeBatch
 } from 'firebase/firestore';
-import { 
-  ref, 
-  uploadBytes, 
-  getDownloadURL, 
+import {
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
   deleteObject,
   getMetadata,
   listAll
@@ -254,33 +254,28 @@ export const uploadDocument = async (
     const storagePath = `documents/${category}/${fileName}`;
     const storageRef = ref(storage, storagePath);
 
-    // Upload do arquivo
-    const uploadTask = uploadBytes(storageRef, file);
-    
-    // Simular progresso (Firebase não fornece progresso real para uploadBytes)
-    if (onProgress) {
-      const progressInterval = setInterval(() => {
-        const fakeProgress = Math.min(90, Math.random() * 100);
-        onProgress({
-          loaded: (fakeProgress / 100) * file.size,
-          total: file.size,
-          percentage: fakeProgress,
-        });
-      }, 100);
+    // Upload do arquivo utilizando SDK do Firebase
+    const uploadTask = uploadBytesResumable(storageRef, file);
 
-      uploadTask.finally(() => {
-        clearInterval(progressInterval);
-        onProgress({
-          loaded: file.size,
-          total: file.size,
-          percentage: 100,
-        });
-      });
-    }
+    await new Promise<void>((resolve, reject) => {
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          if (onProgress) {
+            onProgress({
+              loaded: snapshot.bytesTransferred,
+              total: snapshot.totalBytes,
+              percentage: (snapshot.bytesTransferred / snapshot.totalBytes) * 100,
+            });
+          }
+        },
+        (error) => reject(error),
+        () => resolve()
+      );
+    });
 
-    const uploadResult = await uploadTask;
-    const downloadURL = await getDownloadURL(uploadResult.ref);
-    const metadata = await getMetadata(uploadResult.ref);
+    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+    const metadata = await getMetadata(uploadTask.snapshot.ref);
 
     // Criar documento no Firestore
     const documentData = {
@@ -604,7 +599,7 @@ export const createDocumentVersion = async (
     const storagePath = `documents/${originalDoc.category}/versions/${fileName}`;
     const storageRef = ref(storage, storagePath);
 
-    const uploadResult = await uploadBytes(storageRef, file);
+    const uploadResult = await uploadBytesResumable(storageRef, file);
     const downloadURL = await getDownloadURL(uploadResult.ref);
 
     // Criar registro da versão

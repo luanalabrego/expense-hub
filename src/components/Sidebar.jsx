@@ -13,6 +13,7 @@ const navigation = [
   { name: 'Aprov. Financeira', href: '/financial-approvals', icon: '💸', page: 'financialApprovals' },
   { name: 'Pagamentos', href: '/payments', icon: '💳', page: 'payments' },
   { name: 'Relatórios', href: '/reports', icon: '📊', page: 'reports' },
+  { name: 'Orçamento', href: '/budgets', icon: '🗓️', page: 'budgets' },
   { name: 'Usuários', href: '/users', icon: '👥', page: 'users' },
 ];
 

@@ -9,6 +9,8 @@ import { useActiveVendors } from '@/hooks/useVendors';
 import { useActiveCostCenters } from '@/hooks/useCostCenters';
 import { useCreateRequest } from '@/hooks/useRequests';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUploadDocument } from '@/hooks/useDocuments';
+import * as requestsService from '@/services/requests';
 
 export const NewRequestModal = ({ open, onClose }) => {
   const { user } = useAuth();
@@ -26,6 +28,10 @@ export const NewRequestModal = ({ open, onClose }) => {
   const [dueDate, setDueDate] = useState('');
   const [isExtraordinary, setIsExtraordinary] = useState(false);
   const [reason, setReason] = useState('');
+  const [invoiceNumber, setInvoiceNumber] = useState('');
+  const [amount, setAmount] = useState('');
+  const [boletoFile, setBoletoFile] = useState(null);
+  const [nfFile, setNfFile] = useState(null);
 
   const resetForm = () => {
     setExpenseName('');
@@ -38,6 +44,10 @@ export const NewRequestModal = ({ open, onClose }) => {
     setDueDate('');
     setIsExtraordinary(false);
     setReason('');
+    setInvoiceNumber('');
+    setAmount('');
+    setBoletoFile(null);
+    setNfFile(null);
   };
 
   const selectedVendor = vendors.find((v) => v.id === vendorId);
@@ -51,32 +61,62 @@ export const NewRequestModal = ({ open, onClose }) => {
     }
   }, [selectedVendor, invoiceDate, isExtraordinary]);
 
-  const handleSubmit = (e) => {
+  const uploadDocument = useUploadDocument();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    createRequest.mutate({
-      description: expenseName,
-      amount: 0,
-      vendorId: isExtraordinary ? '' : vendorId,
-      vendorName: isExtraordinary ? vendorName : selectedVendor?.name || '',
-      costCenterId,
-      categoryId: costType,
-      costType,
-      invoiceDate: invoiceDate ? new Date(invoiceDate) : undefined,
-      competenceDate: competenceDate ? new Date(`${competenceDate}-01`) : undefined,
-      dueDate: dueDate ? new Date(dueDate) : undefined,
-      notes: isExtraordinary ? reason : '',
-      isExtraordinary,
-      extraordinaryReason: isExtraordinary ? reason : '',
-      requesterId: user.id,
-      requesterName: user.name,
-      priority: 'low',
-      paymentMethod: 'transfer',
-    }, {
-      onSuccess: () => {
-        resetForm();
-        onClose();
+    try {
+      const newRequest = await createRequest.mutateAsync({
+        description: expenseName,
+        amount: parseFloat(amount) || 0,
+        invoiceNumber,
+        vendorId: isExtraordinary ? '' : vendorId,
+        vendorName: isExtraordinary ? vendorName : selectedVendor?.name || '',
+        costCenterId,
+        categoryId: costType,
+        costType,
+        invoiceDate: invoiceDate ? new Date(invoiceDate) : undefined,
+        competenceDate: competenceDate ? new Date(`${competenceDate}-01`) : undefined,
+        dueDate: dueDate ? new Date(dueDate) : undefined,
+        notes: isExtraordinary ? reason : '',
+        isExtraordinary,
+        extraordinaryReason: isExtraordinary ? reason : '',
+        requesterId: user.id,
+        requesterName: user.name,
+        priority: 'low',
+        paymentMethod: 'transfer',
+      });
+
+      const attachments = [];
+      if (boletoFile) {
+        const doc = await uploadDocument.mutateAsync({
+          file: boletoFile,
+          category: 'boleto',
+          relatedEntityType: 'request',
+          relatedEntityId: newRequest.id,
+          userId: user.id,
+        });
+        attachments.push(doc.id);
       }
-    });
+      if (nfFile) {
+        const doc = await uploadDocument.mutateAsync({
+          file: nfFile,
+          category: 'nf',
+          relatedEntityType: 'request',
+          relatedEntityId: newRequest.id,
+          userId: user.id,
+        });
+        attachments.push(doc.id);
+      }
+      if (attachments.length > 0) {
+        await requestsService.updateRequest(newRequest.id, { attachments });
+      }
+
+      resetForm();
+      onClose();
+    } catch (err) {
+      console.error('Erro ao criar solicitação:', err);
+    }
   };
 
   return (
@@ -121,6 +161,14 @@ export const NewRequestModal = ({ open, onClose }) => {
             </div>
           )}
           <div>
+            <label className="block text-sm font-medium mb-1">Número da NF</label>
+            <Input value={invoiceNumber} onChange={(e) => setInvoiceNumber(e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Valor bruto</label>
+            <Input type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required />
+          </div>
+          <div>
             <label className="block text-sm font-medium mb-1">Tipo de custo</label>
             <Select value={costType} onValueChange={setCostType}>
               <SelectTrigger className="w-full">
@@ -157,6 +205,14 @@ export const NewRequestModal = ({ open, onClose }) => {
           <div>
             <label className="block text-sm font-medium mb-1">Data de vencimento</label>
             <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} readOnly={!isExtraordinary} required />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Boleto</label>
+            <Input type="file" onChange={(e) => setBoletoFile(e.target.files?.[0] || null)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">NF</label>
+            <Input type="file" onChange={(e) => setNfFile(e.target.files?.[0] || null)} />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => { resetForm(); onClose(); }}>

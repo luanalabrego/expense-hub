@@ -8,6 +8,7 @@ import { VendorDossierPage } from '../pages/VendorDossierPage';
 import { UsersPage } from '../pages/UsersPage';
 import { CostCentersPage } from '../pages/CostCentersPage';
 import { FinancialApprovalsPage } from '../pages/FinancialApprovalsPage';
+import { OwnerApprovalsPage } from '../pages/OwnerApprovalsPage';
 import { PaymentManagementPage } from '../pages/PaymentManagementPage';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -44,6 +45,16 @@ export const AppRoutes = () => {
           element={
             hasPageAccess('vendorApprovals') ? (
               <VendorApprovalsPage />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route
+          path="owner-approvals"
+          element={
+            hasPageAccess('ownerApprovals') ? (
+              <OwnerApprovalsPage />
             ) : (
               <Navigate to="/" replace />
             )

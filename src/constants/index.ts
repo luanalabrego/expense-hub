@@ -9,12 +9,20 @@ export const CURRENCY = 'BRL';
 export const ROLES = {
   USER: 'user',
   COST_CENTER_OWNER: 'cost_center_owner',
-  FINANCE: 'finance'
+  FINANCE: 'finance',
+  FPA: 'fpa',
+  DIRECTOR: 'director',
+  CFO: 'cfo',
+  CEO: 'ceo'
 } as const;
 
 // Status das solicitações
 export const REQUEST_STATUS = {
   PENDING_OWNER_APPROVAL: 'pending_owner_approval',
+  PENDING_FPA_APPROVAL: 'pending_fpa_approval',
+  PENDING_DIRECTOR_APPROVAL: 'pending_director_approval',
+  PENDING_CFO_APPROVAL: 'pending_cfo_approval',
+  PENDING_CEO_APPROVAL: 'pending_ceo_approval',
   PENDING_PAYMENT_APPROVAL: 'pending_payment_approval',
   REJECTED: 'rejected',
   CANCELLED: 'cancelled',
@@ -46,11 +54,19 @@ export const DOCUMENT_TYPES = {
 export const ROLE_LABELS = {
   [ROLES.USER]: 'Usuário',
   [ROLES.COST_CENTER_OWNER]: 'Dono de Centro de Custos',
-  [ROLES.FINANCE]: 'Financeiro'
+  [ROLES.FINANCE]: 'Financeiro',
+  [ROLES.FPA]: 'FP&A',
+  [ROLES.DIRECTOR]: 'Diretor',
+  [ROLES.CFO]: 'CFO',
+  [ROLES.CEO]: 'CEO'
 } as const;
 
 export const STATUS_LABELS = {
   [REQUEST_STATUS.PENDING_OWNER_APPROVAL]: 'Ag. aprovação do owner',
+  [REQUEST_STATUS.PENDING_FPA_APPROVAL]: 'Ag. aprovação FP&A',
+  [REQUEST_STATUS.PENDING_DIRECTOR_APPROVAL]: 'Ag. aprovação Diretor',
+  [REQUEST_STATUS.PENDING_CFO_APPROVAL]: 'Ag. aprovação CFO',
+  [REQUEST_STATUS.PENDING_CEO_APPROVAL]: 'Ag. aprovação CEO',
   [REQUEST_STATUS.PENDING_PAYMENT_APPROVAL]: 'Ag. aprovação de pagamento',
   [REQUEST_STATUS.REJECTED]: 'Rejeitada',
   [REQUEST_STATUS.CANCELLED]: 'Cancelada',
@@ -78,6 +94,10 @@ export const DOCUMENT_TYPE_LABELS = {
 // Cores para status
 export const STATUS_COLORS = {
   [REQUEST_STATUS.PENDING_OWNER_APPROVAL]: 'yellow',
+  [REQUEST_STATUS.PENDING_FPA_APPROVAL]: 'purple',
+  [REQUEST_STATUS.PENDING_DIRECTOR_APPROVAL]: 'indigo',
+  [REQUEST_STATUS.PENDING_CFO_APPROVAL]: 'pink',
+  [REQUEST_STATUS.PENDING_CEO_APPROVAL]: 'orange',
   [REQUEST_STATUS.PENDING_PAYMENT_APPROVAL]: 'blue',
   [REQUEST_STATUS.REJECTED]: 'red',
   [REQUEST_STATUS.CANCELLED]: 'gray',

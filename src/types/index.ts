@@ -79,6 +79,8 @@ export interface Vendor {
   status: 'pending' | 'needsInfo' | 'rejected' | 'active' | 'inactive';
   createdAt: Date;
   updatedAt: Date;
+  sapVendorId?: string;
+  pipefyCardId?: string;
 }
 
 export interface Contact {

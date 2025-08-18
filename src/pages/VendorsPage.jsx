@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Search, MoreHorizontal, Edit, UserX, UserCheck, Shield, ShieldOff, Star } from 'lucide-react';
 import { useVendors, useDeactivateVendor, useReactivateVendor, useBlockVendor, useUnblockVendor, useCreateVendor } from '@/hooks/useVendors';
+import { checkVendorCompliance } from '@/services/vendorCompliance';
 import { formatCNPJ, formatPhone, formatDate } from '@/utils';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
@@ -280,6 +281,8 @@ const NewVendorDialog = ({ open, onOpenChange }) => {
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
   const [contractFile, setContractFile] = useState(null);
+  const [compliance, setCompliance] = useState(null);
+  const [checkingCompliance, setCheckingCompliance] = useState(false);
 
   const addTag = () => {
     const tag = tagInput.trim();
@@ -303,10 +306,19 @@ const NewVendorDialog = ({ open, onOpenChange }) => {
         reader.readAsDataURL(contractFile);
       });
     }
+    const taxIdClean = values.taxId.replace(/\D/g, '');
+    setCheckingCompliance(true);
+    const result = await checkVendorCompliance(taxIdClean);
+    setCompliance(result);
+    setCheckingCompliance(false);
+    if (!result.sefazActive || result.serasaBlocked) {
+      alert('Fornecedor não passou nas verificações de compliance.');
+      return;
+    }
 
     await createVendor.mutateAsync({
       name: values.name,
-      taxId: values.taxId.replace(/\D/g, ''),
+      taxId: taxIdClean,
       email: values.email || '',
       phone: values.phone ? values.phone.replace(/\D/g, '') : '',
       rating: values.rating,
@@ -317,11 +329,13 @@ const NewVendorDialog = ({ open, onOpenChange }) => {
       observations: values.observations,
       status: 'pending',
       blocked: false,
+      compliance: { ...result, checkedAt: new Date() },
     });
     form.reset();
     setTags([]);
     setTagInput('');
     setContractFile(null);
+    setCompliance(null);
     onOpenChange(false);
   };
 
@@ -508,11 +522,26 @@ const NewVendorDialog = ({ open, onOpenChange }) => {
               </FormItem>
             )}
           />
+          {checkingCompliance && (
+            <div className="text-sm text-gray-500">Verificando compliance...</div>
+          )}
+          {compliance && (
+            <div className="text-sm border rounded-md p-2 space-y-1">
+              <div>SEFAZ: {compliance.sefazActive ? 'Ativo' : 'Inativo'}</div>
+              <div>
+                SERASA Score: {compliance.serasaScore}
+                {compliance.serasaBlocked && ' (Bloqueado)'}
+              </div>
+            </div>
+          )}
           <DialogFooter>
             <button
               type="button"
               className="px-4 py-2 border rounded-md"
-              onClick={() => onOpenChange(false)}
+              onClick={() => {
+                setCompliance(null);
+                onOpenChange(false);
+              }}
             >
               Cancelar
             </button>

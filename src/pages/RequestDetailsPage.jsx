@@ -19,6 +19,8 @@ const fiscalStatusLabels = {
   pending: 'Pendente',
   approved: 'Aprovado',
   pending_adjustment: 'Pendente de ajuste',
+};
+
 const contractStatusLabels = {
   pending: 'Ag. jurídico',
   approved: 'Contrato aprovado',

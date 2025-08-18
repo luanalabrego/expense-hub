@@ -160,6 +160,14 @@ export interface PaymentRequest {
   attachmentsCount: number;
   hasInvoice: boolean;
   paymentDate?: Date;
+  paidAt?: Date | null;
+  paymentReference?: string;
+  paymentNotes?: string;
+  paidBy?: string;
+  paidByName?: string;
+  paymentProtocol?: string;
+  paymentReceiptUrl?: string;
+  erpMiroId?: string;
   contractDocumentId?: string;
   contractStatus?: 'pending' | 'approved' | 'adjustments_requested';
   contractNotes?: string;

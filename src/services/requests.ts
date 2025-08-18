@@ -219,6 +219,7 @@ export const createRequest = async (requestData: {
   dueDate?: Date;
   notes?: string;
   isExtraordinary?: boolean;
+  isRecurring?: boolean;
   extraordinaryReason?: string;
   requesterId: string;
   requesterName: string;
@@ -274,6 +275,7 @@ export const createRequest = async (requestData: {
         dueDate: requestData.dueDate || null,
         notes: requestData.notes || '',
         isExtraordinary: requestData.isExtraordinary || false,
+        isRecurring: requestData.isRecurring || false,
         extraordinaryReason: requestData.extraordinaryReason || '',
         requesterId: requestData.requesterId,
         requesterName: requestData.requesterName,

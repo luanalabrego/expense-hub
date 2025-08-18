@@ -63,6 +63,8 @@ export interface Vendor {
   contacts: Contact[];
   categories: string[];
   paymentTerms?: string;
+  serviceType?: string;
+  scope?: string;
   hasContract: boolean;
   contractUrl?: string;
   observations?: string;
@@ -129,6 +131,7 @@ export interface PaymentRequest {
   invoiceDate?: Date | null;
   competenceDate?: Date | null;
   isExtraordinary?: boolean;
+  isRecurring?: boolean;
   extraordinaryReason?: string;
   purchaseType?: PurchaseType;
   serviceType?: string;
@@ -264,6 +267,7 @@ export interface CreateRequestForm {
   competenceDate?: string;
   dueDate: string;
   isExtraordinary?: boolean;
+  isRecurring?: boolean;
   extraordinaryReason?: string;
   serviceType?: string;
   scope?: string;
@@ -275,6 +279,8 @@ export interface CreateVendorForm {
   taxId: string;
   email?: string;
   phone?: string;
+  serviceType?: string;
+  scope?: string;
   tags: string[];
 }
 

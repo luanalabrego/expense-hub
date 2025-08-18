@@ -38,8 +38,8 @@ export const NewRequestModal = ({ open, onClose }) => {
   const [amount, setAmount] = useState('');
   const [boletoFile, setBoletoFile] = useState(null);
   const [nfFile, setNfFile] = useState(null);
-  const [contractFile, setContractFile] = useState(null);
   const [quotationFiles, setQuotationFiles] = useState([]);
+  const [isRecurring, setIsRecurring] = useState(false);
 
   const resetForm = () => {
     setExpenseName('');
@@ -61,8 +61,8 @@ export const NewRequestModal = ({ open, onClose }) => {
     setAmount('');
     setBoletoFile(null);
     setNfFile(null);
-    setContractFile(null);
     setQuotationFiles([]);
+    setIsRecurring(false);
   };
 
   const selectedVendor = vendors.find((v) => v.id === vendorId);
@@ -76,19 +76,24 @@ export const NewRequestModal = ({ open, onClose }) => {
     }
   }, [selectedVendor, invoiceDate, isExtraordinary]);
 
+  useEffect(() => {
+    if (!isExtraordinary && selectedVendor) {
+      setServiceType(selectedVendor.serviceType || '');
+      setScope(selectedVendor.scope || '');
+    } else if (isExtraordinary) {
+      setServiceType('');
+      setScope('');
+    }
+  }, [selectedVendor, isExtraordinary]);
+
   const uploadDocument = useUploadDocument();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const requiredQuotations = (parseFloat(amount) || 0) > 10000 ? 3 : 1;
+      const requiredQuotations = (!isRecurring && (parseFloat(amount) || 0) > 10000) ? 3 : 1;
       if (quotationFiles.length < requiredQuotations) {
         alert(`É necessário anexar pelo menos ${requiredQuotations} orçamento(s).`);
-        return;
-      }
-      const requiresContract = !isExtraordinary && selectedVendor?.hasContract;
-      if (requiresContract && !contractFile) {
-        alert('É necessário anexar o contrato.');
         return;
       }
       const newRequest = await createRequest.mutateAsync({
@@ -110,6 +115,7 @@ export const NewRequestModal = ({ open, onClose }) => {
         dueDate: dueDate ? new Date(dueDate) : undefined,
         notes: isExtraordinary ? reason : '',
         isExtraordinary,
+        isRecurring,
         extraordinaryReason: isExtraordinary ? reason : '',
         requesterId: user.id,
         requesterName: user.name,
@@ -118,7 +124,6 @@ export const NewRequestModal = ({ open, onClose }) => {
       });
 
       const attachments = [];
-      let contractDoc = null;
       if (boletoFile) {
         const doc = await uploadDocument.mutateAsync({
           file: boletoFile,
@@ -139,16 +144,6 @@ export const NewRequestModal = ({ open, onClose }) => {
         });
         attachments.push(doc.id);
       }
-      if (requiresContract && contractFile) {
-        contractDoc = await uploadDocument.mutateAsync({
-          file: contractFile,
-          category: 'contract',
-          relatedEntityType: 'request',
-          relatedEntityId: newRequest.id,
-          userId: user.id,
-        });
-        attachments.push(contractDoc.id);
-      }
       for (const file of quotationFiles) {
         const doc = await uploadDocument.mutateAsync({
           file,
@@ -163,16 +158,9 @@ export const NewRequestModal = ({ open, onClose }) => {
           createdBy: user.id,
         });
       }
-      if (attachments.length > 0 || contractDoc) {
+      if (attachments.length > 0) {
         await requestsService.updateRequest(newRequest.id, {
           attachments,
-          ...(contractDoc
-            ? {
-                contractDocumentId: contractDoc.id,
-                contractStatus: 'pending',
-                contractRequesterId: user.id,
-              }
-            : {}),
         });
       }
 
@@ -224,6 +212,11 @@ export const NewRequestModal = ({ open, onClose }) => {
               </Select>
             </div>
           )}
+          {!isExtraordinary && selectedVendor && (
+            <div className="sm:col-span-2 text-sm">
+              Contrato: {selectedVendor.hasContract ? 'Sim' : 'Não'}
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium mb-1">Número da NF</label>
             <Input value={invoiceNumber} onChange={(e) => setInvoiceNumber(e.target.value)} />
@@ -261,11 +254,11 @@ export const NewRequestModal = ({ open, onClose }) => {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Tipo de serviço</label>
-            <Input value={serviceType} onChange={(e) => setServiceType(e.target.value)} />
+            <Input value={serviceType} onChange={(e) => setServiceType(e.target.value)} readOnly={!isExtraordinary} />
           </div>
           <div className="sm:col-span-2">
             <label className="block text-sm font-medium mb-1">Escopo</label>
-            <Textarea value={scope} onChange={(e) => setScope(e.target.value)} />
+            <Textarea value={scope} onChange={(e) => setScope(e.target.value)} readOnly={!isExtraordinary} />
           </div>
           <div className="sm:col-span-2">
             <label className="block text-sm font-medium mb-1">Justificativa</label>
@@ -288,6 +281,10 @@ export const NewRequestModal = ({ open, onClose }) => {
             <Checkbox id="inBudget" checked={inBudget} onCheckedChange={(v) => setInBudget(!!v)} />
             <label htmlFor="inBudget" className="text-sm">Dentro do orçamento</label>
           </div>
+          <div className="flex items-center space-x-2 sm:col-span-2">
+            <Checkbox id="recurring" checked={isRecurring} onCheckedChange={(v) => setIsRecurring(!!v)} />
+            <label htmlFor="recurring" className="text-sm">Lançamento recorrente</label>
+          </div>
           <div>
             <label className="block text-sm font-medium mb-1">Data de emissão</label>
             <Input type="date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} required />
@@ -308,12 +305,6 @@ export const NewRequestModal = ({ open, onClose }) => {
             <label className="block text-sm font-medium mb-1">NF</label>
             <Input type="file" onChange={(e) => setNfFile(e.target.files?.[0] || null)} />
           </div>
-          {selectedVendor?.hasContract && !isExtraordinary && (
-            <div className="sm:col-span-2">
-              <label className="block text-sm font-medium mb-1">Contrato</label>
-              <Input type="file" onChange={(e) => setContractFile(e.target.files?.[0] || null)} />
-            </div>
-          )}
           <div className="sm:col-span-2">
             <label className="block text-sm font-medium mb-1">Orçamentos</label>
             <Input type="file" multiple onChange={(e) => setQuotationFiles(Array.from(e.target.files || []))} />

@@ -10,10 +10,14 @@ import { UsersPage } from '../pages/UsersPage';
 import { CostCentersPage } from '../pages/CostCentersPage';
 import { FinancialApprovalsPage } from '../pages/FinancialApprovalsPage';
 import { OwnerApprovalsPage } from '../pages/OwnerApprovalsPage';
+import { DirectorApprovalsPage } from '../pages/DirectorApprovalsPage';
+import { CfoApprovalsPage } from '../pages/CfoApprovalsPage';
+import { CeoApprovalsPage } from '../pages/CeoApprovalsPage';
 import { PaymentManagementPage } from '../pages/PaymentManagementPage';
 import { ReportsPage } from '../pages/ReportsPage';
 import { useAuth } from '../contexts/AuthContext';
 import { BudgetsPage } from '../pages/BudgetsPage';
+import { ValidationPage } from '../pages/ValidationPage';
 
 export const AppRoutes = () => {
   const { hasPageAccess } = useAuth();
@@ -28,6 +32,10 @@ export const AppRoutes = () => {
         <Route
           path="requests/:id"
           element={hasPageAccess('requests') ? <RequestDetailsPage /> : <Navigate to="/" replace />}
+        />
+        <Route
+          path="validation"
+          element={hasPageAccess('validation') ? <ValidationPage /> : <Navigate to="/" replace />}
         />
         <Route
           path="vendors"
@@ -78,6 +86,36 @@ export const AppRoutes = () => {
           element={
             hasPageAccess('financialApprovals') ? (
               <FinancialApprovalsPage />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route
+          path="director-approvals"
+          element={
+            hasPageAccess('directorApprovals') ? (
+              <DirectorApprovalsPage />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route
+          path="cfo-approvals"
+          element={
+            hasPageAccess('cfoApprovals') ? (
+              <CfoApprovalsPage />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route
+          path="ceo-approvals"
+          element={
+            hasPageAccess('ceoApprovals') ? (
+              <CeoApprovalsPage />
             ) : (
               <Navigate to="/" replace />
             )

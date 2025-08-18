@@ -2,9 +2,9 @@ import React from 'react';
 import { useRequestsList, useApproveRequest, useRejectRequest } from '../hooks/useRequests';
 import { useAuth } from '../contexts/AuthContext';
 
-export const FinancialApprovalsPage = () => {
+export const CeoApprovalsPage = () => {
   const { user } = useAuth();
-  const { data, isLoading } = useRequestsList({ page: 1, limit: 50, status: 'pending_fpa_approval' });
+  const { data, isLoading } = useRequestsList({ page: 1, limit: 50, status: 'pending_ceo_approval' });
   const approveRequest = useApproveRequest();
   const rejectRequest = useRejectRequest();
   const requests = data?.data || [];
@@ -27,8 +27,8 @@ export const FinancialApprovalsPage = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Aprovações FP&A</h1>
-        <p className="text-muted-foreground">Solicitações aguardando aprovação do FP&A</p>
+        <h1 className="text-3xl font-bold tracking-tight">Aprovações CEO</h1>
+        <p className="text-muted-foreground">Solicitações aguardando aprovação do CEO</p>
       </div>
       <div className="bg-white rounded-lg border">
         <table className="min-w-full divide-y divide-gray-200">
@@ -85,5 +85,4 @@ export const FinancialApprovalsPage = () => {
   );
 };
 
-export default FinancialApprovalsPage;
-
+export default CeoApprovalsPage;

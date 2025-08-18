@@ -11,6 +11,7 @@ import { useCreateRequest } from '@/hooks/useRequests';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUploadDocument } from '@/hooks/useDocuments';
 import * as requestsService from '@/services/requests';
+import * as quotationsService from '@/services/quotations';
 
 export const NewRequestModal = ({ open, onClose }) => {
   const { user } = useAuth();
@@ -22,6 +23,8 @@ export const NewRequestModal = ({ open, onClose }) => {
   const [vendorId, setVendorId] = useState('');
   const [vendorName, setVendorName] = useState('');
   const [costType, setCostType] = useState('OPEX');
+  const [purchaseType, setPurchaseType] = useState('');
+  const [inBudget, setInBudget] = useState(false);
   const [costCenterId, setCostCenterId] = useState('');
   const [invoiceDate, setInvoiceDate] = useState('');
   const [competenceDate, setCompetenceDate] = useState('');
@@ -32,12 +35,15 @@ export const NewRequestModal = ({ open, onClose }) => {
   const [amount, setAmount] = useState('');
   const [boletoFile, setBoletoFile] = useState(null);
   const [nfFile, setNfFile] = useState(null);
+  const [quotationFiles, setQuotationFiles] = useState([]);
 
   const resetForm = () => {
     setExpenseName('');
     setVendorId('');
     setVendorName('');
     setCostType('OPEX');
+    setPurchaseType('');
+    setInBudget(false);
     setCostCenterId('');
     setInvoiceDate('');
     setCompetenceDate('');
@@ -48,6 +54,7 @@ export const NewRequestModal = ({ open, onClose }) => {
     setAmount('');
     setBoletoFile(null);
     setNfFile(null);
+    setQuotationFiles([]);
   };
 
   const selectedVendor = vendors.find((v) => v.id === vendorId);
@@ -66,6 +73,11 @@ export const NewRequestModal = ({ open, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const requiredQuotations = (parseFloat(amount) || 0) > 10000 ? 3 : 1;
+      if (quotationFiles.length < requiredQuotations) {
+        alert(`É necessário anexar pelo menos ${requiredQuotations} orçamento(s).`);
+        return;
+      }
       const newRequest = await createRequest.mutateAsync({
         description: expenseName,
         amount: parseFloat(amount) || 0,
@@ -75,6 +87,8 @@ export const NewRequestModal = ({ open, onClose }) => {
         costCenterId,
         categoryId: costType,
         costType,
+        purchaseType,
+        inBudget,
         invoiceDate: invoiceDate ? new Date(invoiceDate) : undefined,
         competenceDate: competenceDate ? new Date(`${competenceDate}-01`) : undefined,
         dueDate: dueDate ? new Date(dueDate) : undefined,
@@ -107,6 +121,20 @@ export const NewRequestModal = ({ open, onClose }) => {
           userId: user.id,
         });
         attachments.push(doc.id);
+      }
+      for (const file of quotationFiles) {
+        const doc = await uploadDocument.mutateAsync({
+          file,
+          category: 'quotation',
+          relatedEntityType: 'request',
+          relatedEntityId: newRequest.id,
+          userId: user.id,
+        });
+        await quotationsService.createQuotation({
+          requestId: newRequest.id,
+          documentId: doc.id,
+          createdBy: user.id,
+        });
       }
       if (attachments.length > 0) {
         await requestsService.updateRequest(newRequest.id, { attachments });
@@ -182,6 +210,20 @@ export const NewRequestModal = ({ open, onClose }) => {
             </Select>
           </div>
           <div>
+            <label className="block text-sm font-medium mb-1">Tipo de compra</label>
+            <Select value={purchaseType} onValueChange={setPurchaseType}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="uso">Uso</SelectItem>
+                <SelectItem value="consumo">Consumo</SelectItem>
+                <SelectItem value="insumos">Insumos</SelectItem>
+                <SelectItem value="imobilizado">Imobilizado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
             <label className="block text-sm font-medium mb-1">Centro de custo</label>
             <Select value={costCenterId} onValueChange={setCostCenterId}>
               <SelectTrigger className="w-full">
@@ -193,6 +235,10 @@ export const NewRequestModal = ({ open, onClose }) => {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox id="inBudget" checked={inBudget} onCheckedChange={(v) => setInBudget(!!v)} />
+            <label htmlFor="inBudget" className="text-sm">Dentro do orçamento</label>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Data de emissão</label>
@@ -213,6 +259,10 @@ export const NewRequestModal = ({ open, onClose }) => {
           <div>
             <label className="block text-sm font-medium mb-1">NF</label>
             <Input type="file" onChange={(e) => setNfFile(e.target.files?.[0] || null)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Orçamentos</label>
+            <Input type="file" multiple onChange={(e) => setQuotationFiles(Array.from(e.target.files || []))} />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => { resetForm(); onClose(); }}>

@@ -1,9 +1,21 @@
 // Tipos principais do sistema de aprovação de pagamentos
 
-export type Role = 'finance' | 'cost_center_owner' | 'user';
+export type Role =
+  | 'finance'
+  | 'cost_center_owner'
+  | 'user'
+  | 'fpa'
+  | 'director'
+  | 'cfo'
+  | 'ceo';
 
 export type RequestStatus =
+  | 'pending_validation'
   | 'pending_owner_approval'
+  | 'pending_fpa_approval'
+  | 'pending_director_approval'
+  | 'pending_cfo_approval'
+  | 'pending_ceo_approval'
   | 'pending_payment_approval'
   | 'rejected'
   | 'cancelled'
@@ -22,6 +34,8 @@ export type StepStatus = 'pending' | 'approved' | 'rejected';
 export type CategoryType = 'OPEX' | 'CAPEX';
 
 export type CostType = 'CAPEX' | 'OPEX' | 'CPO';
+
+export type PurchaseType = 'uso' | 'consumo' | 'insumos' | 'imobilizado';
 
 export type DocumentType = 'invoice' | 'receipt' | 'contract' | 'other';
 
@@ -56,6 +70,13 @@ export interface Vendor {
   legalNotes?: string;
   contractRequesterId?: string;
   status: 'pending' | 'needsInfo' | 'rejected' | 'contract_review' | 'active' | 'inactive';
+  compliance?: {
+    sefazActive: boolean;
+    serasaScore?: number;
+    serasaBlocked?: boolean;
+    checkedAt: Date;
+  };
+  status: 'pending' | 'needsInfo' | 'rejected' | 'active' | 'inactive';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -107,6 +128,8 @@ export interface PaymentRequest {
   competenceDate?: Date | null;
   isExtraordinary?: boolean;
   extraordinaryReason?: string;
+  purchaseType?: PurchaseType;
+  inBudget?: boolean;
   
   // Workflow
   status: RequestStatus;
@@ -566,5 +589,14 @@ export interface DocumentStats {
   byFileType: Record<string, number>;
   averageSize: number;
   averageDownloads: number;
+}
+
+
+export interface Quotation {
+  id: string;
+  requestId: string;
+  documentId: string;
+  createdBy: string;
+  createdAt: Date;
 }
 

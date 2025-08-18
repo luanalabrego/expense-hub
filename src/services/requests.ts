@@ -18,7 +18,8 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { getCostCenterById } from './costCenters';
-import type { PaymentRequest, PaginationParams, PaginatedResponse, RequestStatus } from '../types';
+import { getQuotationsByRequest } from './quotations';
+import type { PaymentRequest, PaginationParams, PaginatedResponse, RequestStatus, PurchaseType } from '../types';
 
 const COLLECTION_NAME = 'payment-requests';
 
@@ -195,6 +196,8 @@ export const createRequest = async (requestData: {
   costCenterId: string;
   categoryId: string;
   costType?: 'CAPEX' | 'OPEX' | 'CPO';
+  purchaseType?: PurchaseType;
+  inBudget?: boolean;
   invoiceDate?: Date;
   competenceDate?: Date;
   dueDate?: Date;
@@ -210,8 +213,7 @@ export const createRequest = async (requestData: {
   try {
     // Gerar número da solicitação
       const requestNumber = await generateRequestNumber();
-      const costCenter = await getCostCenterById(requestData.costCenterId);
-      const currentApproverId = costCenter?.managerId || null;
+      const currentApproverId = null;
 
       const requestDoc = {
         requestNumber,
@@ -223,6 +225,8 @@ export const createRequest = async (requestData: {
         costCenterId: requestData.costCenterId,
         categoryId: requestData.categoryId,
         costType: requestData.costType || null,
+        purchaseType: requestData.purchaseType || null,
+        inBudget: requestData.inBudget ?? false,
         invoiceDate: requestData.invoiceDate || null,
         competenceDate: requestData.competenceDate || null,
         dueDate: requestData.dueDate || null,
@@ -234,13 +238,13 @@ export const createRequest = async (requestData: {
         priority: requestData.priority,
         paymentMethod: requestData.paymentMethod,
         attachments: requestData.attachments || [],
-        status: 'pending_owner_approval' as RequestStatus,
+        status: 'pending_validation' as RequestStatus,
         currentApproverId,
         approvalLevel: 0,
         approvalHistory: [],
         statusHistory: [
           {
-            status: 'pending_owner_approval',
+            status: 'pending_validation',
             changedBy: requestData.requesterId,
             changedByName: requestData.requesterName,
             timestamp: new Date(),
@@ -307,17 +311,17 @@ export const updateRequest = async (
         }],
         updatedAt: now
       });
-    } catch (error) {
-      console.error('Erro ao submeter solicitação:', error);
-      throw error;
-    }
-  };
+  } catch (error) {
+    console.error('Erro ao submeter solicitação:', error);
+    throw error;
+  }
+};
 
-// Aprovar solicitação
-export const approveRequest = async (
-  id: string, 
-  approverId: string, 
-  approverName: string,
+// Validar solicitação e encaminhar para aprovação do owner
+export const validateRequest = async (
+  id: string,
+  validatorId: string,
+  validatorName: string,
   comments?: string
 ): Promise<void> => {
   try {
@@ -325,6 +329,72 @@ export const approveRequest = async (
     if (!request) throw new Error('Solicitação não encontrada');
 
     const now = new Date();
+    const costCenter = request.costCenterId
+      ? await getCostCenterById(request.costCenterId)
+      : null;
+    const currentApproverId = costCenter?.managerId || null;
+
+    await updateDoc(doc(db, COLLECTION_NAME, id), {
+      status: 'pending_owner_approval',
+      currentApproverId,
+      statusHistory: [
+        ...(request.statusHistory || []),
+        {
+          status: 'pending_owner_approval',
+          changedBy: validatorId,
+          changedByName: validatorName,
+          timestamp: now,
+          reason: comments || '',
+        },
+      ],
+      updatedAt: now,
+    });
+  } catch (error) {
+    console.error('Erro ao validar solicitação:', error);
+    throw error;
+  }
+};
+
+// Aprovar solicitação
+export const approveRequest = async (
+  id: string,
+  approverId: string,
+  approverName: string,
+  comments?: string
+): Promise<void> => {
+  try {
+    const request = await getRequestById(id);
+    if (!request) throw new Error('Solicitação não encontrada');
+
+    const quotations = await getQuotationsByRequest(id);
+    const required = request.amount > 10000 ? 3 : 1;
+    if (quotations.length < required) {
+      throw new Error(`Solicitação requer pelo menos ${required} orçamento(s).`);
+    }
+
+    const now = new Date();
+
+    let nextStatus: RequestStatus = 'pending_payment_approval';
+    const amount = request.amount || 0;
+
+    switch (request.status) {
+      case 'pending_owner_approval':
+        nextStatus = amount <= 10000 ? 'pending_payment_approval' : 'pending_fpa_approval';
+        break;
+      case 'pending_fpa_approval':
+        nextStatus = 'pending_director_approval';
+        break;
+      case 'pending_director_approval':
+        nextStatus = amount <= 50000 ? 'pending_payment_approval' : 'pending_cfo_approval';
+        break;
+      case 'pending_cfo_approval':
+        nextStatus = amount <= 200000 ? 'pending_payment_approval' : 'pending_ceo_approval';
+        break;
+      case 'pending_ceo_approval':
+        nextStatus = 'pending_payment_approval';
+        break;
+    }
+
     const approvalEntry = {
       approverId,
       approverName,
@@ -335,7 +405,7 @@ export const approveRequest = async (
     };
 
     const statusEntry = {
-      status: 'pending_payment_approval' as RequestStatus,
+      status: nextStatus as RequestStatus,
       changedBy: approverId,
       changedByName: approverName,
       timestamp: now,
@@ -344,22 +414,26 @@ export const approveRequest = async (
     const batch = writeBatch(db);
     const requestRef = doc(db, COLLECTION_NAME, id);
 
-    // Atualizar solicitação
-    batch.update(requestRef, {
-      status: 'pending_payment_approval',
+    const updateData: any = {
+      status: nextStatus,
       approvalLevel: increment(1),
       approvalHistory: [...request.approvalHistory, approvalEntry],
       statusHistory: [...(request.statusHistory || []), statusEntry],
-      approvedAt: now,
-      updatedAt: now
-    });
+      updatedAt: now,
+      currentApproverId: null,
+    };
 
-    // Atualizar centro de custo (comprometer valor)
-    if (request.costCenterId) {
+    if (nextStatus === 'pending_payment_approval') {
+      updateData.approvedAt = now;
+    }
+
+    batch.update(requestRef, updateData);
+
+    if (nextStatus === 'pending_payment_approval' && request.costCenterId) {
       const costCenterRef = doc(db, 'cost-centers', request.costCenterId);
       batch.update(costCenterRef, {
         committed: increment(request.amount),
-        updatedAt: new Date()
+        updatedAt: now
       });
     }
 

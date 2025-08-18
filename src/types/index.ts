@@ -129,6 +129,9 @@ export interface PaymentRequest {
   isExtraordinary?: boolean;
   extraordinaryReason?: string;
   purchaseType?: PurchaseType;
+  serviceType?: string;
+  scope?: string;
+  justification?: string;
   inBudget?: boolean;
   
   // Workflow
@@ -239,6 +242,9 @@ export interface CreateRequestForm {
   dueDate: string;
   isExtraordinary?: boolean;
   extraordinaryReason?: string;
+  serviceType?: string;
+  scope?: string;
+  justification?: string;
 }
 
 export interface CreateVendorForm {

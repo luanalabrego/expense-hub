@@ -24,6 +24,9 @@ export const NewRequestModal = ({ open, onClose }) => {
   const [vendorName, setVendorName] = useState('');
   const [costType, setCostType] = useState('OPEX');
   const [purchaseType, setPurchaseType] = useState('');
+  const [serviceType, setServiceType] = useState('');
+  const [scope, setScope] = useState('');
+  const [justification, setJustification] = useState('');
   const [inBudget, setInBudget] = useState(false);
   const [costCenterId, setCostCenterId] = useState('');
   const [invoiceDate, setInvoiceDate] = useState('');
@@ -43,6 +46,9 @@ export const NewRequestModal = ({ open, onClose }) => {
     setVendorName('');
     setCostType('OPEX');
     setPurchaseType('');
+    setServiceType('');
+    setScope('');
+    setJustification('');
     setInBudget(false);
     setCostCenterId('');
     setInvoiceDate('');
@@ -88,6 +94,9 @@ export const NewRequestModal = ({ open, onClose }) => {
         categoryId: costType,
         costType,
         purchaseType,
+        serviceType,
+        scope,
+        justification,
         inBudget,
         invoiceDate: invoiceDate ? new Date(invoiceDate) : undefined,
         competenceDate: competenceDate ? new Date(`${competenceDate}-01`) : undefined,
@@ -222,6 +231,18 @@ export const NewRequestModal = ({ open, onClose }) => {
                 <SelectItem value="imobilizado">Imobilizado</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Tipo de serviço</label>
+            <Input value={serviceType} onChange={(e) => setServiceType(e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Escopo</label>
+            <Textarea value={scope} onChange={(e) => setScope(e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Justificativa</label>
+            <Textarea value={justification} onChange={(e) => setJustification(e.target.value)} />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Centro de custo</label>

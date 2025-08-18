@@ -19,6 +19,7 @@ import {
 import { db } from './firebase';
 import { getCostCenterById } from './costCenters';
 import { getQuotationsByRequest } from './quotations';
+import { validateNF, TaxValidationResult } from './taxValidation';
 import { findApplicableBudget, commitBudgetAmount, spendBudgetAmount } from './budgets';
 import type { PaymentRequest, PaginationParams, PaginatedResponse, RequestStatus, PurchaseType } from '../types';
 import * as notificationsService from './notifications';
@@ -219,6 +220,9 @@ export const createRequest = async (requestData: {
   priority: 'low' | 'medium' | 'high' | 'urgent';
   paymentMethod: 'transfer' | 'check' | 'cash' | 'card';
   attachments?: string[];
+  fiscalStatus?: 'pending' | 'approved' | 'pending_adjustment';
+  fiscalNotes?: string;
+  taxInfo?: { expected: number; calculated: number; difference: number };
   contractDocumentId?: string;
   contractStatus?: 'pending' | 'approved' | 'adjustments_requested';
   contractRequesterId?: string;
@@ -271,6 +275,9 @@ export const createRequest = async (requestData: {
         priority: requestData.priority,
         paymentMethod: requestData.paymentMethod,
         attachments: requestData.attachments || [],
+        fiscalStatus: 'pending',
+        fiscalNotes: requestData.fiscalNotes || '',
+        taxInfo: requestData.taxInfo || null,
         contractDocumentId: requestData.contractDocumentId || null,
         contractStatus: requestData.contractStatus || null,
         contractRequesterId: requestData.contractRequesterId || null,
@@ -376,7 +383,7 @@ export const validateRequest = async (
   validatorId: string,
   validatorName: string,
   comments?: string
-): Promise<void> => {
+): Promise<TaxValidationResult> => {
   try {
     const request = await getRequestById(id);
     if (!request) throw new Error('Solicitação não encontrada');
@@ -401,6 +408,11 @@ export const validateRequest = async (
       : null;
     const currentApproverId = costCenter?.managerId || null;
 
+    const taxResult = await validateNF({
+      amount: request.amount,
+      reportedTax: request.taxInfo?.calculated,
+    });
+
     await updateDoc(doc(db, COLLECTION_NAME, id), {
       status: 'pending_owner_approval',
       currentApproverId,
@@ -415,7 +427,11 @@ export const validateRequest = async (
         },
       ],
       updatedAt: now,
+      fiscalStatus: taxResult.status,
+      taxInfo: taxResult.taxes,
     });
+
+    return taxResult;
   } catch (error) {
     console.error('Erro ao validar solicitação:', error);
     throw error;

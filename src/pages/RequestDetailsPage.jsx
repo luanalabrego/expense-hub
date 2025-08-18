@@ -15,6 +15,10 @@ const statusLabels = {
   paid: 'Pagamento realizado',
 };
 
+const fiscalStatusLabels = {
+  pending: 'Pendente',
+  approved: 'Aprovado',
+  pending_adjustment: 'Pendente de ajuste',
 const contractStatusLabels = {
   pending: 'Ag. jurídico',
   approved: 'Contrato aprovado',
@@ -44,6 +48,7 @@ export const RequestDetailsPage = () => {
       </div>
       <div>
         <p className="mb-2"><strong>Status atual:</strong> {statusLabels[request.status] || request.status}</p>
+        <p className="mb-4"><strong>Status fiscal:</strong> {fiscalStatusLabels[request.fiscalStatus] || 'N/A'}</p>
         {request.contractStatus && (
           <p className="mb-4"><strong>Status do contrato:</strong> {contractStatusLabels[request.contractStatus] || request.contractStatus}</p>
         )}
@@ -68,6 +73,12 @@ export const RequestDetailsPage = () => {
           ))}
         </ul>
       </div>
+      {request.fiscalNotes && (
+        <div>
+          <h2 className="text-xl font-semibold mb-2">Notas Fiscais</h2>
+          <p className="text-sm text-gray-700">{request.fiscalNotes}</p>
+        </div>
+      )}
     </div>
   );
 };

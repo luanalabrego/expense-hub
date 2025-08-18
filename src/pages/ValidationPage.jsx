@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useRequestsByStatus, useValidateRequest, useRejectRequest } from '../hooks/useRequests';
+import { useRequestsByStatus, useValidateRequest, useRejectRequest, useUpdateRequest } from '../hooks/useRequests';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { formatCurrency } from '@/utils';
 
@@ -9,17 +9,25 @@ export const ValidationPage = () => {
   const { data, isLoading, isError } = useRequestsByStatus('pending_validation');
   const validateRequest = useValidateRequest();
   const rejectRequest = useRejectRequest();
+  const updateRequest = useUpdateRequest();
 
   const requests = data || [];
 
-  const handleValidate = (id) => {
+  const handleValidate = async (id) => {
     const comments = window.prompt('Comentários da validação');
-    validateRequest.mutate({
+    const result = await validateRequest.mutateAsync({
       id,
       validatorId: user.id,
       validatorName: user.name,
       comments: comments || undefined,
     });
+
+    if (result.fiscalStatus === 'pending_adjustment') {
+      const note = window.prompt('Divergência fiscal detectada. Registrar ajuste/notas?');
+      if (note) {
+        updateRequest.mutate({ id, updates: { fiscalNotes: note } });
+      }
+    }
   };
 
   const handleReturn = (id) => {

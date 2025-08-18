@@ -135,6 +135,15 @@ export interface PaymentRequest {
   scope?: string;
   justification?: string;
   inBudget?: boolean;
+
+  // Dados fiscais
+  fiscalStatus?: 'pending' | 'approved' | 'pending_adjustment';
+  fiscalNotes?: string;
+  taxInfo?: {
+    expected: number;
+    calculated: number;
+    difference: number;
+  };
   
   // Workflow
   status: RequestStatus;

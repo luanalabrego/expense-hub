@@ -48,25 +48,27 @@ export const RequestsPage = () => {
     return new Intl.DateTimeFormat('pt-BR').format(new Date(date));
   };
 
-  const getStatusColor = (status) => {
-    const colors = {
-      pending_owner_approval: 'bg-yellow-100 text-yellow-800',
-      pending_payment_approval: 'bg-purple-100 text-purple-800',
-      rejected: 'bg-red-100 text-red-800',
-      cancelled: 'bg-gray-200 text-gray-800',
-      paid: 'bg-green-100 text-green-800',
-    };
+    const getStatusColor = (status) => {
+      const colors = {
+        pending_validation: 'bg-orange-100 text-orange-800',
+        pending_owner_approval: 'bg-yellow-100 text-yellow-800',
+        pending_payment_approval: 'bg-purple-100 text-purple-800',
+        rejected: 'bg-red-100 text-red-800',
+        cancelled: 'bg-gray-200 text-gray-800',
+        paid: 'bg-green-100 text-green-800',
+      };
     return colors[status] || 'bg-gray-100 text-gray-800';
   };
 
-  const getStatusLabel = (status) => {
-    const labels = {
-      pending_owner_approval: 'Ag. aprovação do owner',
-      pending_payment_approval: 'Ag. aprovação de pagamento',
-      rejected: 'Rejeitado',
-      cancelled: 'Cancelado',
-      paid: 'Pagamento realizado',
-    };
+    const getStatusLabel = (status) => {
+      const labels = {
+        pending_validation: 'Ag. validação',
+        pending_owner_approval: 'Ag. aprovação do owner',
+        pending_payment_approval: 'Ag. aprovação de pagamento',
+        rejected: 'Rejeitado',
+        cancelled: 'Cancelado',
+        paid: 'Pagamento realizado',
+      };
     return labels[status] || status;
   };
 
@@ -110,7 +112,7 @@ export const RequestsPage = () => {
       </div>
 
       {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="bg-white p-6 rounded-lg border">
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 rounded-lg">
@@ -125,6 +127,18 @@ export const RequestsPage = () => {
         
         <div className="bg-white p-6 rounded-lg border">
           <div className="flex items-center">
+            <div className="p-2 bg-orange-100 rounded-lg">
+              <Clock className="w-6 h-6 text-orange-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Ag. validação</p>
+              <p className="text-2xl font-bold">{stats?.byStatus?.pending_validation ?? 0}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg border">
+          <div className="flex items-center">
             <div className="p-2 bg-yellow-100 rounded-lg">
               <Clock className="w-6 h-6 text-yellow-600" />
             </div>
@@ -134,7 +148,7 @@ export const RequestsPage = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white p-6 rounded-lg border">
           <div className="flex items-center">
             <div className="p-2 bg-green-100 rounded-lg">
@@ -146,7 +160,7 @@ export const RequestsPage = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white p-6 rounded-lg border">
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 rounded-lg">
@@ -183,6 +197,7 @@ export const RequestsPage = () => {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">Todos os status</option>
+              <option value="pending_validation">Ag. validação</option>
               <option value="pending_owner_approval">Ag. aprovação do owner</option>
               <option value="pending_payment_approval">Ag. aprovação de pagamento</option>
               <option value="rejected">Rejeitado</option>

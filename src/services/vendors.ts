@@ -142,6 +142,8 @@ export const createVendor = async (vendorData: {
   rating?: number;
   tags?: string[];
   paymentTerms?: string;
+  serviceType?: string;
+  scope?: string;
   hasContract?: boolean;
   contractUrl?: string;
   observations?: string;
@@ -176,6 +178,8 @@ export const createVendor = async (vendorData: {
       rating: vendorData.rating ?? 0,
       blocked: vendorData.blocked ?? false,
       paymentTerms: vendorData.paymentTerms || '',
+      serviceType: vendorData.serviceType || '',
+      scope: vendorData.scope || '',
       hasContract: vendorData.hasContract ?? false,
       contractUrl: vendorData.contractUrl || '',
       observations: vendorData.observations || '',

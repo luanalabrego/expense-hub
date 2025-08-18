@@ -289,6 +289,8 @@ const NewVendorDialog = ({ open, onOpenChange }) => {
       phone: '',
       rating: 0,
       paymentTerms: '',
+      serviceType: '',
+      scope: '',
       hasContract: false,
       observations: '',
     },
@@ -339,6 +341,8 @@ const NewVendorDialog = ({ open, onOpenChange }) => {
       rating: values.rating,
       tags,
       paymentTerms: values.paymentTerms,
+      serviceType: values.serviceType,
+      scope: values.scope,
       hasContract: values.hasContract,
       contractUrl,
       observations: values.observations,
@@ -497,6 +501,30 @@ const NewVendorDialog = ({ open, onOpenChange }) => {
                 <FormLabel>Prazo de Pagamento</FormLabel>
                 <FormControl>
                   <Input {...field} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="serviceType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tipo de Serviço</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="scope"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Escopo</FormLabel>
+                <FormControl>
+                  <Textarea {...field} />
                 </FormControl>
               </FormItem>
             )}

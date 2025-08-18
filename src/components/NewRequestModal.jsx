@@ -22,6 +22,8 @@ export const NewRequestModal = ({ open, onClose }) => {
   const [vendorId, setVendorId] = useState('');
   const [vendorName, setVendorName] = useState('');
   const [costType, setCostType] = useState('OPEX');
+  const [purchaseType, setPurchaseType] = useState('');
+  const [inBudget, setInBudget] = useState(false);
   const [costCenterId, setCostCenterId] = useState('');
   const [invoiceDate, setInvoiceDate] = useState('');
   const [competenceDate, setCompetenceDate] = useState('');
@@ -38,6 +40,8 @@ export const NewRequestModal = ({ open, onClose }) => {
     setVendorId('');
     setVendorName('');
     setCostType('OPEX');
+    setPurchaseType('');
+    setInBudget(false);
     setCostCenterId('');
     setInvoiceDate('');
     setCompetenceDate('');
@@ -75,6 +79,8 @@ export const NewRequestModal = ({ open, onClose }) => {
         costCenterId,
         categoryId: costType,
         costType,
+        purchaseType,
+        inBudget,
         invoiceDate: invoiceDate ? new Date(invoiceDate) : undefined,
         competenceDate: competenceDate ? new Date(`${competenceDate}-01`) : undefined,
         dueDate: dueDate ? new Date(dueDate) : undefined,
@@ -182,6 +188,20 @@ export const NewRequestModal = ({ open, onClose }) => {
             </Select>
           </div>
           <div>
+            <label className="block text-sm font-medium mb-1">Tipo de compra</label>
+            <Select value={purchaseType} onValueChange={setPurchaseType}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="uso">Uso</SelectItem>
+                <SelectItem value="consumo">Consumo</SelectItem>
+                <SelectItem value="insumos">Insumos</SelectItem>
+                <SelectItem value="imobilizado">Imobilizado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
             <label className="block text-sm font-medium mb-1">Centro de custo</label>
             <Select value={costCenterId} onValueChange={setCostCenterId}>
               <SelectTrigger className="w-full">
@@ -193,6 +213,10 @@ export const NewRequestModal = ({ open, onClose }) => {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox id="inBudget" checked={inBudget} onCheckedChange={(v) => setInBudget(!!v)} />
+            <label htmlFor="inBudget" className="text-sm">Dentro do orçamento</label>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Data de emissão</label>

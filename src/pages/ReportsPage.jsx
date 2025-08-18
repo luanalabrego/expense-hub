@@ -8,6 +8,8 @@ const availableTables = [
       { value: 'id', label: 'ID' },
       { value: 'title', label: 'Título' },
       { value: 'amount', label: 'Valor' },
+      { value: 'purchaseType', label: 'Tipo de compra' },
+      { value: 'inBudget', label: 'Dentro do orçamento' },
       { value: 'status', label: 'Status' },
       { value: 'createdAt', label: 'Criado em' },
     ],

@@ -23,6 +23,8 @@ export type CategoryType = 'OPEX' | 'CAPEX';
 
 export type CostType = 'CAPEX' | 'OPEX' | 'CPO';
 
+export type PurchaseType = 'uso' | 'consumo' | 'insumos' | 'imobilizado';
+
 export type DocumentType = 'invoice' | 'receipt' | 'contract' | 'other';
 
 export interface User {
@@ -105,6 +107,8 @@ export interface PaymentRequest {
   competenceDate?: Date | null;
   isExtraordinary?: boolean;
   extraordinaryReason?: string;
+  purchaseType?: PurchaseType;
+  inBudget?: boolean;
   
   // Workflow
   status: RequestStatus;

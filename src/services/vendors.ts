@@ -25,11 +25,20 @@ export const getVendorById = async (id: string): Promise<Vendor | null> => {
     const vendorDoc = await getDoc(doc(db, COLLECTION_NAME, id));
     if (!vendorDoc.exists()) return null;
 
+    const data = vendorDoc.data();
     return {
       id: vendorDoc.id,
-      ...vendorDoc.data(),
-      createdAt: vendorDoc.data().createdAt?.toDate() || new Date(),
-      updatedAt: vendorDoc.data().updatedAt?.toDate() || new Date(),
+      ...data,
+      compliance: data.compliance
+        ? {
+            ...data.compliance,
+            checkedAt: data.compliance.checkedAt?.toDate
+              ? data.compliance.checkedAt.toDate()
+              : data.compliance.checkedAt || new Date(),
+          }
+        : undefined,
+      createdAt: data.createdAt?.toDate() || new Date(),
+      updatedAt: data.updatedAt?.toDate() || new Date(),
     } as Vendor;
   } catch (error) {
     console.error('Erro ao buscar fornecedor:', error);
@@ -71,12 +80,23 @@ export const getVendors = async (
     }
 
     const snapshot = await getDocs(q);
-    let vendors = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate() || new Date(),
-      updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-    })) as Vendor[];
+    let vendors = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        compliance: data.compliance
+          ? {
+              ...data.compliance,
+              checkedAt: data.compliance.checkedAt?.toDate
+                ? data.compliance.checkedAt.toDate()
+                : data.compliance.checkedAt || new Date(),
+            }
+          : undefined,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+      } as Vendor;
+    }) as Vendor[];
 
     // Aplicar offset simulado
     if (params.page > 1) {
@@ -132,6 +152,12 @@ export const createVendor = async (vendorData: {
     role?: string;
   }>;
   categories?: string[];
+  compliance?: {
+    sefazActive: boolean;
+    serasaScore?: number;
+    serasaBlocked?: boolean;
+    checkedAt: Date;
+  };
 }): Promise<Vendor> => {
   try {
     const vendorDoc = {
@@ -150,6 +176,9 @@ export const createVendor = async (vendorData: {
       observations: vendorData.observations || '',
       approvalNotes: vendorData.approvalNotes || '',
       status: vendorData.status || 'pending',
+      compliance: vendorData.compliance
+        ? { ...vendorData.compliance }
+        : undefined,
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -247,12 +276,23 @@ export const getVendorsByTag = async (tag: string): Promise<Vendor[]> => {
     );
 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate() || new Date(),
-      updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-    })) as Vendor[];
+    return snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        compliance: data.compliance
+          ? {
+              ...data.compliance,
+              checkedAt: data.compliance.checkedAt?.toDate
+                ? data.compliance.checkedAt.toDate()
+                : data.compliance.checkedAt || new Date(),
+            }
+          : undefined,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+      } as Vendor;
+    }) as Vendor[];
   } catch (error) {
     console.error('Erro ao buscar fornecedores por tag:', error);
     throw error;
@@ -296,12 +336,23 @@ export const getActiveVendors = async (): Promise<Vendor[]> => {
 
     const snapshot = await getDocs(q);
     return snapshot.docs
-      .map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-      }))
+      .map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          compliance: data.compliance
+            ? {
+                ...data.compliance,
+                checkedAt: data.compliance.checkedAt?.toDate
+                  ? data.compliance.checkedAt.toDate()
+                  : data.compliance.checkedAt || new Date(),
+              }
+            : undefined,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || new Date(),
+        } as Vendor;
+      })
       // Excluir fornecedores bloqueados ou sem informação do campo
       // "blocked" e ordenar pelo nome.
       .filter(vendor => vendor.blocked !== true)

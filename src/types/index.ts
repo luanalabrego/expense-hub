@@ -10,6 +10,7 @@ export type Role =
   | 'ceo';
 
 export type RequestStatus =
+  | 'pending_validation'
   | 'pending_owner_approval'
   | 'pending_fpa_approval'
   | 'pending_director_approval'
@@ -33,6 +34,8 @@ export type StepStatus = 'pending' | 'approved' | 'rejected';
 export type CategoryType = 'OPEX' | 'CAPEX';
 
 export type CostType = 'CAPEX' | 'OPEX' | 'CPO';
+
+export type PurchaseType = 'uso' | 'consumo' | 'insumos' | 'imobilizado';
 
 export type DocumentType = 'invoice' | 'receipt' | 'contract' | 'other';
 
@@ -64,6 +67,12 @@ export interface Vendor {
   contractUrl?: string;
   observations?: string;
   approvalNotes?: string;
+  compliance?: {
+    sefazActive: boolean;
+    serasaScore?: number;
+    serasaBlocked?: boolean;
+    checkedAt: Date;
+  };
   status: 'pending' | 'needsInfo' | 'rejected' | 'active' | 'inactive';
   createdAt: Date;
   updatedAt: Date;
@@ -116,6 +125,8 @@ export interface PaymentRequest {
   competenceDate?: Date | null;
   isExtraordinary?: boolean;
   extraordinaryReason?: string;
+  purchaseType?: PurchaseType;
+  inBudget?: boolean;
   
   // Workflow
   status: RequestStatus;
@@ -575,5 +586,14 @@ export interface DocumentStats {
   byFileType: Record<string, number>;
   averageSize: number;
   averageDownloads: number;
+}
+
+
+export interface Quotation {
+  id: string;
+  requestId: string;
+  documentId: string;
+  createdBy: string;
+  createdAt: Date;
 }
 

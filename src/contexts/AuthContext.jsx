@@ -67,6 +67,7 @@ export const AuthProvider = ({ children }) => {
     requests: ['finance', 'cost_center_owner', 'user', 'fpa', 'director', 'cfo', 'ceo'],
     vendors: ['finance'],
     vendorApprovals: ['finance'],
+    validation: ['finance'],
     ownerApprovals: ['cost_center_owner'],
     financialApprovals: ['fpa'],
     directorApprovals: ['director'],

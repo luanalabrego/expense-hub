@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useRequest } from '@/hooks/useRequests';
 
 const statusLabels = {
+  pending_validation: 'Ag. validação',
   pending_owner_approval: 'Ag. aprovação do owner',
   pending_fpa_approval: 'Ag. aprovação FP&A',
   pending_director_approval: 'Ag. aprovação Diretor',

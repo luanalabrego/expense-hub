@@ -18,6 +18,7 @@ export const ROLES = {
 
 // Status das solicitações
 export const REQUEST_STATUS = {
+  PENDING_VALIDATION: 'pending_validation',
   PENDING_OWNER_APPROVAL: 'pending_owner_approval',
   PENDING_FPA_APPROVAL: 'pending_fpa_approval',
   PENDING_DIRECTOR_APPROVAL: 'pending_director_approval',
@@ -62,6 +63,7 @@ export const ROLE_LABELS = {
 } as const;
 
 export const STATUS_LABELS = {
+  [REQUEST_STATUS.PENDING_VALIDATION]: 'Ag. validação',
   [REQUEST_STATUS.PENDING_OWNER_APPROVAL]: 'Ag. aprovação do owner',
   [REQUEST_STATUS.PENDING_FPA_APPROVAL]: 'Ag. aprovação FP&A',
   [REQUEST_STATUS.PENDING_DIRECTOR_APPROVAL]: 'Ag. aprovação Diretor',
@@ -93,6 +95,7 @@ export const DOCUMENT_TYPE_LABELS = {
 
 // Cores para status
 export const STATUS_COLORS = {
+  [REQUEST_STATUS.PENDING_VALIDATION]: 'orange',
   [REQUEST_STATUS.PENDING_OWNER_APPROVAL]: 'yellow',
   [REQUEST_STATUS.PENDING_FPA_APPROVAL]: 'purple',
   [REQUEST_STATUS.PENDING_DIRECTOR_APPROVAL]: 'indigo',
@@ -202,10 +205,11 @@ export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
   DASHBOARD: '/dashboard',
-  REQUESTS: '/requests',
-  NEW_REQUEST: '/requests/new',
-  REQUEST_DETAIL: '/requests/:id',
-  VENDORS: '/vendors',
+    REQUESTS: '/requests',
+    NEW_REQUEST: '/requests/new',
+    REQUEST_DETAIL: '/requests/:id',
+    VALIDATION: '/validation',
+    VENDORS: '/vendors',
   VENDOR_APPROVALS: '/vendor-approvals',
   COST_CENTERS: '/cost-centers',
   CATEGORIES: '/categories',

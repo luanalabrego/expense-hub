@@ -18,7 +18,8 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { getCostCenterById } from './costCenters';
-import type { PaymentRequest, PaginationParams, PaginatedResponse, RequestStatus } from '../types';
+import { getQuotationsByRequest } from './quotations';
+import type { PaymentRequest, PaginationParams, PaginatedResponse, RequestStatus, PurchaseType } from '../types';
 
 const COLLECTION_NAME = 'payment-requests';
 
@@ -195,6 +196,8 @@ export const createRequest = async (requestData: {
   costCenterId: string;
   categoryId: string;
   costType?: 'CAPEX' | 'OPEX' | 'CPO';
+  purchaseType?: PurchaseType;
+  inBudget?: boolean;
   invoiceDate?: Date;
   competenceDate?: Date;
   dueDate?: Date;
@@ -210,8 +213,7 @@ export const createRequest = async (requestData: {
   try {
     // Gerar número da solicitação
       const requestNumber = await generateRequestNumber();
-      const costCenter = await getCostCenterById(requestData.costCenterId);
-      const currentApproverId = costCenter?.managerId || null;
+      const currentApproverId = null;
 
       const requestDoc = {
         requestNumber,
@@ -223,6 +225,8 @@ export const createRequest = async (requestData: {
         costCenterId: requestData.costCenterId,
         categoryId: requestData.categoryId,
         costType: requestData.costType || null,
+        purchaseType: requestData.purchaseType || null,
+        inBudget: requestData.inBudget ?? false,
         invoiceDate: requestData.invoiceDate || null,
         competenceDate: requestData.competenceDate || null,
         dueDate: requestData.dueDate || null,
@@ -234,13 +238,13 @@ export const createRequest = async (requestData: {
         priority: requestData.priority,
         paymentMethod: requestData.paymentMethod,
         attachments: requestData.attachments || [],
-        status: 'pending_owner_approval' as RequestStatus,
+        status: 'pending_validation' as RequestStatus,
         currentApproverId,
         approvalLevel: 0,
         approvalHistory: [],
         statusHistory: [
           {
-            status: 'pending_owner_approval',
+            status: 'pending_validation',
             changedBy: requestData.requesterId,
             changedByName: requestData.requesterName,
             timestamp: new Date(),
@@ -307,11 +311,49 @@ export const updateRequest = async (
         }],
         updatedAt: now
       });
-    } catch (error) {
-      console.error('Erro ao submeter solicitação:', error);
-      throw error;
-    }
-  };
+  } catch (error) {
+    console.error('Erro ao submeter solicitação:', error);
+    throw error;
+  }
+};
+
+// Validar solicitação e encaminhar para aprovação do owner
+export const validateRequest = async (
+  id: string,
+  validatorId: string,
+  validatorName: string,
+  comments?: string
+): Promise<void> => {
+  try {
+    const request = await getRequestById(id);
+    if (!request) throw new Error('Solicitação não encontrada');
+
+    const now = new Date();
+    const costCenter = request.costCenterId
+      ? await getCostCenterById(request.costCenterId)
+      : null;
+    const currentApproverId = costCenter?.managerId || null;
+
+    await updateDoc(doc(db, COLLECTION_NAME, id), {
+      status: 'pending_owner_approval',
+      currentApproverId,
+      statusHistory: [
+        ...(request.statusHistory || []),
+        {
+          status: 'pending_owner_approval',
+          changedBy: validatorId,
+          changedByName: validatorName,
+          timestamp: now,
+          reason: comments || '',
+        },
+      ],
+      updatedAt: now,
+    });
+  } catch (error) {
+    console.error('Erro ao validar solicitação:', error);
+    throw error;
+  }
+};
 
 // Aprovar solicitação
 export const approveRequest = async (
@@ -323,6 +365,12 @@ export const approveRequest = async (
   try {
     const request = await getRequestById(id);
     if (!request) throw new Error('Solicitação não encontrada');
+
+    const quotations = await getQuotationsByRequest(id);
+    const required = request.amount > 10000 ? 3 : 1;
+    if (quotations.length < required) {
+      throw new Error(`Solicitação requer pelo menos ${required} orçamento(s).`);
+    }
 
     const now = new Date();
 

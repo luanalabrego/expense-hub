@@ -15,6 +15,12 @@ const statusLabels = {
   paid: 'Pagamento realizado',
 };
 
+const contractStatusLabels = {
+  pending: 'Ag. jurídico',
+  approved: 'Contrato aprovado',
+  adjustments_requested: 'Ajustes solicitados',
+};
+
 const formatDateTime = (date) =>
   new Intl.DateTimeFormat('pt-BR', {
     dateStyle: 'short',
@@ -37,7 +43,10 @@ export const RequestDetailsPage = () => {
         </Link>
       </div>
       <div>
-        <p className="mb-4"><strong>Status atual:</strong> {statusLabels[request.status] || request.status}</p>
+        <p className="mb-2"><strong>Status atual:</strong> {statusLabels[request.status] || request.status}</p>
+        {request.contractStatus && (
+          <p className="mb-4"><strong>Status do contrato:</strong> {contractStatusLabels[request.contractStatus] || request.contractStatus}</p>
+        )}
         <h2 className="text-xl font-semibold mb-2">Histórico de Status</h2>
         <ul className="space-y-2">
           {request.statusHistory?.map((entry, idx) => (

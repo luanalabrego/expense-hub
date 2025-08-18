@@ -146,6 +146,10 @@ export interface PaymentRequest {
   attachmentsCount: number;
   hasInvoice: boolean;
   paymentDate?: Date;
+  contractDocumentId?: string;
+  contractStatus?: 'pending' | 'approved' | 'adjustments_requested';
+  contractNotes?: string;
+  contractRequesterId?: string;
 }
 
 export interface ApprovalStep {

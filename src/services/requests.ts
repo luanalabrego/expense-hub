@@ -20,6 +20,7 @@ import { db } from './firebase';
 import { getCostCenterById } from './costCenters';
 import { getQuotationsByRequest } from './quotations';
 import type { PaymentRequest, PaginationParams, PaginatedResponse, RequestStatus, PurchaseType } from '../types';
+import * as notificationsService from './notifications';
 
 const COLLECTION_NAME = 'payment-requests';
 
@@ -66,6 +67,7 @@ export const getRequests = async (
     dateTo?: Date;
     amountFrom?: number;
     amountTo?: number;
+    contractStatus?: 'pending' | 'approved' | 'adjustments_requested';
   } = { page: 1, limit: 20 }
 ): Promise<PaginatedResponse<PaymentRequest>> => {
   try {
@@ -94,6 +96,10 @@ export const getRequests = async (
 
     if (params.categoryId) {
       q = query(q, where('categoryId', '==', params.categoryId));
+    }
+
+    if (params.contractStatus) {
+      q = query(q, where('contractStatus', '==', params.contractStatus));
     }
 
     // Ordenação
@@ -209,6 +215,9 @@ export const createRequest = async (requestData: {
   priority: 'low' | 'medium' | 'high' | 'urgent';
   paymentMethod: 'transfer' | 'check' | 'cash' | 'card';
   attachments?: string[];
+  contractDocumentId?: string;
+  contractStatus?: 'pending' | 'approved' | 'adjustments_requested';
+  contractRequesterId?: string;
 }): Promise<PaymentRequest> => {
   try {
     // Gerar número da solicitação
@@ -238,6 +247,10 @@ export const createRequest = async (requestData: {
         priority: requestData.priority,
         paymentMethod: requestData.paymentMethod,
         attachments: requestData.attachments || [],
+        contractDocumentId: requestData.contractDocumentId || null,
+        contractStatus: requestData.contractStatus || null,
+        contractRequesterId: requestData.contractRequesterId || null,
+        contractNotes: '',
         status: 'pending_validation' as RequestStatus,
         currentApproverId,
         approvalLevel: 0,
@@ -584,6 +597,67 @@ export const cancelRequest = async (
     await batch.commit();
   } catch (error) {
     console.error('Erro ao cancelar solicitação:', error);
+    throw error;
+  }
+};
+
+// Aprovar contrato da solicitação
+export const approveRequestContract = async (id: string): Promise<void> => {
+  try {
+    const ref = doc(db, COLLECTION_NAME, id);
+    const snap = await getDoc(ref);
+    await updateDoc(ref, {
+      contractStatus: 'approved',
+      contractNotes: '',
+      updatedAt: new Date(),
+    });
+
+    const requesterId = snap.data()?.contractRequesterId;
+    if (requesterId) {
+      await notificationsService.createNotification({
+        type: 'success',
+        title: 'Contrato aprovado',
+        message: 'O contrato da solicitação foi aprovado.',
+        recipientId: requesterId,
+        relatedEntityType: 'request',
+        relatedEntityId: id,
+        priority: 'medium',
+      });
+    }
+  } catch (error) {
+    console.error('Erro ao aprovar contrato da solicitação:', error);
+    throw error;
+  }
+};
+
+// Solicitar ajustes no contrato da solicitação
+export const requestRequestContractAdjustments = async (
+  id: string,
+  notes: string,
+): Promise<void> => {
+  try {
+    const ref = doc(db, COLLECTION_NAME, id);
+    const snap = await getDoc(ref);
+    await updateDoc(ref, {
+      contractStatus: 'adjustments_requested',
+      contractNotes: notes,
+      updatedAt: new Date(),
+    });
+
+    const requesterId = snap.data()?.contractRequesterId;
+    if (requesterId) {
+      await notificationsService.createNotification({
+        type: 'warning',
+        title: 'Contrato requer ajustes',
+        message: notes || 'O contrato da solicitação necessita ajustes.',
+        recipientId: requesterId,
+        relatedEntityType: 'request',
+        relatedEntityId: id,
+        priority: 'medium',
+      });
+    }
+  } catch (error) {
+    console.error('Erro ao solicitar ajustes do contrato da solicitação:', error);
     throw error;
   }
 };

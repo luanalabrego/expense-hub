@@ -50,6 +50,17 @@ export const useTimeSeriesData = (
   });
 };
 
+// Hook para obter previsão de pagamentos
+export const usePaymentForecast = (
+  filters: { startDate?: Date; endDate?: Date } = {}
+) => {
+  return useQuery({
+    queryKey: ['analytics', 'payment-forecast', filters],
+    queryFn: () => analyticsService.getPaymentForecast(filters),
+    ...queryOptions.dynamic,
+  });
+};
+
 // Hook para obter top fornecedores
 export const useTopVendors = (
   limit: number = 10,

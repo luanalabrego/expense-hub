@@ -77,6 +77,13 @@ export interface TopVendorsData {
   lastRequest: Date;
 }
 
+export interface PaymentForecastData {
+  date: string;
+  dueDate: Date;
+  amount: number;
+  count: number;
+}
+
 export interface CostCenterAnalysis {
   costCenterId: string;
   costCenterName: string;
@@ -363,6 +370,47 @@ export const getTimeSeriesData = async (
     return Object.values(groupedData).sort((a, b) => a.date.getTime() - b.date.getTime());
   } catch (error) {
     console.error('Erro ao obter dados de série temporal:', error);
+    throw error;
+  }
+};
+
+// Obter previsão de pagamentos por data de vencimento
+export const getPaymentForecast = async (
+  filters: { startDate?: Date; endDate?: Date } = {}
+): Promise<PaymentForecastData[]> => {
+  try {
+    let requestsQuery = query(
+      collection(db, 'payment-requests'),
+      where('status', '==', 'pending_payment_approval'),
+      orderBy('dueDate', 'asc')
+    );
+
+    if (filters.startDate) {
+      requestsQuery = query(requestsQuery, where('dueDate', '>=', Timestamp.fromDate(filters.startDate)));
+    }
+    if (filters.endDate) {
+      requestsQuery = query(requestsQuery, where('dueDate', '<=', Timestamp.fromDate(filters.endDate)));
+    }
+
+    const snapshot = await getDocs(requestsQuery);
+    const requests = snapshot.docs.map(doc => ({
+      ...doc.data(),
+      dueDate: doc.data().dueDate?.toDate() || new Date(),
+    })) as PaymentRequest[];
+
+    const grouped = requests.reduce((acc, request) => {
+      const key = request.dueDate.toISOString().split('T')[0];
+      if (!acc[key]) {
+        acc[key] = { date: key, dueDate: new Date(key), amount: 0, count: 0 };
+      }
+      acc[key].amount += request.amount;
+      acc[key].count += 1;
+      return acc;
+    }, {} as Record<string, PaymentForecastData>);
+
+    return Object.values(grouped).sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
+  } catch (error) {
+    console.error('Erro ao obter previsão de pagamentos:', error);
     throw error;
   }
 };

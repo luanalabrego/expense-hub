@@ -1,13 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useRequestsList, useMarkAsPaid, useCancelRequest } from '../hooks/useRequests';
 import { useAuth } from '../contexts/AuthContext';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '../components/ui/chart';
+import { usePaymentForecast } from '../hooks/useAnalytics';
 
 export const PaymentManagementPage = () => {
   const { user } = useAuth();
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const { data, isLoading } = useRequestsList({ page: 1, limit: 50, status: 'pending_payment_approval' });
   const { mutate: markAsPaid } = useMarkAsPaid();
   const { mutate: cancelRequest } = useCancelRequest();
   const requests = data?.data || [];
+
+  const { data: forecastData = [] } = usePaymentForecast({
+    startDate: startDate ? new Date(startDate) : undefined,
+    endDate: endDate ? new Date(endDate) : undefined,
+  });
 
   const formatCurrency = (value) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -38,6 +48,48 @@ export const PaymentManagementPage = () => {
         <h1 className="text-3xl font-bold tracking-tight">Gestão de Pagamentos</h1>
         <p className="text-muted-foreground">Despesas aguardando pagamento</p>
       </div>
+
+      <div className="bg-white rounded-lg border p-4 space-y-4">
+        <div className="flex flex-wrap gap-4">
+          <div className="flex items-center gap-2">
+            <label className="text-sm">De:</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="border rounded px-2 py-1"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm">Até:</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="border rounded px-2 py-1"
+            />
+          </div>
+        </div>
+        <ChartContainer
+          className="w-full"
+          config={{
+            amount: {
+              label: 'Valor Previsto',
+              color: 'hsl(var(--chart-1))',
+            },
+          }}
+        >
+          <LineChart data={forecastData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="date" />
+            <YAxis />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <ChartLegend content={<ChartLegendContent />} />
+            <Line type="monotone" dataKey="amount" stroke="var(--color-amount)" strokeWidth={2} dot={false} />
+          </LineChart>
+        </ChartContainer>
+      </div>
+
       <div className="bg-white rounded-lg border">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">

@@ -18,6 +18,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { getCostCenterById } from './costCenters';
+import { getQuotationsByRequest } from './quotations';
 import type { PaymentRequest, PaginationParams, PaginatedResponse, RequestStatus, PurchaseType } from '../types';
 
 const COLLECTION_NAME = 'payment-requests';
@@ -364,6 +365,12 @@ export const approveRequest = async (
   try {
     const request = await getRequestById(id);
     if (!request) throw new Error('Solicitação não encontrada');
+
+    const quotations = await getQuotationsByRequest(id);
+    const required = request.amount > 10000 ? 3 : 1;
+    if (quotations.length < required) {
+      throw new Error(`Solicitação requer pelo menos ${required} orçamento(s).`);
+    }
 
     const now = new Date();
     const approvalEntry = {

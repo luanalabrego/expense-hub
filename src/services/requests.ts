@@ -19,6 +19,7 @@ import {
 import { db } from './firebase';
 import { getCostCenterById } from './costCenters';
 import { getQuotationsByRequest } from './quotations';
+import { findApplicableBudget, commitBudgetAmount, spendBudgetAmount } from './budgets';
 import type { PaymentRequest, PaginationParams, PaginatedResponse, RequestStatus, PurchaseType } from '../types';
 import * as notificationsService from './notifications';
 
@@ -203,6 +204,9 @@ export const createRequest = async (requestData: {
   categoryId: string;
   costType?: 'CAPEX' | 'OPEX' | 'CPO';
   purchaseType?: PurchaseType;
+  serviceType?: string;
+  scope?: string;
+  justification?: string;
   inBudget?: boolean;
   invoiceDate?: Date;
   competenceDate?: Date;
@@ -220,11 +224,28 @@ export const createRequest = async (requestData: {
   contractRequesterId?: string;
 }): Promise<PaymentRequest> => {
   try {
-    // Gerar número da solicitação
-      const requestNumber = await generateRequestNumber();
-      const currentApproverId = null;
+    // Verificar disponibilidade no orçamento
+    const refDate = requestData.competenceDate || requestData.invoiceDate || requestData.dueDate || new Date();
+    const year = refDate.getFullYear();
+    const month = refDate.getMonth() + 1;
+    const budget = await findApplicableBudget(
+      requestData.costCenterId,
+      requestData.categoryId || null,
+      year,
+      month
+    );
+    if (!budget) {
+      throw new Error('Nenhum orçamento disponível para este centro de custo/período.');
+    }
+    if (budget.availableAmount < requestData.amount) {
+      throw new Error('Orçamento insuficiente para esta solicitação.');
+    }
 
-      const requestDoc = {
+    // Gerar número da solicitação
+    const requestNumber = await generateRequestNumber();
+    const currentApproverId = null;
+
+    const requestDoc = {
         requestNumber,
         description: requestData.description,
         amount: requestData.amount,
@@ -235,6 +256,9 @@ export const createRequest = async (requestData: {
         categoryId: requestData.categoryId,
         costType: requestData.costType || null,
         purchaseType: requestData.purchaseType || null,
+        serviceType: requestData.serviceType || '',
+        scope: requestData.scope || '',
+        justification: requestData.justification || '',
         inBudget: requestData.inBudget ?? false,
         invoiceDate: requestData.invoiceDate || null,
         competenceDate: requestData.competenceDate || null,
@@ -308,6 +332,22 @@ export const updateRequest = async (
   ): Promise<void> => {
     try {
       const request = await getRequestById(id);
+      if (!request) throw new Error('Solicitação não encontrada');
+
+      // Verificar disponibilidade no orçamento
+      if (request.costCenterId) {
+        const refDate = request.competenceDate || request.invoiceDate || request.dueDate || new Date();
+        const year = refDate.getFullYear();
+        const month = refDate.getMonth() + 1;
+        const budget = await findApplicableBudget(request.costCenterId, request.categoryId || null, year, month);
+        if (!budget) {
+          throw new Error('Nenhum orçamento disponível para este centro de custo/período.');
+        }
+        if (budget.availableAmount < request.amount) {
+          throw new Error('Orçamento insuficiente para esta solicitação.');
+        }
+      }
+
       const now = new Date();
       const costCenter = request?.costCenterId
         ? await getCostCenterById(request.costCenterId)
@@ -340,6 +380,20 @@ export const validateRequest = async (
   try {
     const request = await getRequestById(id);
     if (!request) throw new Error('Solicitação não encontrada');
+
+    // Verificar disponibilidade no orçamento
+    if (request.costCenterId) {
+      const refDate = request.competenceDate || request.invoiceDate || request.dueDate || new Date();
+      const year = refDate.getFullYear();
+      const month = refDate.getMonth() + 1;
+      const budget = await findApplicableBudget(request.costCenterId, request.categoryId || null, year, month);
+      if (!budget) {
+        throw new Error('Nenhum orçamento disponível para este centro de custo/período.');
+      }
+      if (budget.availableAmount < request.amount) {
+        throw new Error('Orçamento insuficiente para esta solicitação.');
+      }
+    }
 
     const now = new Date();
     const costCenter = request.costCenterId
@@ -451,6 +505,13 @@ export const approveRequest = async (
     }
 
     await batch.commit();
+
+    if (nextStatus === 'pending_payment_approval' && request.costCenterId) {
+      const refDate = request.competenceDate || request.invoiceDate || request.dueDate || new Date();
+      const year = refDate.getFullYear();
+      const month = refDate.getMonth() + 1;
+      await commitBudgetAmount(request.costCenterId, request.categoryId || null, request.amount, year, month);
+    }
   } catch (error) {
     console.error('Erro ao aprovar solicitação:', error);
     throw error;
@@ -548,6 +609,13 @@ export const markAsPaid = async (
     }
 
     await batch.commit();
+
+    if (request.costCenterId) {
+      const refDate = request.competenceDate || request.invoiceDate || request.dueDate || new Date();
+      const year = refDate.getFullYear();
+      const month = refDate.getMonth() + 1;
+      await spendBudgetAmount(request.costCenterId, request.categoryId || null, request.amount, year, month);
+    }
   } catch (error) {
     console.error('Erro ao marcar como pago:', error);
     throw error;

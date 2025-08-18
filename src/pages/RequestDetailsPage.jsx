@@ -47,6 +47,12 @@ export const RequestDetailsPage = () => {
         {request.contractStatus && (
           <p className="mb-4"><strong>Status do contrato:</strong> {contractStatusLabels[request.contractStatus] || request.contractStatus}</p>
         )}
+        <div className="mb-4 space-y-1">
+          <p><strong>Tipo de serviço:</strong> {request.serviceType || '-'}</p>
+          <p><strong>Escopo:</strong> {request.scope || '-'}</p>
+          <p><strong>Justificativa:</strong> {request.justification || '-'}</p>
+          <p><strong>Status atual:</strong> {statusLabels[request.status] || request.status}</p>
+        </div>
         <h2 className="text-xl font-semibold mb-2">Histórico de Status</h2>
         <ul className="space-y-2">
           {request.statusHistory?.map((entry, idx) => (

@@ -197,6 +197,9 @@ export const createRequest = async (requestData: {
   categoryId: string;
   costType?: 'CAPEX' | 'OPEX' | 'CPO';
   purchaseType?: PurchaseType;
+  serviceType?: string;
+  scope?: string;
+  justification?: string;
   inBudget?: boolean;
   invoiceDate?: Date;
   competenceDate?: Date;
@@ -226,6 +229,9 @@ export const createRequest = async (requestData: {
         categoryId: requestData.categoryId,
         costType: requestData.costType || null,
         purchaseType: requestData.purchaseType || null,
+        serviceType: requestData.serviceType || '',
+        scope: requestData.scope || '',
+        justification: requestData.justification || '',
         inBudget: requestData.inBudget ?? false,
         invoiceDate: requestData.invoiceDate || null,
         competenceDate: requestData.competenceDate || null,

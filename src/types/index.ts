@@ -3,6 +3,7 @@
 export type Role = 'finance' | 'cost_center_owner' | 'user';
 
 export type RequestStatus =
+  | 'pending_validation'
   | 'pending_owner_approval'
   | 'pending_payment_approval'
   | 'rejected'
@@ -22,6 +23,8 @@ export type StepStatus = 'pending' | 'approved' | 'rejected';
 export type CategoryType = 'OPEX' | 'CAPEX';
 
 export type CostType = 'CAPEX' | 'OPEX' | 'CPO';
+
+export type PurchaseType = 'uso' | 'consumo' | 'insumos' | 'imobilizado';
 
 export type DocumentType = 'invoice' | 'receipt' | 'contract' | 'other';
 
@@ -105,6 +108,8 @@ export interface PaymentRequest {
   competenceDate?: Date | null;
   isExtraordinary?: boolean;
   extraordinaryReason?: string;
+  purchaseType?: PurchaseType;
+  inBudget?: boolean;
   
   // Workflow
   status: RequestStatus;

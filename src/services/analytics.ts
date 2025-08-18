@@ -141,7 +141,7 @@ export const getDashboardKPIs = async (
     const totalRequests = requests.length;
     const totalAmount = requests.reduce((sum, r) => sum + r.amount, 0);
     const approvedRequests = requests.filter(r => ['pending_payment_approval', 'paid'].includes(r.status));
-    const pendingRequests = requests.filter(r => r.status === 'pending_owner_approval');
+    const pendingRequests = requests.filter(r => ['pending_validation', 'pending_owner_approval'].includes(r.status));
     const rejectedRequests = requests.filter(r => ['rejected', 'cancelled'].includes(r.status));
     const paidRequests = requests.filter(r => r.status === 'paid');
     
@@ -266,6 +266,7 @@ export const getRequestsByStatus = async (
     }, {} as Record<string, number>);
     
     const statusLabels = {
+      pending_validation: 'Ag. validação',
       pending_owner_approval: 'Ag. aprovação do owner',
       pending_payment_approval: 'Ag. aprovação de pagamento',
       rejected: 'Rejeitado',
@@ -274,6 +275,7 @@ export const getRequestsByStatus = async (
     };
 
     const statusColors = {
+      pending_validation: '#fb923c',
       pending_owner_approval: '#f59e0b',
       pending_payment_approval: '#3b82f6',
       rejected: '#ef4444',
@@ -357,10 +359,10 @@ export const getTimeSeriesData = async (
       acc[periodKey].amount += request.amount;
       
       if (['pending_payment_approval', 'paid'].includes(request.status)) {
-      acc[periodKey].approved += 1;
+        acc[periodKey].approved += 1;
       } else if (['rejected', 'cancelled'].includes(request.status)) {
-      acc[periodKey].rejected += 1;
-      } else if (request.status === 'pending_owner_approval') {
+        acc[periodKey].rejected += 1;
+      } else if (['pending_validation', 'pending_owner_approval'].includes(request.status)) {
         acc[periodKey].pending += 1;
       }
       

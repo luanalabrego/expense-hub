@@ -67,6 +67,7 @@ export const AuthProvider = ({ children }) => {
     requests: ['finance', 'cost_center_owner', 'user'],
     vendors: ['finance'],
     vendorApprovals: ['finance'],
+    validation: ['finance'],
     ownerApprovals: ['cost_center_owner'],
     users: ['finance'],
     'cost-centers': ['finance', 'cost_center_owner'],

@@ -24,7 +24,10 @@ import * as erpService from './erp';
 import * as bankService from './bank';
 import * as emailService from './email';
 import { createAuditLog, AUDIT_ACTIONS, AUDIT_ENTITIES } from './audit';
+import { validateNF, TaxValidationResult } from './taxValidation';
+import { findApplicableBudget, commitBudgetAmount, spendBudgetAmount } from './budgets';
 import type { PaymentRequest, PaginationParams, PaginatedResponse, RequestStatus, PurchaseType } from '../types';
+import * as notificationsService from './notifications';
 
 const COLLECTION_NAME = 'payment-requests';
 
@@ -71,6 +74,7 @@ export const getRequests = async (
     dateTo?: Date;
     amountFrom?: number;
     amountTo?: number;
+    contractStatus?: 'pending' | 'approved' | 'adjustments_requested';
   } = { page: 1, limit: 20 }
 ): Promise<PaginatedResponse<PaymentRequest>> => {
   try {
@@ -99,6 +103,10 @@ export const getRequests = async (
 
     if (params.categoryId) {
       q = query(q, where('categoryId', '==', params.categoryId));
+    }
+
+    if (params.contractStatus) {
+      q = query(q, where('contractStatus', '==', params.contractStatus));
     }
 
     // Ordenação
@@ -202,6 +210,9 @@ export const createRequest = async (requestData: {
   categoryId: string;
   costType?: 'CAPEX' | 'OPEX' | 'CPO';
   purchaseType?: PurchaseType;
+  serviceType?: string;
+  scope?: string;
+  justification?: string;
   inBudget?: boolean;
   invoiceDate?: Date;
   competenceDate?: Date;
@@ -214,13 +225,36 @@ export const createRequest = async (requestData: {
   priority: 'low' | 'medium' | 'high' | 'urgent';
   paymentMethod: 'transfer' | 'check' | 'cash' | 'card';
   attachments?: string[];
+  fiscalStatus?: 'pending' | 'approved' | 'pending_adjustment';
+  fiscalNotes?: string;
+  taxInfo?: { expected: number; calculated: number; difference: number };
+  contractDocumentId?: string;
+  contractStatus?: 'pending' | 'approved' | 'adjustments_requested';
+  contractRequesterId?: string;
 }): Promise<PaymentRequest> => {
   try {
-    // Gerar número da solicitação
-      const requestNumber = await generateRequestNumber();
-      const currentApproverId = null;
+    // Verificar disponibilidade no orçamento
+    const refDate = requestData.competenceDate || requestData.invoiceDate || requestData.dueDate || new Date();
+    const year = refDate.getFullYear();
+    const month = refDate.getMonth() + 1;
+    const budget = await findApplicableBudget(
+      requestData.costCenterId,
+      requestData.categoryId || null,
+      year,
+      month
+    );
+    if (!budget) {
+      throw new Error('Nenhum orçamento disponível para este centro de custo/período.');
+    }
+    if (budget.availableAmount < requestData.amount) {
+      throw new Error('Orçamento insuficiente para esta solicitação.');
+    }
 
-      const requestDoc = {
+    // Gerar número da solicitação
+    const requestNumber = await generateRequestNumber();
+    const currentApproverId = null;
+
+    const requestDoc = {
         requestNumber,
         description: requestData.description,
         amount: requestData.amount,
@@ -231,6 +265,9 @@ export const createRequest = async (requestData: {
         categoryId: requestData.categoryId,
         costType: requestData.costType || null,
         purchaseType: requestData.purchaseType || null,
+        serviceType: requestData.serviceType || '',
+        scope: requestData.scope || '',
+        justification: requestData.justification || '',
         inBudget: requestData.inBudget ?? false,
         invoiceDate: requestData.invoiceDate || null,
         competenceDate: requestData.competenceDate || null,
@@ -243,6 +280,13 @@ export const createRequest = async (requestData: {
         priority: requestData.priority,
         paymentMethod: requestData.paymentMethod,
         attachments: requestData.attachments || [],
+        fiscalStatus: 'pending',
+        fiscalNotes: requestData.fiscalNotes || '',
+        taxInfo: requestData.taxInfo || null,
+        contractDocumentId: requestData.contractDocumentId || null,
+        contractStatus: requestData.contractStatus || null,
+        contractRequesterId: requestData.contractRequesterId || null,
+        contractNotes: '',
         status: 'pending_validation' as RequestStatus,
         currentApproverId,
         approvalLevel: 0,
@@ -300,6 +344,22 @@ export const updateRequest = async (
   ): Promise<void> => {
     try {
       const request = await getRequestById(id);
+      if (!request) throw new Error('Solicitação não encontrada');
+
+      // Verificar disponibilidade no orçamento
+      if (request.costCenterId) {
+        const refDate = request.competenceDate || request.invoiceDate || request.dueDate || new Date();
+        const year = refDate.getFullYear();
+        const month = refDate.getMonth() + 1;
+        const budget = await findApplicableBudget(request.costCenterId, request.categoryId || null, year, month);
+        if (!budget) {
+          throw new Error('Nenhum orçamento disponível para este centro de custo/período.');
+        }
+        if (budget.availableAmount < request.amount) {
+          throw new Error('Orçamento insuficiente para esta solicitação.');
+        }
+      }
+
       const now = new Date();
       const costCenter = request?.costCenterId
         ? await getCostCenterById(request.costCenterId)
@@ -328,16 +388,35 @@ export const validateRequest = async (
   validatorId: string,
   validatorName: string,
   comments?: string
-): Promise<void> => {
+): Promise<TaxValidationResult> => {
   try {
     const request = await getRequestById(id);
     if (!request) throw new Error('Solicitação não encontrada');
+
+    // Verificar disponibilidade no orçamento
+    if (request.costCenterId) {
+      const refDate = request.competenceDate || request.invoiceDate || request.dueDate || new Date();
+      const year = refDate.getFullYear();
+      const month = refDate.getMonth() + 1;
+      const budget = await findApplicableBudget(request.costCenterId, request.categoryId || null, year, month);
+      if (!budget) {
+        throw new Error('Nenhum orçamento disponível para este centro de custo/período.');
+      }
+      if (budget.availableAmount < request.amount) {
+        throw new Error('Orçamento insuficiente para esta solicitação.');
+      }
+    }
 
     const now = new Date();
     const costCenter = request.costCenterId
       ? await getCostCenterById(request.costCenterId)
       : null;
     const currentApproverId = costCenter?.managerId || null;
+
+    const taxResult = await validateNF({
+      amount: request.amount,
+      reportedTax: request.taxInfo?.calculated,
+    });
 
     await updateDoc(doc(db, COLLECTION_NAME, id), {
       status: 'pending_owner_approval',
@@ -353,7 +432,11 @@ export const validateRequest = async (
         },
       ],
       updatedAt: now,
+      fiscalStatus: taxResult.status,
+      taxInfo: taxResult.taxes,
     });
+
+    return taxResult;
   } catch (error) {
     console.error('Erro ao validar solicitação:', error);
     throw error;
@@ -443,6 +526,13 @@ export const approveRequest = async (
     }
 
     await batch.commit();
+
+    if (nextStatus === 'pending_payment_approval' && request.costCenterId) {
+      const refDate = request.competenceDate || request.invoiceDate || request.dueDate || new Date();
+      const year = refDate.getFullYear();
+      const month = refDate.getMonth() + 1;
+      await commitBudgetAmount(request.costCenterId, request.categoryId || null, request.amount, year, month);
+    }
   } catch (error) {
     console.error('Erro ao aprovar solicitação:', error);
     throw error;
@@ -588,6 +678,12 @@ export const markAsPaid = async (
         miroDocument: miro.documentNumber,
       },
     });
+    if (request.costCenterId) {
+      const refDate = request.competenceDate || request.invoiceDate || request.dueDate || new Date();
+      const year = refDate.getFullYear();
+      const month = refDate.getMonth() + 1;
+      await spendBudgetAmount(request.costCenterId, request.categoryId || null, request.amount, year, month);
+    }
   } catch (error) {
     console.error('Erro ao marcar como pago:', error);
     throw error;
@@ -637,6 +733,67 @@ export const cancelRequest = async (
     await batch.commit();
   } catch (error) {
     console.error('Erro ao cancelar solicitação:', error);
+    throw error;
+  }
+};
+
+// Aprovar contrato da solicitação
+export const approveRequestContract = async (id: string): Promise<void> => {
+  try {
+    const ref = doc(db, COLLECTION_NAME, id);
+    const snap = await getDoc(ref);
+    await updateDoc(ref, {
+      contractStatus: 'approved',
+      contractNotes: '',
+      updatedAt: new Date(),
+    });
+
+    const requesterId = snap.data()?.contractRequesterId;
+    if (requesterId) {
+      await notificationsService.createNotification({
+        type: 'success',
+        title: 'Contrato aprovado',
+        message: 'O contrato da solicitação foi aprovado.',
+        recipientId: requesterId,
+        relatedEntityType: 'request',
+        relatedEntityId: id,
+        priority: 'medium',
+      });
+    }
+  } catch (error) {
+    console.error('Erro ao aprovar contrato da solicitação:', error);
+    throw error;
+  }
+};
+
+// Solicitar ajustes no contrato da solicitação
+export const requestRequestContractAdjustments = async (
+  id: string,
+  notes: string,
+): Promise<void> => {
+  try {
+    const ref = doc(db, COLLECTION_NAME, id);
+    const snap = await getDoc(ref);
+    await updateDoc(ref, {
+      contractStatus: 'adjustments_requested',
+      contractNotes: notes,
+      updatedAt: new Date(),
+    });
+
+    const requesterId = snap.data()?.contractRequesterId;
+    if (requesterId) {
+      await notificationsService.createNotification({
+        type: 'warning',
+        title: 'Contrato requer ajustes',
+        message: notes || 'O contrato da solicitação necessita ajustes.',
+        recipientId: requesterId,
+        relatedEntityType: 'request',
+        relatedEntityId: id,
+        priority: 'medium',
+      });
+    }
+  } catch (error) {
+    console.error('Erro ao solicitar ajustes do contrato da solicitação:', error);
     throw error;
   }
 };

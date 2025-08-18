@@ -56,6 +56,12 @@ export interface Vendor {
   contractUrl?: string;
   observations?: string;
   approvalNotes?: string;
+  compliance?: {
+    sefazActive: boolean;
+    serasaScore?: number;
+    serasaBlocked?: boolean;
+    checkedAt: Date;
+  };
   status: 'pending' | 'needsInfo' | 'rejected' | 'active' | 'inactive';
   createdAt: Date;
   updatedAt: Date;

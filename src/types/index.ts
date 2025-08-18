@@ -79,6 +79,8 @@ export interface Vendor {
   status: 'pending' | 'needsInfo' | 'rejected' | 'active' | 'inactive';
   createdAt: Date;
   updatedAt: Date;
+  sapVendorId?: string;
+  pipefyCardId?: string;
 }
 
 export interface Contact {
@@ -129,6 +131,9 @@ export interface PaymentRequest {
   isExtraordinary?: boolean;
   extraordinaryReason?: string;
   purchaseType?: PurchaseType;
+  serviceType?: string;
+  scope?: string;
+  justification?: string;
   inBudget?: boolean;
 
   // Dados fiscais
@@ -155,6 +160,10 @@ export interface PaymentRequest {
   attachmentsCount: number;
   hasInvoice: boolean;
   paymentDate?: Date;
+  contractDocumentId?: string;
+  contractStatus?: 'pending' | 'approved' | 'adjustments_requested';
+  contractNotes?: string;
+  contractRequesterId?: string;
 }
 
 export interface ApprovalStep {
@@ -248,6 +257,9 @@ export interface CreateRequestForm {
   dueDate: string;
   isExtraordinary?: boolean;
   extraordinaryReason?: string;
+  serviceType?: string;
+  scope?: string;
+  justification?: string;
 }
 
 export interface CreateVendorForm {
@@ -609,3 +621,41 @@ export interface Quotation {
   createdAt: Date;
 }
 
+
+export interface PurchaseOrderItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface PurchaseOrder {
+  id: string;
+  requestId: string;
+  vendorId: string;
+  items: PurchaseOrderItem[];
+  total: number;
+  status: 'generated' | 'sent' | 'reconciled';
+  createdAt: Date;
+  sentAt?: Date;
+  reconciledAt?: Date;
+}
+
+export interface InvoiceItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+}
+
+export interface Invoice {
+  key: string;
+  items: InvoiceItem[];
+  total: number;
+}
+
+export interface Discrepancy {
+  type: 'missing_item' | 'quantity_mismatch' | 'price_mismatch' | 'total_mismatch';
+  itemDescription?: string;
+  expected?: number;
+  found?: number;
+}

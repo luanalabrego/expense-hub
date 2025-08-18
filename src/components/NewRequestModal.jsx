@@ -24,6 +24,9 @@ export const NewRequestModal = ({ open, onClose }) => {
   const [vendorName, setVendorName] = useState('');
   const [costType, setCostType] = useState('OPEX');
   const [purchaseType, setPurchaseType] = useState('');
+  const [serviceType, setServiceType] = useState('');
+  const [scope, setScope] = useState('');
+  const [justification, setJustification] = useState('');
   const [inBudget, setInBudget] = useState(false);
   const [costCenterId, setCostCenterId] = useState('');
   const [invoiceDate, setInvoiceDate] = useState('');
@@ -35,6 +38,7 @@ export const NewRequestModal = ({ open, onClose }) => {
   const [amount, setAmount] = useState('');
   const [boletoFile, setBoletoFile] = useState(null);
   const [nfFile, setNfFile] = useState(null);
+  const [contractFile, setContractFile] = useState(null);
   const [quotationFiles, setQuotationFiles] = useState([]);
 
   const resetForm = () => {
@@ -43,6 +47,9 @@ export const NewRequestModal = ({ open, onClose }) => {
     setVendorName('');
     setCostType('OPEX');
     setPurchaseType('');
+    setServiceType('');
+    setScope('');
+    setJustification('');
     setInBudget(false);
     setCostCenterId('');
     setInvoiceDate('');
@@ -54,6 +61,7 @@ export const NewRequestModal = ({ open, onClose }) => {
     setAmount('');
     setBoletoFile(null);
     setNfFile(null);
+    setContractFile(null);
     setQuotationFiles([]);
   };
 
@@ -78,6 +86,11 @@ export const NewRequestModal = ({ open, onClose }) => {
         alert(`É necessário anexar pelo menos ${requiredQuotations} orçamento(s).`);
         return;
       }
+      const requiresContract = !isExtraordinary && selectedVendor?.hasContract;
+      if (requiresContract && !contractFile) {
+        alert('É necessário anexar o contrato.');
+        return;
+      }
       const newRequest = await createRequest.mutateAsync({
         description: expenseName,
         amount: parseFloat(amount) || 0,
@@ -88,6 +101,9 @@ export const NewRequestModal = ({ open, onClose }) => {
         categoryId: costType,
         costType,
         purchaseType,
+        serviceType,
+        scope,
+        justification,
         inBudget,
         invoiceDate: invoiceDate ? new Date(invoiceDate) : undefined,
         competenceDate: competenceDate ? new Date(`${competenceDate}-01`) : undefined,
@@ -102,6 +118,7 @@ export const NewRequestModal = ({ open, onClose }) => {
       });
 
       const attachments = [];
+      let contractDoc = null;
       if (boletoFile) {
         const doc = await uploadDocument.mutateAsync({
           file: boletoFile,
@@ -122,6 +139,16 @@ export const NewRequestModal = ({ open, onClose }) => {
         });
         attachments.push(doc.id);
       }
+      if (requiresContract && contractFile) {
+        contractDoc = await uploadDocument.mutateAsync({
+          file: contractFile,
+          category: 'contract',
+          relatedEntityType: 'request',
+          relatedEntityId: newRequest.id,
+          userId: user.id,
+        });
+        attachments.push(contractDoc.id);
+      }
       for (const file of quotationFiles) {
         const doc = await uploadDocument.mutateAsync({
           file,
@@ -136,8 +163,17 @@ export const NewRequestModal = ({ open, onClose }) => {
           createdBy: user.id,
         });
       }
-      if (attachments.length > 0) {
-        await requestsService.updateRequest(newRequest.id, { attachments });
+      if (attachments.length > 0 || contractDoc) {
+        await requestsService.updateRequest(newRequest.id, {
+          attachments,
+          ...(contractDoc
+            ? {
+                contractDocumentId: contractDoc.id,
+                contractStatus: 'pending',
+                contractRequesterId: user.id,
+              }
+            : {}),
+        });
       }
 
       resetForm();
@@ -224,6 +260,18 @@ export const NewRequestModal = ({ open, onClose }) => {
             </Select>
           </div>
           <div>
+            <label className="block text-sm font-medium mb-1">Tipo de serviço</label>
+            <Input value={serviceType} onChange={(e) => setServiceType(e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Escopo</label>
+            <Textarea value={scope} onChange={(e) => setScope(e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Justificativa</label>
+            <Textarea value={justification} onChange={(e) => setJustification(e.target.value)} />
+          </div>
+          <div>
             <label className="block text-sm font-medium mb-1">Centro de custo</label>
             <Select value={costCenterId} onValueChange={setCostCenterId}>
               <SelectTrigger className="w-full">
@@ -260,6 +308,12 @@ export const NewRequestModal = ({ open, onClose }) => {
             <label className="block text-sm font-medium mb-1">NF</label>
             <Input type="file" onChange={(e) => setNfFile(e.target.files?.[0] || null)} />
           </div>
+          {selectedVendor?.hasContract && !isExtraordinary && (
+            <div>
+              <label className="block text-sm font-medium mb-1">Contrato</label>
+              <Input type="file" onChange={(e) => setContractFile(e.target.files?.[0] || null)} />
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium mb-1">Orçamentos</label>
             <Input type="file" multiple onChange={(e) => setQuotationFiles(Array.from(e.target.files || []))} />

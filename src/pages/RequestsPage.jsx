@@ -231,6 +231,12 @@ export const RequestsPage = () => {
                   Fornecedor
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Tipo de compra
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  No orçamento
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Valor
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -258,6 +264,12 @@ export const RequestsPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
                         <div className="h-3 bg-gray-200 rounded w-20"></div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="h-4 bg-gray-200 rounded w-24"></div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="h-4 bg-gray-200 rounded w-12"></div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="h-4 bg-gray-200 rounded w-16"></div>
@@ -291,6 +303,12 @@ export const RequestsPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{request.vendorName || ''}</div>
                         <div className="text-sm text-gray-500">{request.costCenterName || request.costCenterId || ''}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{request.purchaseType || '-'}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {request.inBudget ? 'Sim' : 'Não'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">

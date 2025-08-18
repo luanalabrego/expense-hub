@@ -18,7 +18,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { getCostCenterById } from './costCenters';
-import type { PaymentRequest, PaginationParams, PaginatedResponse, RequestStatus } from '../types';
+import type { PaymentRequest, PaginationParams, PaginatedResponse, RequestStatus, PurchaseType } from '../types';
 
 const COLLECTION_NAME = 'payment-requests';
 
@@ -195,6 +195,8 @@ export const createRequest = async (requestData: {
   costCenterId: string;
   categoryId: string;
   costType?: 'CAPEX' | 'OPEX' | 'CPO';
+  purchaseType?: PurchaseType;
+  inBudget?: boolean;
   invoiceDate?: Date;
   competenceDate?: Date;
   dueDate?: Date;
@@ -223,6 +225,8 @@ export const createRequest = async (requestData: {
         costCenterId: requestData.costCenterId,
         categoryId: requestData.categoryId,
         costType: requestData.costType || null,
+        purchaseType: requestData.purchaseType || null,
+        inBudget: requestData.inBudget ?? false,
         invoiceDate: requestData.invoiceDate || null,
         competenceDate: requestData.competenceDate || null,
         dueDate: requestData.dueDate || null,

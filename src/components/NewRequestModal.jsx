@@ -185,32 +185,32 @@ export const NewRequestModal = ({ open, onClose }) => {
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Nova Solicitação</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+        <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
+          <div className="sm:col-span-2">
             <label className="block text-sm font-medium mb-1">Nome da despesa</label>
             <Input value={expenseName} onChange={(e) => setExpenseName(e.target.value)} required />
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 sm:col-span-2">
             <Checkbox id="extra" checked={isExtraordinary} onCheckedChange={(v) => setIsExtraordinary(!!v)} />
             <label htmlFor="extra" className="text-sm">Solicitação extraordinária</label>
           </div>
           {isExtraordinary ? (
             <>
-              <div>
+              <div className="sm:col-span-2">
                 <label className="block text-sm font-medium mb-1">Fornecedor</label>
                 <Input value={vendorName} onChange={(e) => setVendorName(e.target.value)} required />
               </div>
-              <div>
+              <div className="sm:col-span-2">
                 <label className="block text-sm font-medium mb-1">Motivo da solicitação</label>
                 <Textarea value={reason} onChange={(e) => setReason(e.target.value)} required />
               </div>
             </>
           ) : (
-            <div>
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium mb-1">Fornecedor</label>
               <Select value={vendorId} onValueChange={setVendorId}>
                 <SelectTrigger className="w-full">
@@ -263,11 +263,11 @@ export const NewRequestModal = ({ open, onClose }) => {
             <label className="block text-sm font-medium mb-1">Tipo de serviço</label>
             <Input value={serviceType} onChange={(e) => setServiceType(e.target.value)} />
           </div>
-          <div>
+          <div className="sm:col-span-2">
             <label className="block text-sm font-medium mb-1">Escopo</label>
             <Textarea value={scope} onChange={(e) => setScope(e.target.value)} />
           </div>
-          <div>
+          <div className="sm:col-span-2">
             <label className="block text-sm font-medium mb-1">Justificativa</label>
             <Textarea value={justification} onChange={(e) => setJustification(e.target.value)} />
           </div>
@@ -284,7 +284,7 @@ export const NewRequestModal = ({ open, onClose }) => {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 sm:col-span-2">
             <Checkbox id="inBudget" checked={inBudget} onCheckedChange={(v) => setInBudget(!!v)} />
             <label htmlFor="inBudget" className="text-sm">Dentro do orçamento</label>
           </div>
@@ -300,25 +300,25 @@ export const NewRequestModal = ({ open, onClose }) => {
             <label className="block text-sm font-medium mb-1">Data de vencimento</label>
             <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} readOnly={!isExtraordinary} required />
           </div>
-          <div>
+          <div className="sm:col-span-2">
             <label className="block text-sm font-medium mb-1">Boleto</label>
             <Input type="file" onChange={(e) => setBoletoFile(e.target.files?.[0] || null)} />
           </div>
-          <div>
+          <div className="sm:col-span-2">
             <label className="block text-sm font-medium mb-1">NF</label>
             <Input type="file" onChange={(e) => setNfFile(e.target.files?.[0] || null)} />
           </div>
           {selectedVendor?.hasContract && !isExtraordinary && (
-            <div>
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium mb-1">Contrato</label>
               <Input type="file" onChange={(e) => setContractFile(e.target.files?.[0] || null)} />
             </div>
           )}
-          <div>
+          <div className="sm:col-span-2">
             <label className="block text-sm font-medium mb-1">Orçamentos</label>
             <Input type="file" multiple onChange={(e) => setQuotationFiles(Array.from(e.target.files || []))} />
           </div>
-          <DialogFooter>
+          <DialogFooter className="sm:col-span-2">
             <Button type="button" variant="outline" onClick={() => { resetForm(); onClose(); }}>
               Cancelar
             </Button>

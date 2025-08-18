@@ -19,6 +19,11 @@ import {
 import { db } from './firebase';
 import { getCostCenterById } from './costCenters';
 import { getQuotationsByRequest } from './quotations';
+import { getVendorById } from './vendors';
+import * as erpService from './erp';
+import * as bankService from './bank';
+import * as emailService from './email';
+import { createAuditLog, AUDIT_ACTIONS, AUDIT_ENTITIES } from './audit';
 import type { PaymentRequest, PaginationParams, PaginatedResponse, RequestStatus, PurchaseType } from '../types';
 
 const COLLECTION_NAME = 'payment-requests';
@@ -488,7 +493,7 @@ export const rejectRequest = async (
 
 // Marcar como pago
 export const markAsPaid = async (
-  id: string, 
+  id: string,
   paymentDetails: {
     paidBy: string;
     paidByName: string;
@@ -500,6 +505,34 @@ export const markAsPaid = async (
   try {
     const request = await getRequestById(id);
     if (!request) throw new Error('Solicitação não encontrada');
+
+    // 1. Gerar documento MIRO no ERP e atualizar status
+    const miro = await erpService.generateMiroDocument(id);
+    await erpService.updateERPStatus(id, 'paid');
+
+    // 2. Processar pagamento via módulo bancário
+    const bankPayment = await bankService.processBankPayment({
+      requestId: id,
+      amount: request.amount,
+      vendorId: request.vendorId,
+    });
+
+    // 3. Anexar comprovante ao request (apenas URL)
+    const updatedAttachments = [...(request.attachments || [])];
+    if (bankPayment.receiptUrl) {
+      updatedAttachments.push(bankPayment.receiptUrl);
+    }
+
+    // 4. Enviar e-mail ao fornecedor com comprovante
+    const vendor = await getVendorById(request.vendorId);
+    if (vendor?.email) {
+      await emailService.sendPaymentReceiptEmail(
+        vendor.email,
+        `Comprovante de pagamento - ${request.description}`,
+        'Segue comprovante referente ao pagamento realizado.',
+        bankPayment.receiptUrl
+      );
+    }
 
     const batch = writeBatch(db);
     const requestRef = doc(db, COLLECTION_NAME, id);
@@ -521,7 +554,12 @@ export const markAsPaid = async (
       paidBy: paymentDetails.paidBy,
       paidByName: paymentDetails.paidByName,
       statusHistory: [...(request.statusHistory || []), statusEntry],
-      updatedAt: now
+      updatedAt: now,
+      paymentProtocol: bankPayment.protocol,
+      paymentReceiptUrl: bankPayment.receiptUrl,
+      erpMiroId: miro.documentNumber,
+      attachments: updatedAttachments,
+      attachmentsCount: updatedAttachments.length,
     });
 
     // Atualizar centro de custo (mover de comprometido para gasto)
@@ -535,6 +573,21 @@ export const markAsPaid = async (
     }
 
     await batch.commit();
+
+    // Registrar log de auditoria
+    await createAuditLog({
+      actorId: paymentDetails.paidBy,
+      actorName: paymentDetails.paidByName,
+      actorEmail: '',
+      action: AUDIT_ACTIONS.REQUEST_PAY,
+      entity: AUDIT_ENTITIES.REQUEST,
+      entityId: id,
+      entityName: request.description,
+      metadata: {
+        paymentProtocol: bankPayment.protocol,
+        miroDocument: miro.documentNumber,
+      },
+    });
   } catch (error) {
     console.error('Erro ao marcar como pago:', error);
     throw error;

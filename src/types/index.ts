@@ -53,7 +53,9 @@ export interface Vendor {
   contractUrl?: string;
   observations?: string;
   approvalNotes?: string;
-  status: 'pending' | 'needsInfo' | 'rejected' | 'active' | 'inactive';
+  legalNotes?: string;
+  contractRequesterId?: string;
+  status: 'pending' | 'needsInfo' | 'rejected' | 'contract_review' | 'active' | 'inactive';
   createdAt: Date;
   updatedAt: Date;
 }

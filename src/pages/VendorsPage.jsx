@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Plus, Search, MoreHorizontal, Edit, UserX, UserCheck, Shield, ShieldOff, Star } from 'lucide-react';
-import { useVendors, useDeactivateVendor, useReactivateVendor, useBlockVendor, useUnblockVendor, useCreateVendor } from '@/hooks/useVendors';
+import { Plus, Search, MoreHorizontal, Edit, UserX, UserCheck, Shield, ShieldOff, Star, Send } from 'lucide-react';
+import { useVendors, useDeactivateVendor, useReactivateVendor, useBlockVendor, useUnblockVendor, useCreateVendor, useSendVendorToContractReview } from '@/hooks/useVendors';
 import { formatCNPJ, formatPhone, formatDate } from '@/utils';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +14,7 @@ import { useForm } from 'react-hook-form';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const VendorsPage = () => {
-  const { hasAnyRole } = useAuth();
+  const { hasAnyRole, user } = useAuth();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
@@ -25,6 +25,7 @@ export const VendorsPage = () => {
   const reactivateVendor = useReactivateVendor();
   const blockVendor = useBlockVendor();
   const unblockVendor = useUnblockVendor();
+  const sendToLegal = useSendVendorToContractReview();
   const [isNewVendorOpen, setIsNewVendorOpen] = useState(false);
 
   const handleDeactivate = async (id) => {
@@ -48,6 +49,12 @@ export const VendorsPage = () => {
   const handleUnblock = async (id) => {
     if (window.confirm('Tem certeza que deseja desbloquear este fornecedor?')) {
       await unblockVendor.mutateAsync(id);
+    }
+  };
+
+  const handleSendToLegal = async (id) => {
+    if (window.confirm('Enviar contrato para revisão jurídica?')) {
+      await sendToLegal.mutateAsync({ id, requesterId: user.id });
     }
   };
 
@@ -102,6 +109,7 @@ export const VendorsPage = () => {
               <option value="pending">Pendente</option>
               <option value="needsInfo">Aguardando Info</option>
               <option value="rejected">Rejeitado</option>
+              <option value="contract_review">Revisão Jurídica</option>
             </select>
           </div>
         </div>
@@ -182,6 +190,8 @@ export const VendorsPage = () => {
                         <Badge variant="secondary">Pendente</Badge>
                       ) : vendor.status === 'needsInfo' ? (
                         <Badge variant="secondary">Aguardando Info</Badge>
+                      ) : vendor.status === 'contract_review' ? (
+                        <Badge variant="secondary">Revisão Jurídica</Badge>
                       ) : vendor.status === 'rejected' ? (
                         <Badge variant="destructive">Rejeitado</Badge>
                       ) : (
@@ -211,6 +221,11 @@ export const VendorsPage = () => {
                             {vendor.status === 'inactive' && (
                               <DropdownMenuItem onClick={() => handleReactivate(vendor.id)}>
                                 <UserCheck className="h-4 w-4" /> Reativar
+                              </DropdownMenuItem>
+                            )}
+                            {vendor.status === 'pending' && (
+                              <DropdownMenuItem onClick={() => handleSendToLegal(vendor.id)}>
+                                <Send className="h-4 w-4" /> Enviar ao Jurídico
                               </DropdownMenuItem>
                             )}
                             {vendor.blocked ? (

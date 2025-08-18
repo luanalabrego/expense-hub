@@ -16,6 +16,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Vendor, PaginationParams, PaginatedResponse } from '../types';
+import * as notificationsService from './notifications';
 
 const COLLECTION_NAME = 'vendors';
 
@@ -123,7 +124,9 @@ export const createVendor = async (vendorData: {
   contractUrl?: string;
   observations?: string;
   approvalNotes?: string;
-  status?: 'pending' | 'needsInfo' | 'rejected' | 'active' | 'inactive';
+  legalNotes?: string;
+  status?: 'pending' | 'needsInfo' | 'rejected' | 'contract_review' | 'active' | 'inactive';
+  contractRequesterId?: string;
   blocked?: boolean;
   contacts?: Array<{
     name: string;
@@ -149,6 +152,8 @@ export const createVendor = async (vendorData: {
       contractUrl: vendorData.contractUrl || '',
       observations: vendorData.observations || '',
       approvalNotes: vendorData.approvalNotes || '',
+      legalNotes: vendorData.legalNotes || '',
+      contractRequesterId: vendorData.contractRequesterId || '',
       status: vendorData.status || 'pending',
       createdAt: new Date(),
       updatedAt: new Date()
@@ -370,6 +375,84 @@ export const requestMoreInfoVendor = async (
     });
   } catch (error) {
     console.error('Erro ao solicitar mais informações do fornecedor:', error);
+    throw error;
+  }
+};
+
+// Enviar contrato para revisão jurídica
+export const sendVendorToContractReview = async (
+  id: string,
+  requesterId: string,
+): Promise<void> => {
+  try {
+    await updateDoc(doc(db, COLLECTION_NAME, id), {
+      status: 'contract_review',
+      contractRequesterId: requesterId,
+      updatedAt: new Date(),
+    });
+  } catch (error) {
+    console.error('Erro ao enviar contrato para revisão:', error);
+    throw error;
+  }
+};
+
+// Aprovar contrato do fornecedor
+export const approveVendorContract = async (id: string): Promise<void> => {
+  try {
+    const ref = doc(db, COLLECTION_NAME, id);
+    const snap = await getDoc(ref);
+    await updateDoc(ref, {
+      status: 'active',
+      legalNotes: '',
+      updatedAt: new Date(),
+    });
+
+    const requesterId = snap.data()?.contractRequesterId;
+    if (requesterId) {
+      await notificationsService.createNotification({
+        type: 'success',
+        title: 'Contrato aprovado',
+        message: `O contrato do fornecedor ${snap.data()?.name || ''} foi aprovado.`,
+        recipientId: requesterId,
+        relatedEntityType: 'vendor',
+        relatedEntityId: id,
+        priority: 'medium',
+      });
+    }
+  } catch (error) {
+    console.error('Erro ao aprovar contrato do fornecedor:', error);
+    throw error;
+  }
+};
+
+// Solicitar ajustes no contrato do fornecedor
+export const requestVendorContractAdjustments = async (
+  id: string,
+  notes: string,
+): Promise<void> => {
+  try {
+    const ref = doc(db, COLLECTION_NAME, id);
+    const snap = await getDoc(ref);
+    await updateDoc(ref, {
+      status: 'pending',
+      legalNotes: notes,
+      updatedAt: new Date(),
+    });
+
+    const requesterId = snap.data()?.contractRequesterId;
+    if (requesterId) {
+      await notificationsService.createNotification({
+        type: 'warning',
+        title: 'Contrato reprovado',
+        message: notes || 'O contrato do fornecedor necessita ajustes.',
+        recipientId: requesterId,
+        relatedEntityType: 'vendor',
+        relatedEntityId: id,
+        priority: 'medium',
+      });
+    }
+  } catch (error) {
+    console.error('Erro ao solicitar ajustes do contrato:', error);
     throw error;
   }
 };

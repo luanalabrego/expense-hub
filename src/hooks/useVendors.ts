@@ -186,6 +186,65 @@ export const useUnblockVendor = () => {
   });
 };
 
+// Hook para enviar contrato para revisão jurídica
+export const useSendVendorToContractReview = () => {
+  const queryClient = useQueryClient();
+  const { success, error } = useNotifications();
+
+  return useMutation({
+    mutationFn: ({ id, requesterId }: { id: string; requesterId: string }) =>
+      vendorsService.sendVendorToContractReview(id, requesterId),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.vendors });
+      queryClient.invalidateQueries({ queryKey: queryKeys.vendor(id) });
+      success('Contrato enviado para revisão jurídica!');
+    },
+    onError: (err: any) => {
+      console.error('Erro ao enviar para revisão jurídica:', err);
+      error('Erro ao enviar para revisão jurídica', err.message || 'Tente novamente.');
+    },
+  });
+};
+
+// Hook para aprovar contrato do fornecedor
+export const useApproveVendorContract = () => {
+  const queryClient = useQueryClient();
+  const { success, error } = useNotifications();
+
+  return useMutation({
+    mutationFn: vendorsService.approveVendorContract,
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.vendors });
+      queryClient.invalidateQueries({ queryKey: queryKeys.vendor(id) });
+      success('Contrato aprovado com sucesso!');
+    },
+    onError: (err: any) => {
+      console.error('Erro ao aprovar contrato:', err);
+      error('Erro ao aprovar contrato', err.message || 'Tente novamente.');
+    },
+  });
+};
+
+// Hook para solicitar ajustes no contrato
+export const useRequestVendorContractAdjustments = () => {
+  const queryClient = useQueryClient();
+  const { success, error } = useNotifications();
+
+  return useMutation({
+    mutationFn: ({ id, notes }: { id: string; notes: string }) =>
+      vendorsService.requestVendorContractAdjustments(id, notes),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.vendors });
+      queryClient.invalidateQueries({ queryKey: queryKeys.vendor(id) });
+      success('Ajustes solicitados com sucesso!');
+    },
+    onError: (err: any) => {
+      console.error('Erro ao solicitar ajustes:', err);
+      error('Erro ao solicitar ajustes', err.message || 'Tente novamente.');
+    },
+  });
+};
+
 // Hook para aprovar fornecedor
 export const useApproveVendor = () => {
   const queryClient = useQueryClient();

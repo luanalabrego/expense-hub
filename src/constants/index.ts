@@ -187,6 +187,7 @@ export const ROUTES = {
   REQUEST_DETAIL: '/requests/:id',
   VENDORS: '/vendors',
   VENDOR_APPROVALS: '/vendor-approvals',
+  CONTRACT_REVIEW: '/contract-review',
   COST_CENTERS: '/cost-centers',
   CATEGORIES: '/categories',
   BUDGETS: '/budgets',

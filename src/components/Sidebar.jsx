@@ -9,6 +9,7 @@ const navigation = [
   { name: 'Fornecedores', href: '/vendors', icon: '🏢', page: 'vendors' },
   { name: 'Centros de Custo', href: '/cost-centers', icon: '💰', page: 'cost-centers' },
   { name: 'Aprovação Forn.', href: '/vendor-approvals', icon: '✅', page: 'vendorApprovals' },
+  { name: 'Revisão Contratos', href: '/contract-review', icon: '📑', page: 'contractReview' },
   { name: 'Aprov. Owner', href: '/owner-approvals', icon: '🧾', page: 'ownerApprovals' },
   { name: 'Aprov. Financeira', href: '/financial-approvals', icon: '💸', page: 'financialApprovals' },
   { name: 'Pagamentos', href: '/payments', icon: '💳', page: 'payments' },

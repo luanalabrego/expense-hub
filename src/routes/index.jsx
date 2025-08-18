@@ -5,6 +5,7 @@ import { RequestDetailsPage } from '../pages/RequestDetailsPage';
 import { VendorsPage } from '../pages/VendorsPage';
 import { VendorApprovalsPage } from '../pages/VendorApprovalsPage';
 import { VendorDossierPage } from '../pages/VendorDossierPage';
+import { ContractReviewPage } from '../pages/ContractReviewPage';
 import { UsersPage } from '../pages/UsersPage';
 import { CostCentersPage } from '../pages/CostCentersPage';
 import { FinancialApprovalsPage } from '../pages/FinancialApprovalsPage';
@@ -47,6 +48,16 @@ export const AppRoutes = () => {
           element={
             hasPageAccess('vendorApprovals') ? (
               <VendorApprovalsPage />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route
+          path="contract-review"
+          element={
+            hasPageAccess('contractReview') ? (
+              <ContractReviewPage />
             ) : (
               <Navigate to="/" replace />
             )

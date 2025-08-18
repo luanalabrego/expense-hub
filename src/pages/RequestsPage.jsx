@@ -78,6 +78,24 @@ export const RequestsPage = () => {
     return labels[status] || status;
   };
 
+  const getFiscalStatusColor = (status) => {
+    const colors = {
+      approved: 'bg-green-100 text-green-800',
+      pending_adjustment: 'bg-orange-100 text-orange-800',
+      pending: 'bg-gray-100 text-gray-800',
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getFiscalStatusLabel = (status) => {
+    const labels = {
+      approved: 'Aprovado',
+      pending_adjustment: 'Pendente de ajuste',
+      pending: 'Pendente',
+    };
+    return labels[status] || '-';
+  };
+
   const getPriorityColor = (priority) => {
     const colors = {
       low: 'bg-gray-100 text-gray-800',
@@ -268,6 +286,9 @@ export const RequestsPage = () => {
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status Fiscal
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Prioridade
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -298,6 +319,9 @@ export const RequestsPage = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="h-4 bg-gray-200 rounded w-16"></div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="h-4 bg-gray-200 rounded w-12"></div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="h-4 bg-gray-200 rounded w-12"></div>
@@ -343,6 +367,11 @@ export const RequestsPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(request.status)}`}>
                           {getStatusLabel(request.status)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getFiscalStatusColor(request.fiscalStatus)}`}>
+                          {getFiscalStatusLabel(request.fiscalStatus)}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

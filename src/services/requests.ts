@@ -19,6 +19,7 @@ import {
 import { db } from './firebase';
 import { getCostCenterById } from './costCenters';
 import { getQuotationsByRequest } from './quotations';
+import { validateNF, TaxValidationResult } from './taxValidation';
 import type { PaymentRequest, PaginationParams, PaginatedResponse, RequestStatus, PurchaseType } from '../types';
 
 const COLLECTION_NAME = 'payment-requests';
@@ -209,6 +210,9 @@ export const createRequest = async (requestData: {
   priority: 'low' | 'medium' | 'high' | 'urgent';
   paymentMethod: 'transfer' | 'check' | 'cash' | 'card';
   attachments?: string[];
+  fiscalStatus?: 'pending' | 'approved' | 'pending_adjustment';
+  fiscalNotes?: string;
+  taxInfo?: { expected: number; calculated: number; difference: number };
 }): Promise<PaymentRequest> => {
   try {
     // Gerar número da solicitação
@@ -238,6 +242,9 @@ export const createRequest = async (requestData: {
         priority: requestData.priority,
         paymentMethod: requestData.paymentMethod,
         attachments: requestData.attachments || [],
+        fiscalStatus: 'pending',
+        fiscalNotes: requestData.fiscalNotes || '',
+        taxInfo: requestData.taxInfo || null,
         status: 'pending_validation' as RequestStatus,
         currentApproverId,
         approvalLevel: 0,
@@ -323,7 +330,7 @@ export const validateRequest = async (
   validatorId: string,
   validatorName: string,
   comments?: string
-): Promise<void> => {
+): Promise<TaxValidationResult> => {
   try {
     const request = await getRequestById(id);
     if (!request) throw new Error('Solicitação não encontrada');
@@ -333,6 +340,11 @@ export const validateRequest = async (
       ? await getCostCenterById(request.costCenterId)
       : null;
     const currentApproverId = costCenter?.managerId || null;
+
+    const taxResult = await validateNF({
+      amount: request.amount,
+      reportedTax: request.taxInfo?.calculated,
+    });
 
     await updateDoc(doc(db, COLLECTION_NAME, id), {
       status: 'pending_owner_approval',
@@ -348,7 +360,11 @@ export const validateRequest = async (
         },
       ],
       updatedAt: now,
+      fiscalStatus: taxResult.status,
+      taxInfo: taxResult.taxes,
     });
+
+    return taxResult;
   } catch (error) {
     console.error('Erro ao validar solicitação:', error);
     throw error;

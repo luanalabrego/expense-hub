@@ -130,6 +130,15 @@ export interface PaymentRequest {
   extraordinaryReason?: string;
   purchaseType?: PurchaseType;
   inBudget?: boolean;
+
+  // Dados fiscais
+  fiscalStatus?: 'pending' | 'approved' | 'pending_adjustment';
+  fiscalNotes?: string;
+  taxInfo?: {
+    expected: number;
+    calculated: number;
+    difference: number;
+  };
   
   // Workflow
   status: RequestStatus;

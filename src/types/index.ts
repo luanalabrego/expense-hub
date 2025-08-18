@@ -566,3 +566,12 @@ export interface DocumentStats {
   averageDownloads: number;
 }
 
+
+export interface Quotation {
+  id: string;
+  requestId: string;
+  documentId: string;
+  createdBy: string;
+  createdAt: Date;
+}
+

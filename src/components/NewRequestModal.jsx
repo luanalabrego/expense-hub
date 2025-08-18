@@ -11,6 +11,7 @@ import { useCreateRequest } from '@/hooks/useRequests';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUploadDocument } from '@/hooks/useDocuments';
 import * as requestsService from '@/services/requests';
+import * as quotationsService from '@/services/quotations';
 
 export const NewRequestModal = ({ open, onClose }) => {
   const { user } = useAuth();
@@ -32,6 +33,7 @@ export const NewRequestModal = ({ open, onClose }) => {
   const [amount, setAmount] = useState('');
   const [boletoFile, setBoletoFile] = useState(null);
   const [nfFile, setNfFile] = useState(null);
+  const [quotationFiles, setQuotationFiles] = useState([]);
 
   const resetForm = () => {
     setExpenseName('');
@@ -48,6 +50,7 @@ export const NewRequestModal = ({ open, onClose }) => {
     setAmount('');
     setBoletoFile(null);
     setNfFile(null);
+    setQuotationFiles([]);
   };
 
   const selectedVendor = vendors.find((v) => v.id === vendorId);
@@ -66,6 +69,11 @@ export const NewRequestModal = ({ open, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const requiredQuotations = (parseFloat(amount) || 0) > 10000 ? 3 : 1;
+      if (quotationFiles.length < requiredQuotations) {
+        alert(`É necessário anexar pelo menos ${requiredQuotations} orçamento(s).`);
+        return;
+      }
       const newRequest = await createRequest.mutateAsync({
         description: expenseName,
         amount: parseFloat(amount) || 0,
@@ -107,6 +115,20 @@ export const NewRequestModal = ({ open, onClose }) => {
           userId: user.id,
         });
         attachments.push(doc.id);
+      }
+      for (const file of quotationFiles) {
+        const doc = await uploadDocument.mutateAsync({
+          file,
+          category: 'quotation',
+          relatedEntityType: 'request',
+          relatedEntityId: newRequest.id,
+          userId: user.id,
+        });
+        await quotationsService.createQuotation({
+          requestId: newRequest.id,
+          documentId: doc.id,
+          createdBy: user.id,
+        });
       }
       if (attachments.length > 0) {
         await requestsService.updateRequest(newRequest.id, { attachments });
@@ -213,6 +235,10 @@ export const NewRequestModal = ({ open, onClose }) => {
           <div>
             <label className="block text-sm font-medium mb-1">NF</label>
             <Input type="file" onChange={(e) => setNfFile(e.target.files?.[0] || null)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Orçamentos</label>
+            <Input type="file" multiple onChange={(e) => setQuotationFiles(Array.from(e.target.files || []))} />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => { resetForm(); onClose(); }}>

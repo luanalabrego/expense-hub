@@ -17,6 +17,8 @@ import {
 import { db } from './firebase';
 import type { Vendor, PaginationParams, PaginatedResponse } from '../types';
 import * as notificationsService from './notifications';
+import { createPreOrderCard } from './pipefy';
+import { createOrUpdateVendor } from './sap';
 
 const COLLECTION_NAME = 'vendors';
 
@@ -452,18 +454,54 @@ export const approveVendorContract = async (id: string): Promise<void> => {
   try {
     const ref = doc(db, COLLECTION_NAME, id);
     const snap = await getDoc(ref);
+    const vendor = snap.data();
+
     await updateDoc(ref, {
       status: 'active',
       legalNotes: '',
       updatedAt: new Date(),
     });
 
-    const requesterId = snap.data()?.contractRequesterId;
+    let sapVendorId: string | undefined;
+    let pipefyCardId: string | undefined;
+
+    if (vendor) {
+      try {
+        sapVendorId = await createOrUpdateVendor({
+          id,
+          name: vendor.name,
+          taxId: vendor.taxId,
+          email: vendor.email,
+          phone: vendor.phone,
+        });
+      } catch (err) {
+        console.error('Integração SAP falhou:', err);
+      }
+
+      try {
+        pipefyCardId = await createPreOrderCard({
+          requestId: id,
+          title: `Pré-pedido ${vendor.name || ''}`,
+          vendorName: vendor.name,
+        });
+      } catch (err) {
+        console.error('Integração Pipefy falhou:', err);
+      }
+
+      if (sapVendorId || pipefyCardId) {
+        await updateDoc(ref, {
+          sapVendorId: sapVendorId || null,
+          pipefyCardId: pipefyCardId || null,
+        });
+      }
+    }
+
+    const requesterId = vendor?.contractRequesterId;
     if (requesterId) {
       await notificationsService.createNotification({
         type: 'success',
         title: 'Contrato aprovado',
-        message: `O contrato do fornecedor ${snap.data()?.name || ''} foi aprovado.`,
+        message: `O contrato do fornecedor ${vendor?.name || ''} foi aprovado.`,
         recipientId: requesterId,
         relatedEntityType: 'vendor',
         relatedEntityId: id,

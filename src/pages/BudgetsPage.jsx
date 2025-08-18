@@ -1,7 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveVendors } from '@/hooks/useVendors';
 import { useActiveCostCenters } from '@/hooks/useCostCenters';
+import {
+  getBudgetLines,
+  createBudgetLine,
+  updateBudgetLine,
+  deleteBudgetLine,
+} from '@/services/budgetLines';
 import {
   Dialog,
   DialogContent,
@@ -37,6 +43,7 @@ export const BudgetsPage = () => {
   };
 
   const [form, setForm] = useState({
+    id: null,
     vendorId: '',
     costCenterId: '',
     description: '',
@@ -49,6 +56,14 @@ export const BudgetsPage = () => {
   const [items, setItems] = useState([]);
   const [editingIndex, setEditingIndex] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      const data = await getBudgetLines();
+      setItems(data);
+    };
+    fetchItems();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -64,6 +79,7 @@ export const BudgetsPage = () => {
 
   const resetForm = () => {
     setForm({
+      id: null,
       vendorId: '',
       costCenterId: '',
       description: '',
@@ -75,14 +91,17 @@ export const BudgetsPage = () => {
     setEditingIndex(null);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    const { id, ...data } = form;
     if (editingIndex !== null) {
+      await updateBudgetLine(id, data);
       const newItems = [...items];
-      newItems[editingIndex] = form;
+      newItems[editingIndex] = { ...data, id };
       setItems(newItems);
     } else {
-      setItems((prev) => [...prev, form]);
+      const created = await createBudgetLine({ ...data, createdBy: user.id });
+      setItems((prev) => [...prev, created]);
     }
     resetForm();
     setIsModalOpen(false);
@@ -94,7 +113,9 @@ export const BudgetsPage = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (index) => {
+  const handleDelete = async (index) => {
+    const item = items[index];
+    await deleteBudgetLine(item.id);
     setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
@@ -275,7 +296,7 @@ export const BudgetsPage = () => {
           </thead>
           <tbody>
             {items.map((item, idx) => (
-              <tr key={idx} className="border-t">
+              <tr key={item.id || idx} className="border-t">
                 <td className="px-2 py-2">{getVendorName(item.vendorId)}</td>
                 <td className="px-2 py-2">{item.description}</td>
                 <td className="px-2 py-2">{getCostCenterName(item.costCenterId)}</td>

@@ -31,6 +31,7 @@ export const useRequestsList = (
     maxAmount?: number;
     fromDate?: Date;
     toDate?: Date;
+    contractStatus?: 'pending' | 'approved' | 'adjustments_requested';
   } = { page: 1, limit: 20 }
 ) => {
   return useQuery({
@@ -50,6 +51,7 @@ export const useRequestsList = (
         amountTo: params.maxAmount,
         sortBy: params.orderBy,
         sortOrder: params.orderDir,
+        contractStatus: params.contractStatus,
       }),
     ...queryOptions.dynamic,
   });
@@ -320,6 +322,45 @@ export const useCancelRequest = () => {
     onError: (err: any) => {
       console.error('Erro ao cancelar solicitação:', err);
       error('Erro ao cancelar solicitação', err.message || 'Tente novamente.');
+    },
+  });
+};
+
+// Hook para aprovar contrato da solicitação
+export const useApproveRequestContract = () => {
+  const queryClient = useQueryClient();
+  const { success, error } = useNotifications();
+
+  return useMutation({
+    mutationFn: requestsService.approveRequestContract,
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.requests });
+      queryClient.invalidateQueries({ queryKey: queryKeys.request(id) });
+      success('Contrato aprovado com sucesso!');
+    },
+    onError: (err: any) => {
+      console.error('Erro ao aprovar contrato:', err);
+      error('Erro ao aprovar contrato', err.message || 'Tente novamente.');
+    },
+  });
+};
+
+// Hook para solicitar ajustes no contrato da solicitação
+export const useRequestContractAdjustments = () => {
+  const queryClient = useQueryClient();
+  const { success, error } = useNotifications();
+
+  return useMutation({
+    mutationFn: ({ id, notes }: { id: string; notes: string }) =>
+      requestsService.requestRequestContractAdjustments(id, notes),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.requests });
+      queryClient.invalidateQueries({ queryKey: queryKeys.request(id) });
+      success('Ajustes solicitados com sucesso!');
+    },
+    onError: (err: any) => {
+      console.error('Erro ao solicitar ajustes:', err);
+      error('Erro ao solicitar ajustes', err.message || 'Tente novamente.');
     },
   });
 };

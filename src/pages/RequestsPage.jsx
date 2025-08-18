@@ -98,6 +98,24 @@ export const RequestsPage = () => {
     return labels[priority] || priority;
   };
 
+  const getContractStatusColor = (status) => {
+    const colors = {
+      pending: 'bg-yellow-100 text-yellow-800',
+      approved: 'bg-green-100 text-green-800',
+      adjustments_requested: 'bg-red-100 text-red-800',
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getContractStatusLabel = (status) => {
+    const labels = {
+      pending: 'Ag. jurídico',
+      approved: 'Aprovado',
+      adjustments_requested: 'Ajustes solicitados',
+    };
+    return labels[status] || '-';
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -268,6 +286,9 @@ export const RequestsPage = () => {
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Contrato
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Prioridade
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -301,6 +322,12 @@ export const RequestsPage = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="h-4 bg-gray-200 rounded w-12"></div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="h-4 bg-gray-200 rounded w-20"></div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="h-4 bg-gray-200 rounded w-20"></div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="h-4 bg-gray-200 rounded w-12"></div>
@@ -344,6 +371,13 @@ export const RequestsPage = () => {
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(request.status)}`}>
                           {getStatusLabel(request.status)}
                         </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {request.contractStatus ? (
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getContractStatusColor(request.contractStatus)}`}>
+                            {getContractStatusLabel(request.contractStatus)}
+                          </span>
+                        ) : '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(request.priority)}`}>

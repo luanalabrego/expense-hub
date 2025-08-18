@@ -45,6 +45,11 @@ export const CostCentersPage = () => {
     }
   };
 
+  const getManagerEmail = (managerId) => {
+    const id = typeof managerId === 'string' ? managerId : managerId?.id;
+    return users.find((u) => u.id === id)?.email || id;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -78,7 +83,7 @@ export const CostCentersPage = () => {
                 <tr key={cc.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-mono">{cc.code}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{cc.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{cc.managerName || cc.managerId}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{getManagerEmail(cc.managerId)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {cc.budget != null
                       ? cc.budget.toLocaleString('pt-BR', {

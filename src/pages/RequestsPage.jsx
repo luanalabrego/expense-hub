@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Edit, Eye, CheckCircle, XCircle, Clock, DollarSign } from 'lucide-react';
-import { useRequestsList, useRequestStats } from '../hooks/useRequests';
+import { useRequestsList, useRequestStats, useApproveRequest, useRejectRequest } from '../hooks/useRequests';
+import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../stores/ui';
 import NewRequestModal from '../components/NewRequestModal';
 
 export const RequestsPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
@@ -14,6 +16,8 @@ export const RequestsPage = () => {
   const [orderBy, setOrderBy] = useState('createdAt');
   const [orderDir, setOrderDir] = useState('desc');
   const [showNewRequest, setShowNewRequest] = useState(false);
+  const approveRequest = useApproveRequest();
+  const rejectRequest = useRejectRequest();
   const { error: notifyError } = useNotifications();
   const { data, isLoading, isError, error } = useRequestsList({
     page,
@@ -132,6 +136,28 @@ export const RequestsPage = () => {
       adjustments_requested: 'Ajustes solicitados',
     };
     return labels[status] || '-';
+  };
+
+  const handleApprove = (id) => {
+    const comments = window.prompt('Comentário da aprovação');
+    if (comments === null) return;
+    approveRequest.mutate({
+      id,
+      approverId: user.id,
+      approverName: user.name,
+      comments,
+    });
+  };
+
+  const handleReject = (id) => {
+    const reason = window.prompt('Motivo da reprovação');
+    if (!reason) return;
+    rejectRequest.mutate({
+      id,
+      approverId: user.id,
+      approverName: user.name,
+      reason,
+    });
   };
 
   return (
@@ -425,16 +451,18 @@ export const RequestsPage = () => {
                           {request.status === 'pending_owner_approval' && (
                             <>
                               <button
-                                onClick={() => alert('Aprovar solicitação (Demo)')}
-                                className="text-green-600 hover:text-green-900"
+                                onClick={() => handleApprove(request.id)}
+                                className="text-green-600 hover:text-green-900 disabled:opacity-50"
                                 title="Aprovar"
+                                disabled={approveRequest.isPending}
                               >
                                 <CheckCircle className="w-4 h-4" />
                               </button>
                               <button
-                                onClick={() => alert('Rejeitar solicitação (Demo)')}
-                                className="text-red-600 hover:text-red-900"
+                                onClick={() => handleReject(request.id)}
+                                className="text-red-600 hover:text-red-900 disabled:opacity-50"
                                 title="Rejeitar"
+                                disabled={rejectRequest.isPending}
                               >
                                 <XCircle className="w-4 h-4" />
                               </button>

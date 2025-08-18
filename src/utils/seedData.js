@@ -681,7 +681,17 @@ export const seedBudgets = [
 
 // Função para gerar solicitações de demonstração
 export const generateSeedRequests = () => {
-  const statuses = ['pending_owner_approval', 'pending_payment_approval', 'paid', 'rejected', 'cancelled'];
+  const statuses = [
+    'pending_owner_approval',
+    'pending_fpa_approval',
+    'pending_director_approval',
+    'pending_cfo_approval',
+    'pending_ceo_approval',
+    'pending_payment_approval',
+    'paid',
+    'rejected',
+    'cancelled',
+  ];
   const priorities = ['low', 'medium', 'high', 'urgent'];
   const paymentMethods = ['transfer', 'check', 'cash', 'card'];
   

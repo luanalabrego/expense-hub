@@ -64,14 +64,17 @@ export const AuthProvider = ({ children }) => {
   };
 
   const [permissions, setPermissions] = useState({
-    requests: ['finance', 'cost_center_owner', 'user'],
+    requests: ['finance', 'cost_center_owner', 'user', 'fpa', 'director', 'cfo', 'ceo'],
     vendors: ['finance'],
     vendorApprovals: ['finance'],
     validation: ['finance'],
     ownerApprovals: ['cost_center_owner'],
+    financialApprovals: ['fpa'],
+    directorApprovals: ['director'],
+    cfoApprovals: ['cfo'],
+    ceoApprovals: ['ceo'],
     users: ['finance'],
     'cost-centers': ['finance', 'cost_center_owner'],
-    financialApprovals: ['finance'],
     payments: ['finance'],
     reports: ['finance'],
     budgets: ['cost_center_owner'],

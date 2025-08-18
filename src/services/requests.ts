@@ -373,6 +373,28 @@ export const approveRequest = async (
     }
 
     const now = new Date();
+
+    let nextStatus: RequestStatus = 'pending_payment_approval';
+    const amount = request.amount || 0;
+
+    switch (request.status) {
+      case 'pending_owner_approval':
+        nextStatus = amount <= 10000 ? 'pending_payment_approval' : 'pending_fpa_approval';
+        break;
+      case 'pending_fpa_approval':
+        nextStatus = 'pending_director_approval';
+        break;
+      case 'pending_director_approval':
+        nextStatus = amount <= 50000 ? 'pending_payment_approval' : 'pending_cfo_approval';
+        break;
+      case 'pending_cfo_approval':
+        nextStatus = amount <= 200000 ? 'pending_payment_approval' : 'pending_ceo_approval';
+        break;
+      case 'pending_ceo_approval':
+        nextStatus = 'pending_payment_approval';
+        break;
+    }
+
     const approvalEntry = {
       approverId,
       approverName,
@@ -383,7 +405,7 @@ export const approveRequest = async (
     };
 
     const statusEntry = {
-      status: 'pending_payment_approval' as RequestStatus,
+      status: nextStatus as RequestStatus,
       changedBy: approverId,
       changedByName: approverName,
       timestamp: now,
@@ -392,22 +414,26 @@ export const approveRequest = async (
     const batch = writeBatch(db);
     const requestRef = doc(db, COLLECTION_NAME, id);
 
-    // Atualizar solicitação
-    batch.update(requestRef, {
-      status: 'pending_payment_approval',
+    const updateData: any = {
+      status: nextStatus,
       approvalLevel: increment(1),
       approvalHistory: [...request.approvalHistory, approvalEntry],
       statusHistory: [...(request.statusHistory || []), statusEntry],
-      approvedAt: now,
-      updatedAt: now
-    });
+      updatedAt: now,
+      currentApproverId: null,
+    };
 
-    // Atualizar centro de custo (comprometer valor)
-    if (request.costCenterId) {
+    if (nextStatus === 'pending_payment_approval') {
+      updateData.approvedAt = now;
+    }
+
+    batch.update(requestRef, updateData);
+
+    if (nextStatus === 'pending_payment_approval' && request.costCenterId) {
       const costCenterRef = doc(db, 'cost-centers', request.costCenterId);
       batch.update(costCenterRef, {
         committed: increment(request.amount),
-        updatedAt: new Date()
+        updatedAt: now
       });
     }
 

@@ -48,27 +48,33 @@ export const RequestsPage = () => {
     return new Intl.DateTimeFormat('pt-BR').format(new Date(date));
   };
 
-    const getStatusColor = (status) => {
-      const colors = {
-        pending_validation: 'bg-orange-100 text-orange-800',
-        pending_owner_approval: 'bg-yellow-100 text-yellow-800',
-        pending_payment_approval: 'bg-purple-100 text-purple-800',
-        rejected: 'bg-red-100 text-red-800',
-        cancelled: 'bg-gray-200 text-gray-800',
-        paid: 'bg-green-100 text-green-800',
-      };
+  const getStatusColor = (status) => {
+    const colors = {
+      pending_owner_approval: 'bg-yellow-100 text-yellow-800',
+      pending_fpa_approval: 'bg-purple-100 text-purple-800',
+      pending_director_approval: 'bg-indigo-100 text-indigo-800',
+      pending_cfo_approval: 'bg-pink-100 text-pink-800',
+      pending_ceo_approval: 'bg-orange-100 text-orange-800',
+      pending_payment_approval: 'bg-purple-100 text-purple-800',
+      rejected: 'bg-red-100 text-red-800',
+      cancelled: 'bg-gray-200 text-gray-800',
+      paid: 'bg-green-100 text-green-800',
+    };
     return colors[status] || 'bg-gray-100 text-gray-800';
   };
 
-    const getStatusLabel = (status) => {
-      const labels = {
-        pending_validation: 'Ag. validação',
-        pending_owner_approval: 'Ag. aprovação do owner',
-        pending_payment_approval: 'Ag. aprovação de pagamento',
-        rejected: 'Rejeitado',
-        cancelled: 'Cancelado',
-        paid: 'Pagamento realizado',
-      };
+  const getStatusLabel = (status) => {
+    const labels = {
+      pending_owner_approval: 'Ag. aprovação do owner',
+      pending_fpa_approval: 'Ag. aprovação FP&A',
+      pending_director_approval: 'Ag. aprovação Diretor',
+      pending_cfo_approval: 'Ag. aprovação CFO',
+      pending_ceo_approval: 'Ag. aprovação CEO',
+      pending_payment_approval: 'Ag. aprovação de pagamento',
+      rejected: 'Rejeitado',
+      cancelled: 'Cancelado',
+      paid: 'Pagamento realizado',
+    };
     return labels[status] || status;
   };
 
@@ -199,6 +205,10 @@ export const RequestsPage = () => {
               <option value="">Todos os status</option>
               <option value="pending_validation">Ag. validação</option>
               <option value="pending_owner_approval">Ag. aprovação do owner</option>
+              <option value="pending_fpa_approval">Ag. aprovação FP&A</option>
+              <option value="pending_director_approval">Ag. aprovação Diretor</option>
+              <option value="pending_cfo_approval">Ag. aprovação CFO</option>
+              <option value="pending_ceo_approval">Ag. aprovação CEO</option>
               <option value="pending_payment_approval">Ag. aprovação de pagamento</option>
               <option value="rejected">Rejeitado</option>
               <option value="cancelled">Cancelado</option>

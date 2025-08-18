@@ -1,10 +1,21 @@
 // Tipos principais do sistema de aprovação de pagamentos
 
-export type Role = 'finance' | 'cost_center_owner' | 'user';
+export type Role =
+  | 'finance'
+  | 'cost_center_owner'
+  | 'user'
+  | 'fpa'
+  | 'director'
+  | 'cfo'
+  | 'ceo';
 
 export type RequestStatus =
   | 'pending_validation'
   | 'pending_owner_approval'
+  | 'pending_fpa_approval'
+  | 'pending_director_approval'
+  | 'pending_cfo_approval'
+  | 'pending_ceo_approval'
   | 'pending_payment_approval'
   | 'rejected'
   | 'cancelled'

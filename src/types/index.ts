@@ -3,6 +3,7 @@
 export type Role = 'finance' | 'cost_center_owner' | 'user';
 
 export type RequestStatus =
+  | 'pending_validation'
   | 'pending_owner_approval'
   | 'pending_payment_approval'
   | 'rejected'

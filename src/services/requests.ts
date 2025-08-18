@@ -212,8 +212,7 @@ export const createRequest = async (requestData: {
   try {
     // Gerar número da solicitação
       const requestNumber = await generateRequestNumber();
-      const costCenter = await getCostCenterById(requestData.costCenterId);
-      const currentApproverId = costCenter?.managerId || null;
+      const currentApproverId = null;
 
       const requestDoc = {
         requestNumber,
@@ -238,13 +237,13 @@ export const createRequest = async (requestData: {
         priority: requestData.priority,
         paymentMethod: requestData.paymentMethod,
         attachments: requestData.attachments || [],
-        status: 'pending_owner_approval' as RequestStatus,
+        status: 'pending_validation' as RequestStatus,
         currentApproverId,
         approvalLevel: 0,
         approvalHistory: [],
         statusHistory: [
           {
-            status: 'pending_owner_approval',
+            status: 'pending_validation',
             changedBy: requestData.requesterId,
             changedByName: requestData.requesterName,
             timestamp: new Date(),
@@ -311,16 +310,54 @@ export const updateRequest = async (
         }],
         updatedAt: now
       });
-    } catch (error) {
-      console.error('Erro ao submeter solicitação:', error);
-      throw error;
-    }
-  };
+  } catch (error) {
+    console.error('Erro ao submeter solicitação:', error);
+    throw error;
+  }
+};
+
+// Validar solicitação e encaminhar para aprovação do owner
+export const validateRequest = async (
+  id: string,
+  validatorId: string,
+  validatorName: string,
+  comments?: string
+): Promise<void> => {
+  try {
+    const request = await getRequestById(id);
+    if (!request) throw new Error('Solicitação não encontrada');
+
+    const now = new Date();
+    const costCenter = request.costCenterId
+      ? await getCostCenterById(request.costCenterId)
+      : null;
+    const currentApproverId = costCenter?.managerId || null;
+
+    await updateDoc(doc(db, COLLECTION_NAME, id), {
+      status: 'pending_owner_approval',
+      currentApproverId,
+      statusHistory: [
+        ...(request.statusHistory || []),
+        {
+          status: 'pending_owner_approval',
+          changedBy: validatorId,
+          changedByName: validatorName,
+          timestamp: now,
+          reason: comments || '',
+        },
+      ],
+      updatedAt: now,
+    });
+  } catch (error) {
+    console.error('Erro ao validar solicitação:', error);
+    throw error;
+  }
+};
 
 // Aprovar solicitação
 export const approveRequest = async (
-  id: string, 
-  approverId: string, 
+  id: string,
+  approverId: string,
   approverName: string,
   comments?: string
 ): Promise<void> => {

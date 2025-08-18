@@ -13,6 +13,7 @@ import { PaymentManagementPage } from '../pages/PaymentManagementPage';
 import { ReportsPage } from '../pages/ReportsPage';
 import { useAuth } from '../contexts/AuthContext';
 import { BudgetsPage } from '../pages/BudgetsPage';
+import { ValidationPage } from '../pages/ValidationPage';
 
 export const AppRoutes = () => {
   const { hasPageAccess } = useAuth();
@@ -27,6 +28,10 @@ export const AppRoutes = () => {
         <Route
           path="requests/:id"
           element={hasPageAccess('requests') ? <RequestDetailsPage /> : <Navigate to="/" replace />}
+        />
+        <Route
+          path="validation"
+          element={hasPageAccess('validation') ? <ValidationPage /> : <Navigate to="/" replace />}
         />
         <Route
           path="vendors"

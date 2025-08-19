@@ -27,11 +27,12 @@ export const OwnerApprovalsPage = () => {
   const approveRequest = useApproveRequest();
   const rejectRequest = useRejectRequest();
 
+  const userCostCenters = user?.ccScope ?? user?.costCenters ?? [];
   const pendingRequests = (pendingData ?? []).filter((r) =>
-    user.costCenters.includes(r.costCenterId)
+    userCostCenters.includes(r.costCenterId)
   );
   const historyRequests = (historyData?.data ?? []).filter(
-    (r) => user.costCenters.includes(r.costCenterId) && r.status !== 'pending_owner_approval'
+    (r) => userCostCenters.includes(r.costCenterId) && r.status !== 'pending_owner_approval'
   );
 
   const filteredHistory = historyRequests.filter((r) => {

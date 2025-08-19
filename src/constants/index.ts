@@ -19,6 +19,7 @@ export const ROLES = {
 // Status das solicitações
 export const REQUEST_STATUS = {
   PENDING_VALIDATION: 'pending_validation',
+  RETURNED: 'returned',
   PENDING_OWNER_APPROVAL: 'pending_owner_approval',
   PENDING_FPA_APPROVAL: 'pending_fpa_approval',
   PENDING_DIRECTOR_APPROVAL: 'pending_director_approval',
@@ -64,6 +65,7 @@ export const ROLE_LABELS = {
 
 export const STATUS_LABELS = {
   [REQUEST_STATUS.PENDING_VALIDATION]: 'Ag. validação',
+  [REQUEST_STATUS.RETURNED]: 'Devolvida',
   [REQUEST_STATUS.PENDING_OWNER_APPROVAL]: 'Ag. aprovação do owner',
   [REQUEST_STATUS.PENDING_FPA_APPROVAL]: 'Ag. aprovação FP&A',
   [REQUEST_STATUS.PENDING_DIRECTOR_APPROVAL]: 'Ag. aprovação Diretor',
@@ -96,6 +98,7 @@ export const DOCUMENT_TYPE_LABELS = {
 // Cores para status
 export const STATUS_COLORS = {
   [REQUEST_STATUS.PENDING_VALIDATION]: 'orange',
+  [REQUEST_STATUS.RETURNED]: 'cyan',
   [REQUEST_STATUS.PENDING_OWNER_APPROVAL]: 'yellow',
   [REQUEST_STATUS.PENDING_FPA_APPROVAL]: 'purple',
   [REQUEST_STATUS.PENDING_DIRECTOR_APPROVAL]: 'indigo',

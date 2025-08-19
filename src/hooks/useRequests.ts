@@ -161,7 +161,10 @@ export const useSubmitRequest = () => {
       // Invalidar queries relacionadas
       queryClient.invalidateQueries({ queryKey: queryKeys.requests });
       queryClient.invalidateQueries({ queryKey: queryKeys.request(id) });
-      
+      queryClient.invalidateQueries({ queryKey: queryKeys.requestsByStatus('returned') });
+      queryClient.invalidateQueries({ queryKey: queryKeys.requestsByStatus('pending_validation') });
+      queryClient.invalidateQueries({ queryKey: queryKeys.requestsByStatus('pending_owner_approval') });
+
       success('Solicitação enviada para aprovação!');
     },
     onError: (err: any) => {
@@ -200,6 +203,39 @@ export const useValidateRequest = () => {
     onError: (err: any) => {
       console.error('Erro ao validar solicitação:', err);
       error('Erro ao validar solicitação', err.message || 'Tente novamente.');
+    },
+  });
+};
+
+// Hook para devolver solicitação ao colaborador
+export const useReturnRequest = () => {
+  const queryClient = useQueryClient();
+  const { success, error } = useNotifications();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      validatorId,
+      validatorName,
+      reason,
+    }: {
+      id: string;
+      validatorId: string;
+      validatorName: string;
+      reason: string;
+    }) => requestsService.returnRequest(id, validatorId, validatorName, reason),
+    onSuccess: (_, { id }) => {
+      // Invalidar queries relacionadas
+      queryClient.invalidateQueries({ queryKey: queryKeys.requests });
+      queryClient.invalidateQueries({ queryKey: queryKeys.request(id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.requestsByStatus('pending_validation') });
+      queryClient.invalidateQueries({ queryKey: queryKeys.requestsByStatus('returned') });
+
+      success('Solicitação devolvida para ajustes.');
+    },
+    onError: (err: any) => {
+      console.error('Erro ao devolver solicitação:', err);
+      error('Erro ao devolver solicitação', err.message || 'Tente novamente.');
     },
   });
 };

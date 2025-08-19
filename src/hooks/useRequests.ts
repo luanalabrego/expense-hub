@@ -174,6 +174,70 @@ export const useSubmitRequest = () => {
   });
 };
 
+// Hook para verificar solicitação na contabilidade
+export const useVerifyRequest = () => {
+  const queryClient = useQueryClient();
+  const { success, error } = useNotifications();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      verifierId,
+      verifierName,
+      comments,
+    }: {
+      id: string;
+      verifierId: string;
+      verifierName: string;
+      comments?: string;
+    }) => requestsService.verifyRequest(id, verifierId, verifierName, comments),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.requests });
+      queryClient.invalidateQueries({ queryKey: queryKeys.request(id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.requestsByStatus('pending_accounting_monitor') });
+      queryClient.invalidateQueries({ queryKey: queryKeys.requestsByStatus('pending_validation') });
+
+      success('Solicitação verificada com sucesso!');
+    },
+    onError: (err: any) => {
+      console.error('Erro ao verificar solicitação:', err);
+      error('Erro ao verificar solicitação', err.message || 'Tente novamente.');
+    },
+  });
+};
+
+// Hook para retornar solicitação com erro
+export const useReturnRequestWithError = () => {
+  const queryClient = useQueryClient();
+  const { success, error } = useNotifications();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      verifierId,
+      verifierName,
+      reason,
+    }: {
+      id: string;
+      verifierId: string;
+      verifierName: string;
+      reason: string;
+    }) => requestsService.returnRequestWithError(id, verifierId, verifierName, reason),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.requests });
+      queryClient.invalidateQueries({ queryKey: queryKeys.request(id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.requestsByStatus('pending_accounting_monitor') });
+      queryClient.invalidateQueries({ queryKey: queryKeys.requestsByStatus('pending_adjustment') });
+
+      success('Solicitação retornada para ajuste.');
+    },
+    onError: (err: any) => {
+      console.error('Erro ao retornar solicitação:', err);
+      error('Erro ao retornar solicitação', err.message || 'Tente novamente.');
+    },
+  });
+};
+
 // Hook para validar solicitação
 export const useValidateRequest = () => {
   const queryClient = useQueryClient();

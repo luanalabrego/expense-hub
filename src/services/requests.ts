@@ -379,7 +379,7 @@ export const updateRequest = async (
 };
 
 // Submeter solicitação para aprovação
-  export const submitRequest = async (
+export const submitRequest = async (
     id: string,
     userId: string,
     userName: string
@@ -433,6 +433,71 @@ export const updateRequest = async (
       });
   } catch (error) {
     console.error('Erro ao submeter solicitação:', error);
+    throw error;
+  }
+};
+
+// Marcar solicitação como verificada pela contabilidade
+export const verifyRequest = async (
+  id: string,
+  verifierId: string,
+  verifierName: string,
+  comments?: string
+): Promise<void> => {
+  try {
+    const request = await getRequestById(id);
+    if (!request) throw new Error('Solicitação não encontrada');
+
+    const now = new Date();
+    await updateDoc(doc(db, COLLECTION_NAME, id), {
+      status: 'pending_validation',
+      statusHistory: [
+        ...(request.statusHistory || []),
+        {
+          status: 'pending_validation',
+          changedBy: verifierId,
+          changedByName: verifierName,
+          timestamp: now,
+          reason: comments || '',
+        },
+      ],
+      updatedAt: now,
+    });
+  } catch (error) {
+    console.error('Erro ao marcar solicitação como verificada:', error);
+    throw error;
+  }
+};
+
+// Retornar solicitação com erro para ajustes
+export const returnRequestWithError = async (
+  id: string,
+  verifierId: string,
+  verifierName: string,
+  reason: string
+): Promise<void> => {
+  try {
+    const request = await getRequestById(id);
+    if (!request) throw new Error('Solicitação não encontrada');
+
+    const now = new Date();
+    await updateDoc(doc(db, COLLECTION_NAME, id), {
+      status: 'pending_adjustment',
+      statusHistory: [
+        ...(request.statusHistory || []),
+        {
+          status: 'pending_adjustment',
+          changedBy: verifierId,
+          changedByName: verifierName,
+          timestamp: now,
+          reason,
+        },
+      ],
+      updatedAt: now,
+      fiscalStatus: 'pending_adjustment',
+    });
+  } catch (error) {
+    console.error('Erro ao retornar solicitação com erro:', error);
     throw error;
   }
 };

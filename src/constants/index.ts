@@ -18,6 +18,7 @@ export const ROLES = {
 
 // Status das solicitações
 export const REQUEST_STATUS = {
+  PENDING_ACCOUNTING_MONITOR: 'pending_accounting_monitor',
   PENDING_VALIDATION: 'pending_validation',
   RETURNED: 'returned',
   PENDING_OWNER_APPROVAL: 'pending_owner_approval',
@@ -26,6 +27,7 @@ export const REQUEST_STATUS = {
   PENDING_CFO_APPROVAL: 'pending_cfo_approval',
   PENDING_CEO_APPROVAL: 'pending_ceo_approval',
   PENDING_PAYMENT_APPROVAL: 'pending_payment_approval',
+  PENDING_ADJUSTMENT: 'pending_adjustment',
   REJECTED: 'rejected',
   CANCELLED: 'cancelled',
   PAID: 'paid'
@@ -64,6 +66,7 @@ export const ROLE_LABELS = {
 } as const;
 
 export const STATUS_LABELS = {
+  [REQUEST_STATUS.PENDING_ACCOUNTING_MONITOR]: 'Ag. conferência contábil',
   [REQUEST_STATUS.PENDING_VALIDATION]: 'Ag. validação',
   [REQUEST_STATUS.RETURNED]: 'Devolvida',
   [REQUEST_STATUS.PENDING_OWNER_APPROVAL]: 'Ag. aprovação do owner',
@@ -72,6 +75,7 @@ export const STATUS_LABELS = {
   [REQUEST_STATUS.PENDING_CFO_APPROVAL]: 'Ag. aprovação CFO',
   [REQUEST_STATUS.PENDING_CEO_APPROVAL]: 'Ag. aprovação CEO',
   [REQUEST_STATUS.PENDING_PAYMENT_APPROVAL]: 'Ag. aprovação de pagamento',
+  [REQUEST_STATUS.PENDING_ADJUSTMENT]: 'Ag. ajuste',
   [REQUEST_STATUS.REJECTED]: 'Rejeitada',
   [REQUEST_STATUS.CANCELLED]: 'Cancelada',
   [REQUEST_STATUS.PAID]: 'Pagamento realizado'
@@ -97,6 +101,7 @@ export const DOCUMENT_TYPE_LABELS = {
 
 // Cores para status
 export const STATUS_COLORS = {
+  [REQUEST_STATUS.PENDING_ACCOUNTING_MONITOR]: 'teal',
   [REQUEST_STATUS.PENDING_VALIDATION]: 'orange',
   [REQUEST_STATUS.RETURNED]: 'cyan',
   [REQUEST_STATUS.PENDING_OWNER_APPROVAL]: 'yellow',
@@ -105,6 +110,7 @@ export const STATUS_COLORS = {
   [REQUEST_STATUS.PENDING_CFO_APPROVAL]: 'pink',
   [REQUEST_STATUS.PENDING_CEO_APPROVAL]: 'orange',
   [REQUEST_STATUS.PENDING_PAYMENT_APPROVAL]: 'blue',
+  [REQUEST_STATUS.PENDING_ADJUSTMENT]: 'orange',
   [REQUEST_STATUS.REJECTED]: 'red',
   [REQUEST_STATUS.CANCELLED]: 'gray',
   [REQUEST_STATUS.PAID]: 'green'

@@ -33,13 +33,28 @@ export const AuthProvider = ({ children }) => {
       if (firebaseUser) {
         const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
         const userData = userDoc.exists() ? userDoc.data() : {};
-        const formattedUser = { id: firebaseUser.uid, email: firebaseUser.email, ...userData };
+
+        // Normaliza os papéis para um array em minúsculas
+        const roles = Array.isArray(userData.roles)
+          ? userData.roles
+          : userData.role
+            ? [userData.role]
+            : [];
+        const normalizedRoles = roles.map((r) => r.toLowerCase());
+
+        const formattedUser = {
+          id: firebaseUser.uid,
+          email: firebaseUser.email,
+          ...userData,
+          roles: normalizedRoles,
+        };
         setCurrentUser(formattedUser);
+
         storeLogin({
           id: firebaseUser.uid,
           name: userData.name || firebaseUser.displayName || '',
           email: firebaseUser.email || '',
-          roles: userData.roles || (userData.role ? [userData.role] : []),
+          roles: normalizedRoles,
           ccScope: userData.ccScope || [],
           approvalLimit: userData.approvalLimit || 0,
           status: userData.status || 'active',
@@ -104,7 +119,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const hasPageAccess = (page) => {
-    const roles = currentUser?.roles || (currentUser?.role ? [currentUser.role] : []);
+    const roles = currentUser?.roles ?? [];
     return (
       roles.includes('finance') ||
       roles.includes('admin') ||
@@ -135,11 +150,11 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     hasRole: (role) => {
-      const roles = currentUser?.roles || (currentUser?.role ? [currentUser.role] : []);
+      const roles = currentUser?.roles ?? [];
       return roles.includes(role) || roles.includes('finance') || roles.includes('admin');
     },
     hasAnyRole: (rolesToCheck) => {
-      const roles = currentUser?.roles || (currentUser?.role ? [currentUser.role] : []);
+      const roles = currentUser?.roles ?? [];
       return roles.includes('finance') || roles.includes('admin') || rolesToCheck.some((r) => roles.includes(r));
     },
   };

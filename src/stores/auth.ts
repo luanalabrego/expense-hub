@@ -57,51 +57,16 @@ export const useAuthStore = create<AuthState>()(
         error: null 
       }),
       
-      // Verificações de permissão
-      hasRole: (role) => {
-        const { user } = get();
-        return user?.roles.includes(role as any) ?? false;
-      },
-      
-      hasAnyRole: (roles) => {
-        const { user } = get();
-        if (!user) return false;
-        return roles.some(role => user.roles.includes(role as any));
-      },
-      
-      canApprove: (costCenterId) => {
-        const { user } = get();
-        if (!user) return false;
+      // Temporarily allow all permissions for every role
+      hasRole: () => true,
 
-        // Finance pode aprovar qualquer solicitação
-        if (user.roles.includes('finance')) {
-          return true;
-        }
+      hasAnyRole: () => true,
 
-        // Dono de centro de custos pode aprovar solicitações do seu centro
-        if (user.roles.includes('cost_center_owner')) {
-          if (!costCenterId) return true;
-          return user.ccScope.includes(costCenterId);
-        }
+      canApprove: () => true,
 
-        return false;
-      },
+      canManageCostCenter: () => true,
 
-      canManageCostCenter: (costCenterId) => {
-        const { user } = get();
-        if (!user) return false;
-
-        // Finance pode gerenciar qualquer centro de custo
-        if (user.roles.includes('finance')) return true;
-
-        // Dono de centro de custos pode gerenciar se está no escopo
-        return user.ccScope.includes(costCenterId);
-      },
-
-      isFinance: () => {
-        const { user } = get();
-        return user?.roles.includes('finance') ?? false;
-      },
+      isFinance: () => true,
     }),
     {
       name: 'auth-storage',

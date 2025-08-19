@@ -124,6 +124,8 @@ export interface PaymentRequest {
   categoryId: string;
   vendorId: string;
   vendorName?: string;
+  sapVendorId?: string;
+  sapEmployeeId?: string;
   invoiceNumber?: string;
   requestNumber?: string;
   dueDate: Date;

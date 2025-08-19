@@ -20,6 +20,8 @@ import { db } from './firebase';
 import { getCostCenterById } from './costCenters';
 import { getQuotationsByRequest } from './quotations';
 import { getVendorById } from './vendors';
+import { getUserById } from './users';
+import * as sap from './sap';
 import * as erpService from './erp';
 import * as bankService from './bank';
 import * as emailService from './email';
@@ -30,6 +32,39 @@ import type { PaymentRequest, PaginationParams, PaginatedResponse, RequestStatus
 import * as notificationsService from './notifications';
 
 const COLLECTION_NAME = 'payment-requests';
+
+const syncWithSap = async (
+  request: PaymentRequest,
+): Promise<{ sapVendorId?: string; sapEmployeeId?: string }> => {
+  try {
+    if (request.vendorId) {
+      const vendor = await getVendorById(request.vendorId);
+      if (vendor) {
+        const sapVendorId = await sap.createOrUpdateVendor({
+          id: vendor.id,
+          name: vendor.name,
+          taxId: vendor.taxId,
+          email: vendor.email,
+          phone: vendor.phone,
+        });
+        return { sapVendorId };
+      }
+    }
+
+    const user = await getUserById(request.requesterId);
+    if (user) {
+      const sapEmployeeId = await sap.createOrUpdateEmployee({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      });
+      return { sapEmployeeId };
+    }
+  } catch (err) {
+    console.error('Integração SAP falhou:', err);
+  }
+  return {};
+};
 
 // Obter solicitação por ID
 export const getRequestById = async (id: string): Promise<PaymentRequest | null> => {
@@ -265,6 +300,8 @@ export const createRequest = async (requestData: {
         invoiceNumber: requestData.invoiceNumber || null,
         vendorId: requestData.vendorId,
         vendorName: requestData.vendorName,
+        sapVendorId: null,
+        sapEmployeeId: null,
         costCenterId: requestData.costCenterId,
         categoryId: requestData.categoryId,
         costType: requestData.costType || null,
@@ -428,6 +465,14 @@ export const validateRequest = async (
       : null;
     const currentApproverId = costCenter?.managerId || null;
 
+    let sapVendorId = request.sapVendorId || null;
+    let sapEmployeeId = request.sapEmployeeId || null;
+    if (!sapVendorId && !sapEmployeeId) {
+      const ids = await syncWithSap(request);
+      sapVendorId = ids.sapVendorId || null;
+      sapEmployeeId = ids.sapEmployeeId || null;
+    }
+
     await updateDoc(doc(db, COLLECTION_NAME, id), {
       status: 'pending_owner_approval',
       currentApproverId,
@@ -444,6 +489,8 @@ export const validateRequest = async (
       updatedAt: now,
       fiscalStatus: 'approved',
       taxInfo: null,
+      sapVendorId,
+      sapEmployeeId,
     });
   } catch (error) {
     console.error('Erro ao validar solicitação:', error);
@@ -470,6 +517,14 @@ export const approveRequest = async (
         : 1;
     if (required > 0 && quotations.length < required) {
       throw new Error(`Solicitação requer pelo menos ${required} orçamento(s).`);
+    }
+
+    let sapVendorId = request.sapVendorId || null;
+    let sapEmployeeId = request.sapEmployeeId || null;
+    if (!sapVendorId && !sapEmployeeId) {
+      const ids = await syncWithSap(request);
+      sapVendorId = ids.sapVendorId || null;
+      sapEmployeeId = ids.sapEmployeeId || null;
     }
 
     const now = new Date();
@@ -521,6 +576,8 @@ export const approveRequest = async (
       statusHistory: [...(request.statusHistory || []), statusEntry],
       updatedAt: now,
       currentApproverId: null,
+      sapVendorId,
+      sapEmployeeId,
     };
 
     if (nextStatus === 'pending_payment_approval') {

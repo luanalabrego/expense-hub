@@ -28,6 +28,18 @@ export const createOrUpdateVendor = async (
   }
 };
 
+export interface SapPaymentRequestInput {
+  requestId: string;
+  amount: number;
+  vendorId: string;
+  description: string;
+}
+
+export const sendPaymentRequest = async (
+  input: SapPaymentRequestInput,
+): Promise<string> => {
+  try {
+    const resp = await fetch(`${API_URL}/payment-requests`, {
 export const createOrUpdateEmployee = async (
   employee: Pick<User, 'id' | 'name' | 'email'> & { taxId?: string; phone?: string },
 ): Promise<string> => {
@@ -38,6 +50,15 @@ export const createOrUpdateEmployee = async (
         'Content-Type': 'application/json',
         Authorization: `Bearer ${API_TOKEN}`,
       },
+      body: JSON.stringify(input),
+    });
+
+    if (!resp.ok) {
+      throw new Error('Falha ao sincronizar solicitação no SAP');
+    }
+
+    const data = await resp.json();
+    return data.id || data.documentId || '';
       body: JSON.stringify(employee),
     });
 
@@ -53,4 +74,5 @@ export const createOrUpdateEmployee = async (
   }
 };
 
+export default { createOrUpdateVendor, sendPaymentRequest };
 export default { createOrUpdateVendor, createOrUpdateEmployee };

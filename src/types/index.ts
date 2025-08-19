@@ -176,6 +176,8 @@ export interface PaymentRequest {
   paymentProtocol?: string;
   paymentReceiptUrl?: string;
   erpMiroId?: string;
+  pipefyCardId?: string;
+  erpDocumentId?: string;
   contractDocumentId?: string;
   contractStatus?: 'pending' | 'approved' | 'adjustments_requested';
   contractNotes?: string;

@@ -1,4 +1,4 @@
-import type { Vendor } from '../types';
+import type { Vendor, User } from '../types';
 
 const API_URL = import.meta.env.VITE_SAP_API_URL || 'https://sap.example.com/api';
 const API_TOKEN = import.meta.env.VITE_SAP_API_TOKEN || '';
@@ -40,6 +40,11 @@ export const sendPaymentRequest = async (
 ): Promise<string> => {
   try {
     const resp = await fetch(`${API_URL}/payment-requests`, {
+export const createOrUpdateEmployee = async (
+  employee: Pick<User, 'id' | 'name' | 'email'> & { taxId?: string; phone?: string },
+): Promise<string> => {
+  try {
+    const resp = await fetch(`${API_URL}/employees`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -54,6 +59,15 @@ export const sendPaymentRequest = async (
 
     const data = await resp.json();
     return data.id || data.documentId || '';
+      body: JSON.stringify(employee),
+    });
+
+    if (!resp.ok) {
+      throw new Error('Falha ao sincronizar funcionário no SAP');
+    }
+
+    const data = await resp.json();
+    return data.id || data.employeeId || '';
   } catch (error) {
     console.error('Erro ao integrar com SAP:', error);
     throw error;
@@ -61,3 +75,4 @@ export const sendPaymentRequest = async (
 };
 
 export default { createOrUpdateVendor, sendPaymentRequest };
+export default { createOrUpdateVendor, createOrUpdateEmployee };

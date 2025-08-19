@@ -10,13 +10,16 @@ export type Role =
   | 'ceo';
 
 export type RequestStatus =
+  | 'pending_accounting_monitor'
   | 'pending_validation'
+  | 'returned'
   | 'pending_owner_approval'
   | 'pending_fpa_approval'
   | 'pending_director_approval'
   | 'pending_cfo_approval'
   | 'pending_ceo_approval'
   | 'pending_payment_approval'
+  | 'pending_adjustment'
   | 'rejected'
   | 'cancelled'
   | 'paid';
@@ -124,6 +127,8 @@ export interface PaymentRequest {
   categoryId: string;
   vendorId: string;
   vendorName?: string;
+  sapVendorId?: string;
+  sapEmployeeId?: string;
   invoiceNumber?: string;
   requestNumber?: string;
   dueDate: Date;

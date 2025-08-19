@@ -1,42 +1,41 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useRequestsByStatus, useValidateRequest, useReturnRequest } from '../hooks/useRequests';
+import { useRequestsByStatus, useVerifyRequest, useReturnRequestWithError } from '../hooks/useRequests';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { formatCurrency } from '@/utils';
 
-export const ValidationPage = () => {
+export const AccountingMonitorPage = () => {
   const { user } = useAuth();
-  const { data, isLoading, isError } = useRequestsByStatus('pending_validation');
-  const validateRequest = useValidateRequest();
-  const returnRequest = useReturnRequest();
+  const { data, isLoading, isError } = useRequestsByStatus('pending_accounting_monitor');
+  const verifyRequest = useVerifyRequest();
+  const returnRequest = useReturnRequestWithError();
 
   const requests = data || [];
 
-  const handleValidate = async (id) => {
-    const comments = window.prompt('Comentários da validação');
-    await validateRequest.mutateAsync({
+  const handleVerify = async (id) => {
+    const comments = window.prompt('Comentários da verificação');
+    await verifyRequest.mutateAsync({
       id,
-      validatorId: user.id,
-      validatorName: user.name,
+      verifierId: user.id,
+      verifierName: user.name,
       comments: comments || undefined,
     });
   };
 
   const handleReturn = (id) => {
-    const reason = window.prompt('Motivo da devolução');
+    const reason = window.prompt('Motivo do retorno');
     if (!reason) return;
     returnRequest.mutate({
       id,
-      validatorId: user.id,
-      validatorName: user.name,
+      verifierId: user.id,
+      verifierName: user.name,
       reason,
     });
   };
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Validação de Solicitações</h1>
-
+      <h1 className="text-3xl font-bold tracking-tight">Monitor Contábil</h1>
       <div className="bg-white rounded-lg border overflow-hidden">
         {isLoading ? (
           <div className="flex justify-center py-12">
@@ -46,7 +45,7 @@ export const ValidationPage = () => {
           <div className="text-center py-12 text-red-500">Erro ao carregar solicitações</div>
         ) : requests.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500">Nenhuma solicitação para validar</p>
+            <p className="text-gray-500">Nenhuma solicitação para verificar</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -73,18 +72,18 @@ export const ValidationPage = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                       <button
-                        onClick={() => handleValidate(req.id)}
+                        onClick={() => handleVerify(req.id)}
                         className="px-3 py-1 bg-green-600 text-white rounded-md"
-                        disabled={validateRequest.isPending}
+                        disabled={verifyRequest.isPending}
                       >
-                        Validar
+                        Verificar
                       </button>
                       <button
                         onClick={() => handleReturn(req.id)}
                         className="px-3 py-1 bg-red-600 text-white rounded-md"
                         disabled={returnRequest.isPending}
                       >
-                        Devolver
+                        Retornar
                       </button>
                     </td>
                   </tr>
@@ -98,5 +97,4 @@ export const ValidationPage = () => {
   );
 };
 
-export default ValidationPage;
-
+export default AccountingMonitorPage;

@@ -20,6 +20,8 @@ import { db } from './firebase';
 import { getCostCenterById } from './costCenters';
 import { getQuotationsByRequest } from './quotations';
 import { getVendorById } from './vendors';
+import { getUserById } from './users';
+import * as sap from './sap';
 import * as erpService from './erp';
 import pipefy from './pipefy';
 import { sendPaymentRequest } from './sap';
@@ -32,6 +34,39 @@ import type { PaymentRequest, PaginationParams, PaginatedResponse, RequestStatus
 import * as notificationsService from './notifications';
 
 const COLLECTION_NAME = 'payment-requests';
+
+const syncWithSap = async (
+  request: PaymentRequest,
+): Promise<{ sapVendorId?: string; sapEmployeeId?: string }> => {
+  try {
+    if (request.vendorId) {
+      const vendor = await getVendorById(request.vendorId);
+      if (vendor) {
+        const sapVendorId = await sap.createOrUpdateVendor({
+          id: vendor.id,
+          name: vendor.name,
+          taxId: vendor.taxId,
+          email: vendor.email,
+          phone: vendor.phone,
+        });
+        return { sapVendorId };
+      }
+    }
+
+    const user = await getUserById(request.requesterId);
+    if (user) {
+      const sapEmployeeId = await sap.createOrUpdateEmployee({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      });
+      return { sapEmployeeId };
+    }
+  } catch (err) {
+    console.error('Integração SAP falhou:', err);
+  }
+  return {};
+};
 
 // Obter solicitação por ID
 export const getRequestById = async (id: string): Promise<PaymentRequest | null> => {
@@ -267,6 +302,8 @@ export const createRequest = async (requestData: {
         invoiceNumber: requestData.invoiceNumber || null,
         vendorId: requestData.vendorId,
         vendorName: requestData.vendorName,
+        sapVendorId: null,
+        sapEmployeeId: null,
         costCenterId: requestData.costCenterId,
         categoryId: requestData.categoryId,
         costType: requestData.costType || null,
@@ -344,7 +381,7 @@ export const updateRequest = async (
 };
 
 // Submeter solicitação para aprovação
-  export const submitRequest = async (
+export const submitRequest = async (
     id: string,
     userId: string,
     userName: string
@@ -373,15 +410,23 @@ export const updateRequest = async (
       }
 
       const now = new Date();
-      const costCenter = request?.costCenterId
-        ? await getCostCenterById(request.costCenterId)
-        : null;
-      const currentApproverId = costCenter?.managerId || null;
+      let nextStatus: RequestStatus = 'pending_owner_approval';
+      let currentApproverId: string | null = null;
+
+      if (request.status === 'returned') {
+        nextStatus = 'pending_validation';
+      } else {
+        const costCenter = request?.costCenterId
+          ? await getCostCenterById(request.costCenterId)
+          : null;
+        currentApproverId = costCenter?.managerId || null;
+      }
+
       await updateDoc(doc(db, COLLECTION_NAME, id), {
-        status: 'pending_owner_approval',
+        status: nextStatus,
         currentApproverId,
         statusHistory: [...(request?.statusHistory || []), {
-          status: 'pending_owner_approval',
+          status: nextStatus,
           changedBy: userId,
           changedByName: userName,
           timestamp: now,
@@ -390,6 +435,71 @@ export const updateRequest = async (
       });
   } catch (error) {
     console.error('Erro ao submeter solicitação:', error);
+    throw error;
+  }
+};
+
+// Marcar solicitação como verificada pela contabilidade
+export const verifyRequest = async (
+  id: string,
+  verifierId: string,
+  verifierName: string,
+  comments?: string
+): Promise<void> => {
+  try {
+    const request = await getRequestById(id);
+    if (!request) throw new Error('Solicitação não encontrada');
+
+    const now = new Date();
+    await updateDoc(doc(db, COLLECTION_NAME, id), {
+      status: 'pending_validation',
+      statusHistory: [
+        ...(request.statusHistory || []),
+        {
+          status: 'pending_validation',
+          changedBy: verifierId,
+          changedByName: verifierName,
+          timestamp: now,
+          reason: comments || '',
+        },
+      ],
+      updatedAt: now,
+    });
+  } catch (error) {
+    console.error('Erro ao marcar solicitação como verificada:', error);
+    throw error;
+  }
+};
+
+// Retornar solicitação com erro para ajustes
+export const returnRequestWithError = async (
+  id: string,
+  verifierId: string,
+  verifierName: string,
+  reason: string
+): Promise<void> => {
+  try {
+    const request = await getRequestById(id);
+    if (!request) throw new Error('Solicitação não encontrada');
+
+    const now = new Date();
+    await updateDoc(doc(db, COLLECTION_NAME, id), {
+      status: 'pending_adjustment',
+      statusHistory: [
+        ...(request.statusHistory || []),
+        {
+          status: 'pending_adjustment',
+          changedBy: verifierId,
+          changedByName: verifierName,
+          timestamp: now,
+          reason,
+        },
+      ],
+      updatedAt: now,
+      fiscalStatus: 'pending_adjustment',
+    });
+  } catch (error) {
+    console.error('Erro ao retornar solicitação com erro:', error);
     throw error;
   }
 };
@@ -430,6 +540,14 @@ export const validateRequest = async (
       : null;
     const currentApproverId = costCenter?.managerId || null;
 
+    let sapVendorId = request.sapVendorId || null;
+    let sapEmployeeId = request.sapEmployeeId || null;
+    if (!sapVendorId && !sapEmployeeId) {
+      const ids = await syncWithSap(request);
+      sapVendorId = ids.sapVendorId || null;
+      sapEmployeeId = ids.sapEmployeeId || null;
+    }
+
     await updateDoc(doc(db, COLLECTION_NAME, id), {
       status: 'pending_owner_approval',
       currentApproverId,
@@ -446,6 +564,8 @@ export const validateRequest = async (
       updatedAt: now,
       fiscalStatus: 'approved',
       taxInfo: null,
+      sapVendorId,
+      sapEmployeeId,
     });
   } catch (error) {
     console.error('Erro ao validar solicitação:', error);
@@ -472,6 +592,14 @@ export const approveRequest = async (
         : 1;
     if (required > 0 && quotations.length < required) {
       throw new Error(`Solicitação requer pelo menos ${required} orçamento(s).`);
+    }
+
+    let sapVendorId = request.sapVendorId || null;
+    let sapEmployeeId = request.sapEmployeeId || null;
+    if (!sapVendorId && !sapEmployeeId) {
+      const ids = await syncWithSap(request);
+      sapVendorId = ids.sapVendorId || null;
+      sapEmployeeId = ids.sapEmployeeId || null;
     }
 
     const now = new Date();
@@ -525,6 +653,8 @@ export const approveRequest = async (
       statusHistory: updatedStatusHistory,
       updatedAt: now,
       currentApproverId: null,
+      sapVendorId,
+      sapEmployeeId,
     };
 
     if (nextStatus === 'pending_payment_approval') {
@@ -601,6 +731,38 @@ export const approveRequest = async (
     }
   } catch (error) {
     console.error('Erro ao aprovar solicitação:', error);
+    throw error;
+  }
+};
+
+// Devolver solicitação para ajustes
+export const returnRequest = async (
+  id: string,
+  validatorId: string,
+  validatorName: string,
+  reason: string
+): Promise<void> => {
+  try {
+    const request = await getRequestById(id);
+    if (!request) throw new Error('Solicitação não encontrada');
+
+    const now = new Date();
+    const statusEntry = {
+      status: 'returned' as RequestStatus,
+      changedBy: validatorId,
+      changedByName: validatorName,
+      timestamp: now,
+      reason,
+    };
+
+    await updateDoc(doc(db, COLLECTION_NAME, id), {
+      status: 'returned',
+      currentApproverId: null,
+      statusHistory: [...(request.statusHistory || []), statusEntry],
+      updatedAt: now,
+    });
+  } catch (error) {
+    console.error('Erro ao devolver solicitação:', error);
     throw error;
   }
 };

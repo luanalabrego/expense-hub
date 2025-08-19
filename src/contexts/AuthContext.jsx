@@ -1,18 +1,32 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { auth, db } from '@/services/firebase';
+import app, { auth, db } from '@/services/firebase';
 import {
   collection,
-  addDoc,
   getDocs,
   updateDoc,
   deleteDoc,
   doc,
   getDoc,
+  setDoc,
 } from 'firebase/firestore';
-import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import {
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  getAuth,
+} from 'firebase/auth';
+import { getApps, initializeApp } from 'firebase/app';
 import { useAuthStore } from '@/stores/auth';
 
 const AuthContext = createContext({});
+
+// Secondary Firebase app to create new users without affecting current session
+const secondaryApp =
+  getApps().find((a) => a.name === 'Secondary') ||
+  initializeApp(app.options, 'Secondary');
+const secondaryAuth = getAuth(secondaryApp);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -82,8 +96,22 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const addUser = async (user) => {
-    const docRef = await addDoc(collection(db, 'users'), user);
-    setUsers((prev) => [...prev, { id: docRef.id, ...user }]);
+    // Create user in Firebase Auth using a secondary app instance
+    const tempPassword = Math.random().toString(36).slice(-8);
+    const cred = await createUserWithEmailAndPassword(
+      secondaryAuth,
+      user.email,
+      tempPassword,
+    );
+
+    // Store user information in Firestore using the auth UID
+    await setDoc(doc(db, 'users', cred.user.uid), user);
+
+    // Update local state
+    setUsers((prev) => [...prev, { id: cred.user.uid, ...user }]);
+
+    // Send email for the user to define a password
+    await sendPasswordResetEmail(auth, user.email);
   };
 
   const updateUserRole = async (id, role) => {

@@ -24,8 +24,8 @@ import * as erpService from './erp';
 import * as bankService from './bank';
 import * as emailService from './email';
 import { createAuditLog, AUDIT_ACTIONS, AUDIT_ENTITIES } from './audit';
-import { validateNF, TaxValidationResult } from './taxValidation';
-import { findApplicableBudget, commitBudgetAmount, spendBudgetAmount } from './budgets';
+import { commitBudgetAmount, spendBudgetAmount } from './budgets';
+import { findBudgetLine } from './budgetLines';
 import type { PaymentRequest, PaginationParams, PaginatedResponse, RequestStatus, PurchaseType } from '../types';
 import * as notificationsService from './notifications';
 
@@ -237,19 +237,19 @@ export const createRequest = async (requestData: {
     const requiresBudget = requestData.inBudget ?? false;
     if (requiresBudget) {
       // Verificar disponibilidade no orçamento
-      const refDate = requestData.competenceDate || requestData.invoiceDate || requestData.dueDate || new Date();
+      const refDate =
+        requestData.competenceDate ||
+        requestData.invoiceDate ||
+        requestData.dueDate ||
+        new Date();
       const year = refDate.getFullYear();
       const month = refDate.getMonth() + 1;
-      const budget = await findApplicableBudget(
-        requestData.costCenterId,
-        requestData.categoryId || null,
-        year,
-        month
-      );
-      if (!budget) {
-        throw new Error('Nenhum orçamento disponível para este centro de custo/período.');
+      const budgetLine = await findBudgetLine(requestData.vendorId, year);
+      if (!budgetLine) {
+        throw new Error('Nenhum orçamento disponível para este fornecedor/período.');
       }
-      if (budget.availableAmount < requestData.amount) {
+      const available = budgetLine.months?.[month] || 0;
+      if (available < requestData.amount) {
         throw new Error('Orçamento insuficiente para esta solicitação.');
       }
     }
@@ -352,15 +352,20 @@ export const updateRequest = async (
       if (!request) throw new Error('Solicitação não encontrada');
 
       // Verificar disponibilidade no orçamento apenas quando marcado como dentro do orçamento
-      if (request.inBudget && request.costCenterId) {
-        const refDate = request.competenceDate || request.invoiceDate || request.dueDate || new Date();
+      if (request.inBudget) {
+        const refDate =
+          request.competenceDate ||
+          request.invoiceDate ||
+          request.dueDate ||
+          new Date();
         const year = refDate.getFullYear();
         const month = refDate.getMonth() + 1;
-        const budget = await findApplicableBudget(request.costCenterId, request.categoryId || null, year, month);
-        if (!budget) {
-          throw new Error('Nenhum orçamento disponível para este centro de custo/período.');
+        const budgetLine = await findBudgetLine(request.vendorId, year);
+        if (!budgetLine) {
+          throw new Error('Nenhum orçamento disponível para este fornecedor/período.');
         }
-        if (budget.availableAmount < request.amount) {
+        const available = budgetLine.months?.[month] || 0;
+        if (available < request.amount) {
           throw new Error('Orçamento insuficiente para esta solicitação.');
         }
       }
@@ -393,21 +398,26 @@ export const validateRequest = async (
   validatorId: string,
   validatorName: string,
   comments?: string
-): Promise<TaxValidationResult> => {
+): Promise<void> => {
   try {
     const request = await getRequestById(id);
     if (!request) throw new Error('Solicitação não encontrada');
 
     // Verificar disponibilidade no orçamento apenas quando marcado como dentro do orçamento
-    if (request.inBudget && request.costCenterId) {
-      const refDate = request.competenceDate || request.invoiceDate || request.dueDate || new Date();
+    if (request.inBudget) {
+      const refDate =
+        request.competenceDate ||
+        request.invoiceDate ||
+        request.dueDate ||
+        new Date();
       const year = refDate.getFullYear();
       const month = refDate.getMonth() + 1;
-      const budget = await findApplicableBudget(request.costCenterId, request.categoryId || null, year, month);
-      if (!budget) {
-        throw new Error('Nenhum orçamento disponível para este centro de custo/período.');
+      const budgetLine = await findBudgetLine(request.vendorId, year);
+      if (!budgetLine) {
+        throw new Error('Nenhum orçamento disponível para este fornecedor/período.');
       }
-      if (budget.availableAmount < request.amount) {
+      const available = budgetLine.months?.[month] || 0;
+      if (available < request.amount) {
         throw new Error('Orçamento insuficiente para esta solicitação.');
       }
     }
@@ -417,11 +427,6 @@ export const validateRequest = async (
       ? await getCostCenterById(request.costCenterId)
       : null;
     const currentApproverId = costCenter?.managerId || null;
-
-    const taxResult = await validateNF({
-      amount: request.amount,
-      reportedTax: request.taxInfo?.calculated,
-    });
 
     await updateDoc(doc(db, COLLECTION_NAME, id), {
       status: 'pending_owner_approval',
@@ -437,11 +442,9 @@ export const validateRequest = async (
         },
       ],
       updatedAt: now,
-      fiscalStatus: taxResult.status,
-      taxInfo: taxResult.taxes,
+      fiscalStatus: 'approved',
+      taxInfo: null,
     });
-
-    return taxResult;
   } catch (error) {
     console.error('Erro ao validar solicitação:', error);
     throw error;
@@ -460,8 +463,12 @@ export const approveRequest = async (
     if (!request) throw new Error('Solicitação não encontrada');
 
     const quotations = await getQuotationsByRequest(id);
-    const required = request.amount > 10000 ? 3 : 1;
-    if (quotations.length < required) {
+    const required = request.isRecurring
+      ? 0
+      : request.amount > 10000
+        ? 3
+        : 1;
+    if (required > 0 && quotations.length < required) {
       throw new Error(`Solicitação requer pelo menos ${required} orçamento(s).`);
     }
 

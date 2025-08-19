@@ -91,8 +91,12 @@ export const NewRequestModal = ({ open, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const requiredQuotations = (!isRecurring && (parseFloat(amount) || 0) > 10000) ? 3 : 1;
-      if (quotationFiles.length < requiredQuotations) {
+      const requiredQuotations = isRecurring
+        ? 0
+        : (parseFloat(amount) || 0) > 10000
+          ? 3
+          : 1;
+      if (requiredQuotations > 0 && quotationFiles.length < requiredQuotations) {
         alert(`É necessário anexar pelo menos ${requiredQuotations} orçamento(s).`);
         return;
       }

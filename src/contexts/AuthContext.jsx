@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { db } from '@/services/firebase';
+import { auth, db } from '@/services/firebase';
 import {
   collection,
   addDoc,
@@ -7,7 +7,10 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  getDoc,
 } from 'firebase/firestore';
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import { useAuthStore } from '@/stores/auth';
 
 const AuthContext = createContext({});
 
@@ -20,21 +23,38 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  // Simular usuário logado para demonstração
-  const mockUser = {
-    id: 'demo-user-123',
-    name: 'Usuário Demonstração',
-    email: 'demo@empresa.com',
-    role: 'finance',
-    active: true,
-    phone: '(11) 99999-9999',
-    approvalLimit: 100000,
-    costCenters: ['cc-001', 'cc-002'],
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [users, setUsers] = useState([]);
+  const { login: storeLogin, logout: storeLogout } = useAuthStore();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+        const userData = userDoc.exists() ? userDoc.data() : {};
+        const formattedUser = { id: firebaseUser.uid, email: firebaseUser.email, ...userData };
+        setCurrentUser(formattedUser);
+        storeLogin({
+          id: firebaseUser.uid,
+          name: userData.name || firebaseUser.displayName || '',
+          email: firebaseUser.email || '',
+          roles: userData.roles || (userData.role ? [userData.role] : []),
+          ccScope: userData.ccScope || [],
+          approvalLimit: userData.approvalLimit || 0,
+          status: userData.status || 'active',
+          createdAt: userData.createdAt ? new Date(userData.createdAt) : new Date(),
+          updatedAt: userData.updatedAt ? new Date(userData.updatedAt) : new Date(),
+        });
+      } else {
+        setCurrentUser(null);
+        storeLogout();
+      }
+      setIsLoading(false);
+    });
+
+    return unsubscribe;
+  }, [storeLogin, storeLogout]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -53,9 +73,7 @@ export const AuthProvider = ({ children }) => {
 
   const updateUserRole = async (id, role) => {
     await updateDoc(doc(db, 'users', id), { role });
-    setUsers((prev) =>
-      prev.map((u) => (u.id === id ? { ...u, role } : u))
-    );
+    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, role } : u)));
   };
 
   const deleteUser = async (id) => {
@@ -85,11 +103,22 @@ export const AuthProvider = ({ children }) => {
     setPermissions((prev) => ({ ...prev, [page]: roles }));
   };
 
-  const hasPageAccess = (page) =>
-    permissions[page]?.includes(mockUser.role) || mockUser.role === 'finance';
+  const hasPageAccess = (page) => {
+    const role = currentUser?.role;
+    return permissions[page]?.includes(role) || role === 'finance';
+  };
+
+  const login = (email, password) => {
+    setIsLoading(true);
+    return signInWithEmailAndPassword(auth, email, password).finally(() => setIsLoading(false));
+  };
+
+  const logout = async () => {
+    await signOut(auth);
+  };
 
   const authValue = {
-    user: mockUser,
+    user: currentUser,
     users,
     addUser,
     updateUserRole,
@@ -97,18 +126,13 @@ export const AuthProvider = ({ children }) => {
     permissions,
     updatePermissions,
     hasPageAccess,
-    isAuthenticated: true,
-    isLoading: false,
-    login: () => {},
-    logout: () => {},
-    hasRole: (role) => mockUser.role === role || mockUser.role === 'finance',
-    hasAnyRole: (roles) => roles.includes(mockUser.role) || mockUser.role === 'finance',
+    isAuthenticated: !!currentUser,
+    isLoading,
+    login,
+    logout,
+    hasRole: (role) => currentUser?.role === role || currentUser?.role === 'finance',
+    hasAnyRole: (roles) => roles.includes(currentUser?.role) || currentUser?.role === 'finance',
   };
 
-  return (
-    <AuthContext.Provider value={authValue}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={authValue}>{children}</AuthContext.Provider>;
 };
-

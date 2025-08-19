@@ -8,6 +8,7 @@ import {
 } from '@/hooks/useVendors';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { formatCNPJ, formatDate } from '@/utils';
+import VendorDetailsModal from '@/components/VendorDetailsModal';
 
 export const VendorApprovalsPage = () => {
   const { data: vendorsData, isLoading, isError } = useVendors({
@@ -19,6 +20,8 @@ export const VendorApprovalsPage = () => {
   const [sortBy, setSortBy] = useState('updatedAt');
   const [sortOrder, setSortOrder] = useState('desc');
   const navigate = useNavigate();
+  const [selectedVendorId, setSelectedVendorId] = useState('');
+  const [showDetails, setShowDetails] = useState(false);
 
   const {
     data: historyData,
@@ -75,6 +78,11 @@ export const VendorApprovalsPage = () => {
     }
   };
 
+  const openVendorDetails = (id) => {
+    setSelectedVendorId(id);
+    setShowDetails(true);
+  };
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold tracking-tight">Aprovação de Fornecedores</h1>
@@ -103,7 +111,12 @@ export const VendorApprovalsPage = () => {
                 {vendors.map((vendor) => (
                   <tr key={vendor.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {vendor.name}
+                      <button
+                        onClick={() => openVendorDetails(vendor.id)}
+                        className="text-blue-600 hover:underline"
+                      >
+                        {vendor.name}
+                      </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {formatCNPJ(vendor.taxId)}
@@ -210,6 +223,29 @@ export const VendorApprovalsPage = () => {
           </div>
         )}
       </div>
+      <VendorDetailsModal
+        vendorId={selectedVendorId}
+        open={showDetails}
+        onClose={() => {
+          setShowDetails(false);
+          setSelectedVendorId('');
+        }}
+        onApprove={async (id) => {
+          await handleApprove(id);
+          setShowDetails(false);
+        }}
+        onReject={async (id) => {
+          await handleReject(id);
+          setShowDetails(false);
+        }}
+        onRequestInfo={async (id) => {
+          await handleRequestInfo(id);
+          setShowDetails(false);
+        }}
+        approveDisabled={approveVendor.isPending}
+        rejectDisabled={rejectVendor.isPending}
+        requestInfoDisabled={requestInfoVendor.isPending}
+      />
     </div>
   );
 };

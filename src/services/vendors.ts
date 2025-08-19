@@ -110,10 +110,11 @@ export const getVendors = async (
     // Filtro de busca no frontend
     if (params.search) {
       const searchLower = params.search.toLowerCase();
-      vendors = vendors.filter(vendor => 
+      vendors = vendors.filter(vendor =>
         vendor.name.toLowerCase().includes(searchLower) ||
         vendor.taxId.includes(params.search!) ||
-        vendor.email?.toLowerCase().includes(searchLower)
+        vendor.email?.toLowerCase().includes(searchLower) ||
+        vendor.tags?.some(tag => tag.toLowerCase().includes(searchLower))
       );
     }
 

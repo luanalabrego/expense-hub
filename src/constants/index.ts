@@ -7,6 +7,7 @@ export const CURRENCY = 'BRL';
 
 // Papéis do sistema
 export const ROLES = {
+  ADMIN: 'admin',
   USER: 'user',
   COST_CENTER_OWNER: 'cost_center_owner',
   FINANCE: 'finance',
@@ -56,6 +57,7 @@ export const DOCUMENT_TYPES = {
 
 // Labels para exibição
 export const ROLE_LABELS = {
+  [ROLES.ADMIN]: 'Administrador',
   [ROLES.USER]: 'Usuário',
   [ROLES.COST_CENTER_OWNER]: 'Dono de Centro de Custos',
   [ROLES.FINANCE]: 'Financeiro',

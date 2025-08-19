@@ -34,6 +34,18 @@ export const seedUsers = [
     updatedAt: serverTimestamp(),
   },
   {
+    id: 'admin-002',
+    name: 'Lucas Augusto Santos',
+    email: 'lucasaugusto2santos@gmail.com',
+    role: 'admin',
+    active: true,
+    phone: '(11) 99999-0008',
+    approvalLimit: 1000000,
+    costCenters: [],
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  },
+  {
     id: 'finance-001',
     name: 'Maria Santos',
     email: 'maria.santos@empresa.com',

@@ -107,6 +107,7 @@ export const AuthProvider = ({ children }) => {
     const roles = currentUser?.roles || (currentUser?.role ? [currentUser.role] : []);
     return (
       roles.includes('finance') ||
+      roles.includes('admin') ||
       roles.some((role) => permissions[page]?.includes(role))
     );
   };
@@ -135,11 +136,11 @@ export const AuthProvider = ({ children }) => {
     logout,
     hasRole: (role) => {
       const roles = currentUser?.roles || (currentUser?.role ? [currentUser.role] : []);
-      return roles.includes(role) || roles.includes('finance');
+      return roles.includes(role) || roles.includes('finance') || roles.includes('admin');
     },
     hasAnyRole: (rolesToCheck) => {
       const roles = currentUser?.roles || (currentUser?.role ? [currentUser.role] : []);
-      return roles.includes('finance') || rolesToCheck.some((r) => roles.includes(r));
+      return roles.includes('finance') || roles.includes('admin') || rolesToCheck.some((r) => roles.includes(r));
     },
   };
 

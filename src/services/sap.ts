@@ -28,4 +28,36 @@ export const createOrUpdateVendor = async (
   }
 };
 
-export default { createOrUpdateVendor };
+export interface SapPaymentRequestInput {
+  requestId: string;
+  amount: number;
+  vendorId: string;
+  description: string;
+}
+
+export const sendPaymentRequest = async (
+  input: SapPaymentRequestInput,
+): Promise<string> => {
+  try {
+    const resp = await fetch(`${API_URL}/payment-requests`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${API_TOKEN}`,
+      },
+      body: JSON.stringify(input),
+    });
+
+    if (!resp.ok) {
+      throw new Error('Falha ao sincronizar solicitação no SAP');
+    }
+
+    const data = await resp.json();
+    return data.id || data.documentId || '';
+  } catch (error) {
+    console.error('Erro ao integrar com SAP:', error);
+    throw error;
+  }
+};
+
+export default { createOrUpdateVendor, sendPaymentRequest };

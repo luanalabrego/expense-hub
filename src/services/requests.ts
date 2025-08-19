@@ -21,6 +21,8 @@ import { getCostCenterById } from './costCenters';
 import { getQuotationsByRequest } from './quotations';
 import { getVendorById } from './vendors';
 import * as erpService from './erp';
+import pipefy from './pipefy';
+import { sendPaymentRequest } from './sap';
 import * as bankService from './bank';
 import * as emailService from './email';
 import { createAuditLog, AUDIT_ACTIONS, AUDIT_ENTITIES } from './audit';
@@ -514,11 +516,13 @@ export const approveRequest = async (
     const batch = writeBatch(db);
     const requestRef = doc(db, COLLECTION_NAME, id);
 
+    const updatedStatusHistory = [...(request.statusHistory || []), statusEntry];
+
     const updateData: any = {
       status: nextStatus,
       approvalLevel: increment(1),
       approvalHistory: [...request.approvalHistory, approvalEntry],
-      statusHistory: [...(request.statusHistory || []), statusEntry],
+      statusHistory: updatedStatusHistory,
       updatedAt: now,
       currentApproverId: null,
     };
@@ -538,6 +542,56 @@ export const approveRequest = async (
     }
 
     await batch.commit();
+    if (nextStatus === 'pending_payment_approval') {
+      const vendor = await getVendorById(request.vendorId);
+      const integrationUpdates: any = {};
+      let history = [...updatedStatusHistory];
+
+      try {
+        const cardId = await pipefy.createPreOrderCard({
+          requestId: id,
+          title: request.description,
+          vendorName: vendor?.name || request.vendorName || '',
+        });
+        integrationUpdates.pipefyCardId = cardId;
+      } catch (err: any) {
+        console.error('Integração Pipefy falhou:', err);
+        history.push({
+          status: 'pending_payment_approval' as RequestStatus,
+          changedBy: approverId,
+          changedByName: approverName,
+          timestamp: new Date(),
+          reason: `Pipefy: ${err.message || err}`,
+        });
+      }
+
+      try {
+        const erpId = await sendPaymentRequest({
+          requestId: id,
+          amount: request.amount,
+          vendorId: request.vendorId,
+          description: request.description,
+        });
+        integrationUpdates.erpDocumentId = erpId;
+      } catch (err: any) {
+        console.error('Integração SAP falhou:', err);
+        history.push({
+          status: 'pending_payment_approval' as RequestStatus,
+          changedBy: approverId,
+          changedByName: approverName,
+          timestamp: new Date(),
+          reason: `SAP: ${err.message || err}`,
+        });
+      }
+
+      if (Object.keys(integrationUpdates).length || history.length > updatedStatusHistory.length) {
+        await updateDoc(requestRef, {
+          ...integrationUpdates,
+          ...(history.length > updatedStatusHistory.length ? { statusHistory: history } : {}),
+          updatedAt: new Date(),
+        });
+      }
+    }
 
     if (nextStatus === 'pending_payment_approval' && request.costCenterId && request.inBudget) {
       const refDate = request.competenceDate || request.invoiceDate || request.dueDate || new Date();

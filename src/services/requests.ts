@@ -234,21 +234,24 @@ export const createRequest = async (requestData: {
   contractRequesterId?: string;
 }): Promise<PaymentRequest> => {
   try {
-    // Verificar disponibilidade no orçamento
-    const refDate = requestData.competenceDate || requestData.invoiceDate || requestData.dueDate || new Date();
-    const year = refDate.getFullYear();
-    const month = refDate.getMonth() + 1;
-    const budget = await findApplicableBudget(
-      requestData.costCenterId,
-      requestData.categoryId || null,
-      year,
-      month
-    );
-    if (!budget) {
-      throw new Error('Nenhum orçamento disponível para este centro de custo/período.');
-    }
-    if (budget.availableAmount < requestData.amount) {
-      throw new Error('Orçamento insuficiente para esta solicitação.');
+    const requiresBudget = requestData.inBudget ?? false;
+    if (requiresBudget) {
+      // Verificar disponibilidade no orçamento
+      const refDate = requestData.competenceDate || requestData.invoiceDate || requestData.dueDate || new Date();
+      const year = refDate.getFullYear();
+      const month = refDate.getMonth() + 1;
+      const budget = await findApplicableBudget(
+        requestData.costCenterId,
+        requestData.categoryId || null,
+        year,
+        month
+      );
+      if (!budget) {
+        throw new Error('Nenhum orçamento disponível para este centro de custo/período.');
+      }
+      if (budget.availableAmount < requestData.amount) {
+        throw new Error('Orçamento insuficiente para esta solicitação.');
+      }
     }
 
     // Gerar número da solicitação
@@ -269,7 +272,7 @@ export const createRequest = async (requestData: {
         serviceType: requestData.serviceType || '',
         scope: requestData.scope || '',
         justification: requestData.justification || '',
-        inBudget: requestData.inBudget ?? false,
+        inBudget: requiresBudget,
         invoiceDate: requestData.invoiceDate || null,
         competenceDate: requestData.competenceDate || null,
         dueDate: requestData.dueDate || null,
@@ -348,8 +351,8 @@ export const updateRequest = async (
       const request = await getRequestById(id);
       if (!request) throw new Error('Solicitação não encontrada');
 
-      // Verificar disponibilidade no orçamento
-      if (request.costCenterId) {
+      // Verificar disponibilidade no orçamento apenas quando marcado como dentro do orçamento
+      if (request.inBudget && request.costCenterId) {
         const refDate = request.competenceDate || request.invoiceDate || request.dueDate || new Date();
         const year = refDate.getFullYear();
         const month = refDate.getMonth() + 1;
@@ -395,8 +398,8 @@ export const validateRequest = async (
     const request = await getRequestById(id);
     if (!request) throw new Error('Solicitação não encontrada');
 
-    // Verificar disponibilidade no orçamento
-    if (request.costCenterId) {
+    // Verificar disponibilidade no orçamento apenas quando marcado como dentro do orçamento
+    if (request.inBudget && request.costCenterId) {
       const refDate = request.competenceDate || request.invoiceDate || request.dueDate || new Date();
       const year = refDate.getFullYear();
       const month = refDate.getMonth() + 1;
@@ -529,7 +532,7 @@ export const approveRequest = async (
 
     await batch.commit();
 
-    if (nextStatus === 'pending_payment_approval' && request.costCenterId) {
+    if (nextStatus === 'pending_payment_approval' && request.costCenterId && request.inBudget) {
       const refDate = request.competenceDate || request.invoiceDate || request.dueDate || new Date();
       const year = refDate.getFullYear();
       const month = refDate.getMonth() + 1;

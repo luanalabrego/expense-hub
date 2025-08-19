@@ -371,15 +371,23 @@ export const updateRequest = async (
       }
 
       const now = new Date();
-      const costCenter = request?.costCenterId
-        ? await getCostCenterById(request.costCenterId)
-        : null;
-      const currentApproverId = costCenter?.managerId || null;
+      let nextStatus: RequestStatus = 'pending_owner_approval';
+      let currentApproverId: string | null = null;
+
+      if (request.status === 'returned') {
+        nextStatus = 'pending_validation';
+      } else {
+        const costCenter = request?.costCenterId
+          ? await getCostCenterById(request.costCenterId)
+          : null;
+        currentApproverId = costCenter?.managerId || null;
+      }
+
       await updateDoc(doc(db, COLLECTION_NAME, id), {
-        status: 'pending_owner_approval',
+        status: nextStatus,
         currentApproverId,
         statusHistory: [...(request?.statusHistory || []), {
-          status: 'pending_owner_approval',
+          status: nextStatus,
           changedBy: userId,
           changedByName: userName,
           timestamp: now,
@@ -547,6 +555,38 @@ export const approveRequest = async (
     }
   } catch (error) {
     console.error('Erro ao aprovar solicitação:', error);
+    throw error;
+  }
+};
+
+// Devolver solicitação para ajustes
+export const returnRequest = async (
+  id: string,
+  validatorId: string,
+  validatorName: string,
+  reason: string
+): Promise<void> => {
+  try {
+    const request = await getRequestById(id);
+    if (!request) throw new Error('Solicitação não encontrada');
+
+    const now = new Date();
+    const statusEntry = {
+      status: 'returned' as RequestStatus,
+      changedBy: validatorId,
+      changedByName: validatorName,
+      timestamp: now,
+      reason,
+    };
+
+    await updateDoc(doc(db, COLLECTION_NAME, id), {
+      status: 'returned',
+      currentApproverId: null,
+      statusHistory: [...(request.statusHistory || []), statusEntry],
+      updatedAt: now,
+    });
+  } catch (error) {
+    console.error('Erro ao devolver solicitação:', error);
     throw error;
   }
 };

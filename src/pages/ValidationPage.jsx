@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useRequestsByStatus, useValidateRequest, useRejectRequest } from '../hooks/useRequests';
+import { useRequestsByStatus, useValidateRequest, useReturnRequest } from '../hooks/useRequests';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { formatCurrency } from '@/utils';
 
@@ -8,7 +8,7 @@ export const ValidationPage = () => {
   const { user } = useAuth();
   const { data, isLoading, isError } = useRequestsByStatus('pending_validation');
   const validateRequest = useValidateRequest();
-  const rejectRequest = useRejectRequest();
+  const returnRequest = useReturnRequest();
 
   const requests = data || [];
 
@@ -25,10 +25,10 @@ export const ValidationPage = () => {
   const handleReturn = (id) => {
     const reason = window.prompt('Motivo da devolução');
     if (!reason) return;
-    rejectRequest.mutate({
+    returnRequest.mutate({
       id,
-      approverId: user.id,
-      approverName: user.name,
+      validatorId: user.id,
+      validatorName: user.name,
       reason,
     });
   };
@@ -82,7 +82,7 @@ export const ValidationPage = () => {
                       <button
                         onClick={() => handleReturn(req.id)}
                         className="px-3 py-1 bg-red-600 text-white rounded-md"
-                        disabled={rejectRequest.isPending}
+                        disabled={returnRequest.isPending}
                       >
                         Devolver
                       </button>

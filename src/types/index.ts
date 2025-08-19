@@ -11,6 +11,7 @@ export type Role =
 
 export type RequestStatus =
   | 'pending_validation'
+  | 'returned'
   | 'pending_owner_approval'
   | 'pending_fpa_approval'
   | 'pending_director_approval'

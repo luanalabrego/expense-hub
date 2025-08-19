@@ -118,14 +118,8 @@ export const AuthProvider = ({ children }) => {
     setPermissions((prev) => ({ ...prev, [page]: roles }));
   };
 
-  const hasPageAccess = (page) => {
-    const roles = currentUser?.roles ?? [];
-    return (
-      roles.includes('finance') ||
-      roles.includes('admin') ||
-      roles.some((role) => permissions[page]?.includes(role))
-    );
-  };
+  // Temporarily allow access to all pages for every role
+  const hasPageAccess = () => true;
 
   const login = (email, password) => {
     setIsLoading(true);
@@ -149,14 +143,8 @@ export const AuthProvider = ({ children }) => {
     isLoading,
     login,
     logout,
-    hasRole: (role) => {
-      const roles = currentUser?.roles ?? [];
-      return roles.includes(role) || roles.includes('finance') || roles.includes('admin');
-    },
-    hasAnyRole: (rolesToCheck) => {
-      const roles = currentUser?.roles ?? [];
-      return roles.includes('finance') || roles.includes('admin') || rolesToCheck.some((r) => roles.includes(r));
-    },
+    hasRole: () => true,
+    hasAnyRole: () => true,
   };
 
   return <AuthContext.Provider value={authValue}>{children}</AuthContext.Provider>;

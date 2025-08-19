@@ -18,12 +18,14 @@ import { ReportsPage } from '../pages/ReportsPage';
 import { useAuth } from '../contexts/AuthContext';
 import { BudgetsPage } from '../pages/BudgetsPage';
 import { ValidationPage } from '../pages/ValidationPage';
+import { LoginPage } from '../pages/LoginPage';
 
 export const AppRoutes = () => {
-  const { hasPageAccess } = useAuth();
+  const { hasPageAccess, isAuthenticated } = useAuth();
   return (
     <Routes>
-      <Route path="/" element={<Layout />}>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/" element={isAuthenticated ? <Layout /> : <Navigate to="/login" replace />}>
         <Route index element={<Navigate to="requests" replace />} />
         <Route
           path="requests"
@@ -156,7 +158,7 @@ export const AppRoutes = () => {
           element={hasPageAccess('users') ? <UsersPage /> : <Navigate to="/" replace />}
         />
       </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to={isAuthenticated ? '/' : '/login'} replace />} />
     </Routes>
   );
 };

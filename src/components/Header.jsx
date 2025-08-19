@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import { signOut } from 'firebase/auth';
-import { auth } from '../services/firebase';
 import { useAuthStore } from '../stores/auth';
+import { useAuth } from '../contexts/AuthContext';
 import { useUIStore } from '../stores/ui';
 import { useUnreadNotificationsCount } from '../hooks/useNotifications';
 import { Button } from './ui/button';
@@ -19,6 +18,7 @@ import { Bell } from 'lucide-react';
 export const Header = () => {
   const { user } = useAuthStore();
   const { toggleSidebar, toggleSidebarCollapse } = useUIStore();
+  const { logout } = useAuth();
   const { data: unreadCount = 0 } = useUnreadNotificationsCount(user?.id || '');
 
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -46,7 +46,7 @@ export const Header = () => {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
+      await logout();
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
     }

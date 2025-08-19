@@ -104,8 +104,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const hasPageAccess = (page) => {
-    const role = currentUser?.role;
-    return permissions[page]?.includes(role) || role === 'finance';
+    const roles = currentUser?.roles || (currentUser?.role ? [currentUser.role] : []);
+    return (
+      roles.includes('finance') ||
+      roles.some((role) => permissions[page]?.includes(role))
+    );
   };
 
   const login = (email, password) => {
@@ -130,8 +133,14 @@ export const AuthProvider = ({ children }) => {
     isLoading,
     login,
     logout,
-    hasRole: (role) => currentUser?.role === role || currentUser?.role === 'finance',
-    hasAnyRole: (roles) => roles.includes(currentUser?.role) || currentUser?.role === 'finance',
+    hasRole: (role) => {
+      const roles = currentUser?.roles || (currentUser?.role ? [currentUser.role] : []);
+      return roles.includes(role) || roles.includes('finance');
+    },
+    hasAnyRole: (rolesToCheck) => {
+      const roles = currentUser?.roles || (currentUser?.role ? [currentUser.role] : []);
+      return roles.includes('finance') || rolesToCheck.some((r) => roles.includes(r));
+    },
   };
 
   return <AuthContext.Provider value={authValue}>{children}</AuthContext.Provider>;

@@ -108,6 +108,7 @@ export const getTotalSpentByBudgetLine = async (
     collection(db, COLLECTION_NAME),
     where('budgetLineId', '==', budgetLineId),
     where('inBudget', '==', true),
+    where('status', 'in', ['pending_payment_approval', 'paid']),
     where('competenceDate', '>=', start),
     where('competenceDate', '<', end)
   );

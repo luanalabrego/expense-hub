@@ -1,14 +1,14 @@
 // Serviços para gestão de usuários
-import { 
-  collection, 
-  doc, 
-  getDocs, 
-  getDoc, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
+import {
+  collection,
+  doc,
+  getDocs,
+  getDoc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
   orderBy,
   limit,
   startAfter,
@@ -165,7 +165,7 @@ export const createUser = async (userData: {
     };
 
     // Usar o UID do Firebase Auth como ID do documento
-    await updateDoc(doc(db, COLLECTION_NAME, userCredential.user.uid), userDoc);
+    await setDoc(doc(db, COLLECTION_NAME, userCredential.user.uid), userDoc);
 
     return {
       id: userCredential.user.uid,

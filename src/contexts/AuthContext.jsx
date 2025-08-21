@@ -16,6 +16,7 @@ import {
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
   getAuth,
+  fetchSignInMethodsForEmail,
 } from 'firebase/auth';
 import { getApps, initializeApp } from 'firebase/app';
 import { useAuthStore } from '@/stores/auth';
@@ -96,6 +97,12 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const addUser = async (user) => {
+    // Verifica se o email já está em uso antes de criar o usuário
+    const methods = await fetchSignInMethodsForEmail(secondaryAuth, user.email);
+    if (methods.length > 0) {
+      throw new Error('E-mail já cadastrado');
+    }
+
     // Create user in Firebase Auth using a secondary app instance
     const tempPassword = Math.random().toString(36).slice(-8);
     const cred = await createUserWithEmailAndPassword(

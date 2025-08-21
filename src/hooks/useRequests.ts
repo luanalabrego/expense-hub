@@ -25,6 +25,7 @@ export const useRequestsList = (
     vendorId?: string;
     costCenterId?: string;
     categoryId?: string;
+    requesterId?: string;
     orderBy?: 'createdAt' | 'dueDate' | 'amount' | 'status' | 'priority';
     orderDir?: 'asc' | 'desc';
     minAmount?: number;
@@ -45,6 +46,7 @@ export const useRequestsList = (
         costCenterId: params.costCenterId,
         categoryId: params.categoryId,
         search: params.search,
+        requesterId: params.requesterId,
         dateFrom: params.fromDate,
         dateTo: params.toDate,
         amountFrom: params.minAmount,
@@ -97,6 +99,7 @@ export const useRequestStats = (
     dateTo?: Date;
     costCenterId?: string;
     categoryId?: string;
+    requesterId?: string;
   } = {}
 ) => {
   return useQuery({

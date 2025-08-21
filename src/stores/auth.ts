@@ -57,10 +57,15 @@ export const useAuthStore = create<AuthState>()(
         error: null 
       }),
       
-      // Temporarily allow all permissions for every role
-      hasRole: () => true,
+      hasRole: (role: string) => {
+        const user = get().user;
+        return user?.roles?.includes(role);
+      },
 
-      hasAnyRole: () => true,
+      hasAnyRole: (roles: string[]) => {
+        const user = get().user;
+        return user?.roles?.some((r) => roles.includes(r));
+      },
 
       canApprove: () => true,
 

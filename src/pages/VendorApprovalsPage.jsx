@@ -10,6 +10,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { formatCNPJ, formatDate } from '@/utils';
 import VendorDetailsModal from '@/components/VendorDetailsModal';
 import { useConfirm } from '@/hooks/useConfirm';
+import { usePrompt } from '@/contexts/PromptContext';
 
 export const VendorApprovalsPage = () => {
   const { data: vendorsData, isLoading, isError } = useVendors({
@@ -39,6 +40,7 @@ export const VendorApprovalsPage = () => {
   const requestInfoVendor = useRequestMoreInfoVendor();
 
   const { confirm, ConfirmationDialog } = useConfirm();
+  const prompt = usePrompt();
 
   const handleApprove = async (id) => {
     if (await confirm('Aprovar este fornecedor?')) {
@@ -47,14 +49,14 @@ export const VendorApprovalsPage = () => {
   };
 
   const handleReject = async (id) => {
-    const reason = window.prompt('Motivo da reprovação:');
+    const reason = await prompt({ title: 'Motivo da reprovação:' });
     if (reason) {
       await rejectVendor.mutateAsync({ id, reason });
     }
   };
 
   const handleRequestInfo = async (id) => {
-    const info = window.prompt('Quais informações adicionais são necessárias?');
+    const info = await prompt({ title: 'Quais informações adicionais são necessárias?' });
     if (info) {
       await requestInfoVendor.mutateAsync({ id, info });
     }

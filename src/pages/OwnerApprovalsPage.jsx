@@ -11,6 +11,7 @@ import { formatCurrency, formatDate } from '@/utils';
 import { DollarSign, Clock, CheckCircle } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import RequestDetailsModal from '@/components/RequestDetailsModal';
+import { usePrompt } from '../contexts/PromptContext';
 
 export const OwnerApprovalsPage = () => {
   const { user } = useAuth();
@@ -30,6 +31,7 @@ export const OwnerApprovalsPage = () => {
 
   const approveRequest = useApproveRequest();
   const rejectRequest = useRejectRequest();
+  const prompt = usePrompt();
 
   const userCostCenters = user?.ccScope ?? user?.costCenters ?? [];
   const pendingRequests = (pendingData ?? []).filter(
@@ -73,8 +75,8 @@ export const OwnerApprovalsPage = () => {
     }
   };
 
-  const handleApprove = (id) => {
-    const comments = window.prompt('Comentário da aprovação');
+  const handleApprove = async (id) => {
+    const comments = await prompt({ title: 'Comentário da aprovação' });
     if (comments === null) return;
     approveRequest.mutate({
       id,
@@ -84,8 +86,8 @@ export const OwnerApprovalsPage = () => {
     });
   };
 
-  const handleReject = (id) => {
-    const reason = window.prompt('Motivo da reprovação');
+  const handleReject = async (id) => {
+    const reason = await prompt({ title: 'Motivo da reprovação' });
     if (!reason) return;
     rejectRequest.mutate({
       id,
@@ -95,8 +97,8 @@ export const OwnerApprovalsPage = () => {
     });
   };
 
-  const handleApproveSelected = () => {
-    const comments = window.prompt('Comentário da aprovação');
+  const handleApproveSelected = async () => {
+    const comments = await prompt({ title: 'Comentário da aprovação' });
     if (comments === null) return;
     selectedIds.forEach((id) =>
       approveRequest.mutate({

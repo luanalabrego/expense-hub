@@ -4,6 +4,7 @@ import { HashRouter } from 'react-router-dom';
 import { queryClient } from './lib/react-query';
 import { AppRoutes } from './routes';
 import { AuthProvider } from './contexts/AuthContext';
+import { PromptProvider } from './contexts/PromptContext';
 import './App.css';
 
 function App() {
@@ -11,10 +12,12 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <HashRouter>
         <AuthProvider>
-          <div className="min-h-screen bg-background">
-            <AppRoutes />
-          </div>
-          <ReactQueryDevtools initialIsOpen={false} />
+          <PromptProvider>
+            <div className="min-h-screen bg-background">
+              <AppRoutes />
+            </div>
+            <ReactQueryDevtools initialIsOpen={false} />
+          </PromptProvider>
         </AuthProvider>
       </HashRouter>
     </QueryClientProvider>

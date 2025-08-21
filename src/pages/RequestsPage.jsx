@@ -5,6 +5,7 @@ import { useBudgetRequests } from '../stores/budget-requests';
 import { Plus, Search, Edit, Eye, CheckCircle, XCircle, Clock, DollarSign, Upload } from 'lucide-react';
 import { useRequestsList, useRequestStats, useApproveRequest, useRejectRequest } from '../hooks/useRequests';
 import { useAuth } from '../contexts/AuthContext';
+import { usePrompt } from '../contexts/PromptContext';
 import { useNotifications } from '../stores/ui';
 import NewRequestModal from '../components/NewRequestModal';
 import ImportRequestsModal from '../components/ImportRequestsModal';
@@ -22,6 +23,7 @@ export const RequestsPage = () => {
   const [showImport, setShowImport] = useState(false);
   const approveRequest = useApproveRequest();
   const rejectRequest = useRejectRequest();
+  const prompt = usePrompt();
   const { error: notifyError } = useNotifications();
   const { requests: budgetRequests } = useBudgetRequests();
   const [showBudgetModal, setShowBudgetModal] = useState(false);
@@ -126,8 +128,8 @@ export const RequestsPage = () => {
     return labels[status] || '-';
   };
 
-  const handleApprove = (id) => {
-    const comments = window.prompt('Comentário da aprovação');
+  const handleApprove = async (id) => {
+    const comments = await prompt({ title: 'Comentário da aprovação' });
     if (comments === null) return;
     approveRequest.mutate({
       id,
@@ -137,8 +139,8 @@ export const RequestsPage = () => {
     });
   };
 
-  const handleReject = (id) => {
-    const reason = window.prompt('Motivo da reprovação');
+  const handleReject = async (id) => {
+    const reason = await prompt({ title: 'Motivo da reprovação' });
     if (!reason) return;
     rejectRequest.mutate({
       id,

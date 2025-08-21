@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '../components/ui/chart';
 import { usePaymentForecast } from '../hooks/useAnalytics';
+import { usePrompt } from '../contexts/PromptContext';
 
 export const PaymentManagementPage = () => {
   const { user } = useAuth();
@@ -13,6 +14,7 @@ export const PaymentManagementPage = () => {
   const { mutate: markAsPaid } = useMarkAsPaid();
   const { mutate: cancelRequest } = useCancelRequest();
   const requests = data?.data || [];
+  const prompt = usePrompt();
 
   const { data: forecastData = [] } = usePaymentForecast({
     startDate: startDate ? new Date(startDate) : undefined,
@@ -22,8 +24,8 @@ export const PaymentManagementPage = () => {
   const formatCurrency = (value) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
-  const handlePaid = (id) => {
-    const notes = window.prompt('Observações do pagamento');
+  const handlePaid = async (id) => {
+    const notes = await prompt({ title: 'Observações do pagamento' });
     if (notes === null) return;
     markAsPaid({
       id,
@@ -36,8 +38,8 @@ export const PaymentManagementPage = () => {
     });
   };
 
-  const handleCancel = (id) => {
-    const reason = window.prompt('Motivo do cancelamento');
+  const handleCancel = async (id) => {
+    const reason = await prompt({ title: 'Motivo do cancelamento' });
     if (!reason) return;
     cancelRequest({ id, reason, userId: user.id, userName: user.name });
   };

@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '@/contexts/AuthContext';
+import { useConfirm } from '@/hooks/useConfirm';
 
 export const VendorsPage = () => {
   const { hasAnyRole, user } = useAuth();
@@ -29,32 +30,34 @@ export const VendorsPage = () => {
   const sendToLegal = useSendVendorToContractReview();
   const [isNewVendorOpen, setIsNewVendorOpen] = useState(false);
 
+  const { confirm, ConfirmationDialog } = useConfirm();
+
   const handleDeactivate = async (id) => {
-    if (window.confirm('Tem certeza que deseja desativar este fornecedor?')) {
+    if (await confirm('Tem certeza que deseja desativar este fornecedor?')) {
       await deactivateVendor.mutateAsync(id);
     }
   };
 
   const handleReactivate = async (id) => {
-    if (window.confirm('Tem certeza que deseja reativar este fornecedor?')) {
+    if (await confirm('Tem certeza que deseja reativar este fornecedor?')) {
       await reactivateVendor.mutateAsync(id);
     }
   };
 
   const handleBlock = async (id) => {
-    if (window.confirm('Tem certeza que deseja bloquear este fornecedor?')) {
+    if (await confirm('Tem certeza que deseja bloquear este fornecedor?')) {
       await blockVendor.mutateAsync(id);
     }
   };
 
   const handleUnblock = async (id) => {
-    if (window.confirm('Tem certeza que deseja desbloquear este fornecedor?')) {
+    if (await confirm('Tem certeza que deseja desbloquear este fornecedor?')) {
       await unblockVendor.mutateAsync(id);
     }
   };
 
   const handleSendToLegal = async (id) => {
-    if (window.confirm('Enviar contrato para revisão jurídica?')) {
+    if (await confirm('Enviar contrato para revisão jurídica?')) {
       await sendToLegal.mutateAsync({ id, requesterId: user.id });
     }
   };
@@ -275,6 +278,7 @@ export const VendorsPage = () => {
         </div>
       )}
       </div>
+      <ConfirmationDialog />
     </>
   );
 };

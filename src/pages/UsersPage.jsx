@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { ROLES } from '@/constants';
 
 export const UsersPage = () => {
   const {
@@ -23,14 +24,24 @@ export const UsersPage = () => {
     setForm({ name: '', email: '', role: 'user' });
   };
 
-  const roles = ['finance', 'cost_center_owner', 'user'];
+  const roles = Object.values(ROLES);
   const pages = Object.keys(permissions);
   const pageLabels = {
     requests: 'Solicitações',
     vendors: 'Fornecedores',
+    vendorApprovals: 'Aprovação de Fornecedores',
+    contractReview: 'Revisão de Contratos',
+    validation: 'Validação',
+    ownerApprovals: 'Aprovações do Owner',
+    financialApprovals: 'Aprovações FP&A',
+    directorApprovals: 'Aprovações do Diretor',
+    cfoApprovals: 'Aprovações do CFO',
+    ceoApprovals: 'Aprovações do CEO',
     users: 'Usuários',
     'cost-centers': 'Centros de Custo',
+    payments: 'Pagamentos',
     reports: 'Relatórios',
+    budgets: 'Orçamentos',
   };
 
   const handlePermissionToggle = (page, role) => {

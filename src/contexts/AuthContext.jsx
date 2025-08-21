@@ -125,21 +125,21 @@ export const AuthProvider = ({ children }) => {
   };
 
   const [permissions, setPermissions] = useState({
-    requests: ['finance', 'cost_center_owner', 'user', 'fpa', 'director', 'cfo', 'ceo'],
-    vendors: ['finance'],
-    vendorApprovals: ['finance'],
-    contractReview: ['finance'],
-    validation: ['finance'],
-    ownerApprovals: ['cost_center_owner'],
-    financialApprovals: ['fpa'],
-    directorApprovals: ['director'],
-    cfoApprovals: ['cfo'],
-    ceoApprovals: ['ceo'],
-    users: ['finance'],
-    'cost-centers': ['finance', 'cost_center_owner'],
-    payments: ['finance'],
-    reports: ['finance'],
-    budgets: ['cost_center_owner'],
+    requests: ['admin', 'finance', 'cost_center_owner', 'user', 'fpa', 'director', 'cfo', 'ceo'],
+    vendors: ['admin', 'finance'],
+    vendorApprovals: ['admin', 'finance'],
+    contractReview: ['admin', 'finance'],
+    validation: ['admin', 'finance'],
+    ownerApprovals: ['admin', 'cost_center_owner'],
+    financialApprovals: ['admin', 'fpa'],
+    directorApprovals: ['admin', 'director'],
+    cfoApprovals: ['admin', 'cfo'],
+    ceoApprovals: ['admin', 'ceo'],
+    users: ['admin', 'finance'],
+    'cost-centers': ['admin', 'finance', 'cost_center_owner'],
+    payments: ['admin', 'finance'],
+    reports: ['admin', 'finance'],
+    budgets: ['admin', 'cost_center_owner'],
   });
 
   const updatePermissions = (page, roles) => {

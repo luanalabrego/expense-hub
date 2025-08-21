@@ -3,6 +3,7 @@ import { useVendors, useApproveVendorContract, useRequestVendorContractAdjustmen
 import { useRequestsList, useApproveRequestContract, useRequestContractAdjustments } from '@/hooks/useRequests';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { formatCNPJ } from '@/utils';
+import { useConfirm } from '@/hooks/useConfirm';
 
 export const ContractReviewPage = () => {
   const { data: vendorsData, isLoading, isError } = useVendors({ status: 'contract_review', page: 1, limit: 50 });
@@ -13,8 +14,10 @@ export const ContractReviewPage = () => {
   const approveRequestContract = useApproveRequestContract();
   const requestRequestAdjustments = useRequestContractAdjustments();
 
+  const { confirm, ConfirmationDialog } = useConfirm();
+
   const handleApprove = async (id) => {
-    if (window.confirm('Aprovar contrato deste fornecedor?')) {
+    if (await confirm('Aprovar contrato deste fornecedor?')) {
       await approveContract.mutateAsync(id);
     }
   };
@@ -27,7 +30,7 @@ export const ContractReviewPage = () => {
   };
 
   const handleApproveRequest = async (id) => {
-    if (window.confirm('Aprovar contrato desta solicitação?')) {
+    if (await confirm('Aprovar contrato desta solicitação?')) {
       await approveRequestContract.mutateAsync(id);
     }
   };
@@ -43,6 +46,7 @@ export const ContractReviewPage = () => {
   const requests = requestsData?.data ?? [];
 
   return (
+    <>
     <div className="space-y-6">
       <h1 className="text-3xl font-bold tracking-tight">Revisão de Contratos</h1>
       <div className="bg-white rounded-lg border overflow-hidden">
@@ -152,6 +156,8 @@ export const ContractReviewPage = () => {
         )}
       </div>
     </div>
+    <ConfirmationDialog />
+    </>
   );
 };
 

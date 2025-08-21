@@ -9,6 +9,7 @@ import {
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { formatCNPJ, formatDate } from '@/utils';
 import VendorDetailsModal from '@/components/VendorDetailsModal';
+import { useConfirm } from '@/hooks/useConfirm';
 
 export const VendorApprovalsPage = () => {
   const { data: vendorsData, isLoading, isError } = useVendors({
@@ -37,8 +38,10 @@ export const VendorApprovalsPage = () => {
   const rejectVendor = useRejectVendor();
   const requestInfoVendor = useRequestMoreInfoVendor();
 
+  const { confirm, ConfirmationDialog } = useConfirm();
+
   const handleApprove = async (id) => {
-    if (window.confirm('Aprovar este fornecedor?')) {
+    if (await confirm('Aprovar este fornecedor?')) {
       await approveVendor.mutateAsync(id);
     }
   };
@@ -84,6 +87,7 @@ export const VendorApprovalsPage = () => {
   };
 
   return (
+    <>
     <div className="space-y-6">
       <h1 className="text-3xl font-bold tracking-tight">Aprovação de Fornecedores</h1>
       <div className="bg-white rounded-lg border overflow-hidden">
@@ -247,5 +251,7 @@ export const VendorApprovalsPage = () => {
         requestInfoDisabled={requestInfoVendor.isPending}
       />
     </div>
+    <ConfirmationDialog />
+    </>
   );
 };

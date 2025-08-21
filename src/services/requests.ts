@@ -1165,6 +1165,7 @@ export const getRequestStats = async (
     dateTo?: Date;
     costCenterId?: string;
     categoryId?: string;
+    requesterId?: string;
   } = {}
 ): Promise<{
   total: number;
@@ -1183,6 +1184,10 @@ export const getRequestStats = async (
 
     if (filters.categoryId) {
       q = query(q, where('categoryId', '==', filters.categoryId));
+    }
+
+    if (filters.requesterId) {
+      q = query(q, where('requesterId', '==', filters.requesterId));
     }
 
     const snapshot = await getDocs(q);

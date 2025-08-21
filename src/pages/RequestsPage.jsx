@@ -25,6 +25,7 @@ export const RequestsPage = () => {
   const { error: notifyError } = useNotifications();
   const { requests: budgetRequests } = useBudgetRequests();
   const [showBudgetModal, setShowBudgetModal] = useState(false);
+  const isBasicUser = user?.roles?.includes('user');
   const { data, isLoading, isError, error } = useRequestsList({
     page,
     limit,
@@ -32,8 +33,11 @@ export const RequestsPage = () => {
     status: statusFilter || undefined,
     orderBy,
     orderDir,
+    requesterId: isBasicUser ? user.id : undefined,
   });
-  const { data: stats } = useRequestStats();
+  const { data: stats } = useRequestStats(
+    isBasicUser ? { requesterId: user.id } : {},
+  );
   const requests = data?.data || [];
   const total = data?.total || 0;
   const totalPages = data?.totalPages || 1;

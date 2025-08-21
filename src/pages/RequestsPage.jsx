@@ -110,26 +110,6 @@ export const RequestsPage = () => {
     return labels[status] || '-';
   };
 
-  const getPriorityColor = (priority) => {
-    const colors = {
-      low: 'bg-gray-100 text-gray-800',
-      medium: 'bg-blue-100 text-blue-800',
-      high: 'bg-orange-100 text-orange-800',
-      urgent: 'bg-red-100 text-red-800',
-    };
-    return colors[priority] || 'bg-gray-100 text-gray-800';
-  };
-
-  const getPriorityLabel = (priority) => {
-    const labels = {
-      low: 'Baixa',
-      medium: 'Média',
-      high: 'Alta',
-      urgent: 'Urgente',
-    };
-    return labels[priority] || priority;
-  };
-
   const getContractStatusColor = (status) => {
     const colors = {
       pending: 'bg-yellow-100 text-yellow-800',
@@ -303,7 +283,6 @@ export const RequestsPage = () => {
               <option value="dueDate">Vencimento</option>
               <option value="amount">Valor</option>
               <option value="status">Status</option>
-              <option value="priority">Prioridade</option>
             </select>
           </div>
 
@@ -349,9 +328,6 @@ export const RequestsPage = () => {
                   Contrato
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Prioridade
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Vencimento
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -387,19 +363,10 @@ export const RequestsPage = () => {
                         <div className="h-4 bg-gray-200 rounded w-20"></div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="h-4 bg-gray-200 rounded w-20"></div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
                         <div className="h-4 bg-gray-200 rounded w-12"></div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="h-4 bg-gray-200 rounded w-12"></div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="h-4 bg-gray-200 rounded w-20"></div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="h-4 bg-gray-200 rounded w-20"></div>
                       </td>
                     </tr>
                   ))
@@ -445,11 +412,6 @@ export const RequestsPage = () => {
                             {getContractStatusLabel(request.contractStatus)}
                           </span>
                         ) : '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(request.priority)}`}>
-                          {getPriorityLabel(request.priority)}
-                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {request.dueDate ? formatDate(request.dueDate) : '-'}

@@ -26,7 +26,7 @@ export const useRequestsList = (
     costCenterId?: string;
     categoryId?: string;
     requesterId?: string;
-    orderBy?: 'createdAt' | 'dueDate' | 'amount' | 'status' | 'priority';
+    orderBy?: 'createdAt' | 'dueDate' | 'amount' | 'status';
     orderDir?: 'asc' | 'desc';
     minAmount?: number;
     maxAmount?: number;

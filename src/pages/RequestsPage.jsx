@@ -33,11 +33,9 @@ export const RequestsPage = () => {
     status: statusFilter || undefined,
     orderBy,
     orderDir,
-    requesterId: isBasicUser ? user.id : undefined,
+    requesterId: user.id,
   });
-  const { data: stats } = useRequestStats(
-    isBasicUser ? { requesterId: user.id } : {},
-  );
+  const { data: stats } = useRequestStats({ requesterId: user.id });
   const requests = data?.data || [];
   const total = data?.total || 0;
   const totalPages = data?.totalPages || 1;

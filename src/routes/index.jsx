@@ -17,6 +17,7 @@ import { PaymentManagementPage } from '../pages/PaymentManagementPage';
 import { ReportsPage } from '../pages/ReportsPage';
 import { useAuth } from '../contexts/AuthContext';
 import { BudgetsPage } from '../pages/BudgetsPage';
+import { BudgetRequestsPage } from '../pages/BudgetRequestsPage';
 import { ValidationPage } from '../pages/ValidationPage';
 import { AccountingMonitorPage } from '../pages/AccountingMonitorPage';
 import { LoginPage } from '../pages/LoginPage';
@@ -159,6 +160,16 @@ export const AppRoutes = () => {
           element={
             hasPageAccess('budgets') ? (
               <BudgetsPage />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route
+          path="budget-requests"
+          element={
+            hasPageAccess('budgetRequests') ? (
+              <BudgetRequestsPage />
             ) : (
               <Navigate to="/" replace />
             )

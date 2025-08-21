@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Edit, Eye, CheckCircle, XCircle, Clock, DollarSign } from 'lucide-react';
+import BudgetRequestModal from '../components/BudgetRequestModal';
+import { useBudgetRequests } from '../stores/budget-requests';
 import { useRequestsList, useRequestStats, useApproveRequest, useRejectRequest } from '../hooks/useRequests';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../stores/ui';
@@ -19,6 +21,8 @@ export const RequestsPage = () => {
   const approveRequest = useApproveRequest();
   const rejectRequest = useRejectRequest();
   const { error: notifyError } = useNotifications();
+  const { requests: budgetRequests } = useBudgetRequests();
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
   const { data, isLoading, isError, error } = useRequestsList({
     page,
     limit,
@@ -170,13 +174,22 @@ export const RequestsPage = () => {
             Gerencie todas as solicitações de pagamento da empresa
           </p>
         </div>
-        <button
-          onClick={() => setShowNewRequest(true)}
-          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Nova Solicitação
-        </button>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setShowBudgetModal(true)}
+            className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Solicitar Orçamento
+          </button>
+          <button
+            onClick={() => setShowNewRequest(true)}
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nova Solicitação
+          </button>
+        </div>
       </div>
 
       {/* Estatísticas */}
@@ -497,6 +510,36 @@ export const RequestsPage = () => {
         )}
       </div>
 
+      {/* Solicitações de Orçamento */}
+      <div className="mt-10">
+        <h2 className="text-xl font-bold mb-2">Solicitações de Orçamento</h2>
+        <table className="min-w-full bg-white border">
+          <thead>
+            <tr className="bg-gray-50">
+              <th className="px-4 py-2 text-left">ID</th>
+              <th className="px-4 py-2 text-left">Título</th>
+              <th className="px-4 py-2 text-left">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {budgetRequests.map((r) => (
+              <tr key={r.id} className="border-t">
+                <td className="px-4 py-2">{r.id}</td>
+                <td className="px-4 py-2">{r.title}</td>
+                <td className="px-4 py-2">{r.status}</td>
+              </tr>
+            ))}
+            {budgetRequests.length === 0 && (
+              <tr>
+                <td colSpan={3} className="px-4 py-8 text-center text-gray-500">
+                  Nenhuma solicitação de orçamento
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
       {/* Paginação */}
       <div className="flex items-center justify-between">
         <div className="text-sm text-gray-700">
@@ -520,6 +563,7 @@ export const RequestsPage = () => {
         </div>
       </div>
       <NewRequestModal open={showNewRequest} onClose={() => setShowNewRequest(false)} />
+      <BudgetRequestModal open={showBudgetModal} onClose={() => setShowBudgetModal(false)} />
     </div>
   );
 };

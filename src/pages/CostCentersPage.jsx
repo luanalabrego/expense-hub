@@ -6,7 +6,7 @@ export const CostCentersPage = () => {
   const [costCenters, setCostCenters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({ name: '', managerId: '', budget: 0 });
+  const [form, setForm] = useState({ name: '', managerId: '', directorId: '', budget: 0 });
   const { users } = useAuth();
 
   const fetchCostCenters = async () => {
@@ -35,10 +35,11 @@ export const CostCentersPage = () => {
       await createCostCenter({
         name: form.name,
         managerId: form.managerId,
+        directorId: form.directorId,
         budget: Number(form.budget)
       });
       setShowModal(false);
-      setForm({ name: '', managerId: '', budget: 0 });
+      setForm({ name: '', managerId: '', directorId: '', budget: 0 });
       fetchCostCenters();
     } catch (error) {
       console.error('Erro ao criar centro de custo:', error);
@@ -49,6 +50,8 @@ export const CostCentersPage = () => {
     const id = typeof managerId === 'string' ? managerId : managerId?.id;
     return users.find((u) => u.id === id)?.email || id;
   };
+
+  const directorUsers = users.filter((u) => u.roles?.includes('director'));
 
   return (
     <div className="space-y-6">
@@ -132,6 +135,23 @@ export const CostCentersPage = () => {
                 >
                   <option value="">Selecione</option>
                   {users.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Diretor</label>
+                <select
+                  name="directorId"
+                  value={form.directorId}
+                  onChange={handleChange}
+                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                >
+                  <option value="">Selecione</option>
+                  {directorUsers.map((u) => (
                     <option key={u.id} value={u.id}>
                       {u.name}
                     </option>

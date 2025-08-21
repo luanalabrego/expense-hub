@@ -99,6 +99,8 @@ export interface CostCenter {
   code: string;
   name: string;
   ownerUserId: string; // gerente responsável
+  managerId?: string;
+  directorId?: string;
   budgets: Record<string, number>; // YYYY-MM: amount
   status: 'active' | 'inactive';
   createdAt: Date;
@@ -293,6 +295,7 @@ export interface CreateVendorForm {
 export interface CreateCostCenterForm {
   name: string;
   managerId: string;
+  directorId: string;
 }
 
 export interface CreateCategoryForm {

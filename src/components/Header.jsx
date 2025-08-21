@@ -35,6 +35,8 @@ export const Header = () => {
     second: '2-digit',
   });
 
+  const userRole = user?.roles?.[0]?.toUpperCase() || '';
+
   const userInitials = user?.name
     ? user.name
         .split(' ')
@@ -77,6 +79,7 @@ export const Header = () => {
       {/* Data/Hora, Notificações e Perfil do Usuário */}
       <div className="flex items-center space-x-4">
         <div className="text-sm text-gray-600">
+          {userRole && <span className="mr-2">{userRole}</span>}
           {formattedDate} {formattedTime}
         </div>
 

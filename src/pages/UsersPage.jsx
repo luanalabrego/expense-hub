@@ -36,7 +36,6 @@ export const UsersPage = () => {
     vendorApprovals: 'Aprovação de Fornecedores',
     contractReview: 'Revisão de Contratos',
     ownerApprovals: 'Aprovações do Owner',
-    financialApprovals: 'Aprovações FP&A',
     directorApprovals: 'Aprovações do Diretor',
     cfoApprovals: 'Aprovações do CFO',
     ceoApprovals: 'Aprovações do CEO',

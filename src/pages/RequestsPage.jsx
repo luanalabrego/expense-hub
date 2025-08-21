@@ -463,7 +463,7 @@ export const RequestsPage = () => {
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          {request.status === 'pending_owner_approval' && (
+                          {!isBasicUser && request.status === 'pending_owner_approval' && (
                             <>
                               <button
                                 onClick={() => handleApprove(request.id)}
@@ -483,13 +483,15 @@ export const RequestsPage = () => {
                               </button>
                             </>
                           )}
-                          <button
-                            onClick={() => navigate(`/requests/${request.id}/edit`)}
-                            className="text-gray-600 hover:text-gray-900"
-                            title="Editar"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
+                          {(!isBasicUser || request.status === 'pending_owner_approval') && (
+                            <button
+                              onClick={() => navigate(`/requests/${request.id}/edit`)}
+                              className="text-gray-600 hover:text-gray-900"
+                              title="Editar"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

@@ -136,6 +136,7 @@ export const createCostCenter = async (ccData: {
   name: string;
   description?: string;
   managerId: string;
+  directorId: string;
   parentId?: string;
   budget?: number;
 }): Promise<CostCenter> => {
@@ -146,6 +147,7 @@ export const createCostCenter = async (ccData: {
       code,
       description: ccData.description || '',
       managerId: ccData.managerId,
+      directorId: ccData.directorId,
       parentId: ccData.parentId || null,
       budget: ccData.budget || 0,
       spent: 0,

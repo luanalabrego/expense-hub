@@ -145,6 +145,7 @@ export const AuthProvider = ({ children }) => {
     payments: ['admin', 'finance'],
     reports: ['admin', 'finance'],
     budgets: ['admin', 'cost_center_owner'],
+    settings: ['cfo'],
   });
 
   const updatePermissions = (page, roles) => {

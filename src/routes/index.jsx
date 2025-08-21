@@ -19,6 +19,7 @@ import { BudgetsPage } from '../pages/BudgetsPage';
 import { BudgetRequestsPage } from '../pages/BudgetRequestsPage';
 import { AccountingMonitorPage } from '../pages/AccountingMonitorPage';
 import { LoginPage } from '../pages/LoginPage';
+import { SettingsPage } from '../pages/SettingsPage';
 
 export const AppRoutes = () => {
   const { hasPageAccess, isAuthenticated } = useAuth();
@@ -154,6 +155,16 @@ export const AppRoutes = () => {
           element={
             hasPageAccess('budgetRequests') ? (
               <BudgetRequestsPage />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route
+          path="settings"
+          element={
+            hasPageAccess('settings') ? (
+              <SettingsPage />
             ) : (
               <Navigate to="/" replace />
             )

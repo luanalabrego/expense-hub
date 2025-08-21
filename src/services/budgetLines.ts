@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where } from 'firebase/firestore';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, getDoc } from 'firebase/firestore';
 import { db } from './firebase';
 
 const COLLECTION_NAME = 'budget-lines';
@@ -25,6 +25,17 @@ export const getBudgetLines = async (): Promise<BudgetLine[]> => {
     createdAt: d.data().createdAt?.toDate ? d.data().createdAt.toDate() : undefined,
     updatedAt: d.data().updatedAt?.toDate ? d.data().updatedAt.toDate() : undefined,
   })) as BudgetLine[];
+};
+
+export const getBudgetLineById = async (id: string): Promise<BudgetLine | null> => {
+  const d = await getDoc(doc(db, COLLECTION_NAME, id));
+  if (!d.exists()) return null;
+  return {
+    id: d.id,
+    ...d.data(),
+    createdAt: d.data().createdAt?.toDate ? d.data().createdAt.toDate() : undefined,
+    updatedAt: d.data().updatedAt?.toDate ? d.data().updatedAt.toDate() : undefined,
+  } as BudgetLine;
 };
 
 export const findBudgetLine = async (

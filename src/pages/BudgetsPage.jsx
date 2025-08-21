@@ -8,6 +8,8 @@ import {
   updateBudgetLine,
   deleteBudgetLine,
 } from '@/services/budgetLines';
+import { getTotalSpentByBudgetLine } from '@/services/requests';
+import * as XLSX from 'xlsx';
 import {
   Dialog,
   DialogContent,
@@ -15,6 +17,21 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+
+const emptyMonths = {
+  1: 0,
+  2: 0,
+  3: 0,
+  4: 0,
+  5: 0,
+  6: 0,
+  7: 0,
+  8: 0,
+  9: 0,
+  10: 0,
+  11: 0,
+  12: 0,
+};
 
 // Componente da página de Orçamento
 export const BudgetsPage = () => {
@@ -26,21 +43,6 @@ export const BudgetsPage = () => {
   const { data: costCentersData } = useActiveCostCenters();
   const vendors = vendorsData || [];
   const costCenters = costCentersData || [];
-
-  const emptyMonths = {
-    1: 0,
-    2: 0,
-    3: 0,
-    4: 0,
-    5: 0,
-    6: 0,
-    7: 0,
-    8: 0,
-    9: 0,
-    10: 0,
-    11: 0,
-    12: 0,
-  };
 
   const [form, setForm] = useState({
     id: null,
@@ -56,6 +58,8 @@ export const BudgetsPage = () => {
   const [items, setItems] = useState([]);
   const [editingIndex, setEditingIndex] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [results, setResults] = useState({});
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -64,6 +68,28 @@ export const BudgetsPage = () => {
     };
     fetchItems();
   }, []);
+
+  useEffect(() => {
+    if (showResults) {
+      const fetchResults = async () => {
+        const res = {};
+        for (const item of items) {
+          if (!item.id) continue;
+          const monthsData = {};
+          for (const m of Object.keys(emptyMonths)) {
+            monthsData[m] = await getTotalSpentByBudgetLine(
+              item.id,
+              item.year,
+              Number(m)
+            );
+          }
+          res[item.id] = monthsData;
+        }
+        setResults(res);
+      };
+      fetchResults();
+    }
+  }, [showResults, items]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -90,6 +116,8 @@ export const BudgetsPage = () => {
     });
     setEditingIndex(null);
   };
+
+  const toggleResults = () => setShowResults((prev) => !prev);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -122,6 +150,33 @@ export const BudgetsPage = () => {
   const getVendorName = (id) => vendors.find((v) => v.id === id)?.name || '';
   const getCostCenterName = (id) => costCenters.find((c) => c.id === id)?.name || '';
 
+  const exportToExcel = () => {
+    const headers = [
+      'Fornecedor',
+      'Descrição',
+      'Centro de Custo',
+      'Natureza',
+      'Tipo',
+      'Ano',
+      ...Object.keys(emptyMonths).map((m) =>
+        new Date(0, m - 1).toLocaleString('pt-BR', { month: 'short' })
+      ),
+    ];
+    const data = items.map((item) => [
+      getVendorName(item.vendorId),
+      item.description,
+      getCostCenterName(item.costCenterId),
+      item.nature,
+      item.costType,
+      item.year,
+      ...Object.keys(emptyMonths).map((m) => item.months[m] || 0),
+    ]);
+    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...data]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Orçamento');
+    XLSX.writeFile(workbook, 'orcamento.xlsx');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -129,17 +184,31 @@ export const BudgetsPage = () => {
           <h1 className="text-3xl font-bold tracking-tight">Orçamento</h1>
           <p className="text-muted-foreground">Previsão de gastos por fornecedor e mês</p>
         </div>
-        {canEdit && (
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => {
-              resetForm();
-              setIsModalOpen(true);
-            }}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            onClick={toggleResults}
+            className="px-4 py-2 bg-gray-200 rounded-md"
           >
-            Registrar novo orçamento
+            {showResults ? 'Ocultar resultados' : 'Ver resultados'}
           </button>
-        )}
+          <button
+            onClick={exportToExcel}
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+          >
+            Baixar Excel
+          </button>
+          {canEdit && (
+            <button
+              onClick={() => {
+                resetForm();
+                setIsModalOpen(true);
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              Registrar novo orçamento
+            </button>
+          )}
+        </div>
       </div>
       <Dialog
         open={isModalOpen}
@@ -305,10 +374,29 @@ export const BudgetsPage = () => {
                 <td className="px-2 py-2">{item.year}</td>
                 {Object.keys(emptyMonths).map((m) => (
                   <td key={m} className="px-2 py-2 text-right">
-                    {item.months[m].toLocaleString('pt-BR', {
-                      style: 'currency',
-                      currency: 'BRL',
-                    })}
+                    <div className="flex flex-col items-end">
+                      <span>
+                        {item.months[m].toLocaleString('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL',
+                        })}
+                      </span>
+                      {showResults && results[item.id] && (
+                        <span className="text-xs text-gray-500">
+                          {results[item.id][m].toLocaleString('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL',
+                          })}{' '}
+                          (
+                          {item.months[m]
+                            ? Math.round(
+                                (results[item.id][m] / item.months[m]) * 100
+                              )
+                            : 0}
+                          %)
+                        </span>
+                      )}
+                    </div>
                   </td>
                 ))}
                 {canEdit && (

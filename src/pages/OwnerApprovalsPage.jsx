@@ -9,6 +9,8 @@ import {
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { formatCurrency, formatDate } from '@/utils';
 import { DollarSign, Clock, CheckCircle } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import RequestDetailsModal from '@/components/RequestDetailsModal';
 
 export const OwnerApprovalsPage = () => {
   const { user } = useAuth();
@@ -17,6 +19,8 @@ export const OwnerApprovalsPage = () => {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('updatedAt');
   const [sortOrder, setSortOrder] = useState('desc');
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [detailsId, setDetailsId] = useState(null);
 
   const {
     data: historyData,
@@ -55,6 +59,20 @@ export const OwnerApprovalsPage = () => {
     }
   };
 
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedIds(pendingRequests.map((r) => r.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
   const handleApprove = (id) => {
     const comments = window.prompt('Comentário da aprovação');
     if (comments === null) return;
@@ -75,6 +93,20 @@ export const OwnerApprovalsPage = () => {
       approverName: user.name,
       reason,
     });
+  };
+
+  const handleApproveSelected = () => {
+    const comments = window.prompt('Comentário da aprovação');
+    if (comments === null) return;
+    selectedIds.forEach((id) =>
+      approveRequest.mutate({
+        id,
+        approverId: user.id,
+        approverName: user.name,
+        comments,
+      })
+    );
+    setSelectedIds([]);
   };
 
   const pendingAmount = pendingRequests.reduce((sum, r) => sum + (r.amount || 0), 0);
@@ -134,9 +166,34 @@ export const OwnerApprovalsPage = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
+            <div className="p-4 flex gap-2">
+              <button
+                onClick={() => toggleSelectAll(true)}
+                className="px-3 py-1 bg-gray-200 rounded-md"
+              >
+                Selecionar Tudo
+              </button>
+              {selectedIds.length > 0 && (
+                <button
+                  onClick={handleApproveSelected}
+                  className="px-3 py-1 bg-green-600 text-white rounded-md"
+                >
+                  Aprovar Selecionadas
+                </button>
+              )}
+            </div>
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="px-6 py-3">
+                    <Checkbox
+                      checked={
+                        pendingRequests.length > 0 &&
+                        selectedIds.length === pendingRequests.length
+                      }
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Solicitação</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fornecedor</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
@@ -146,7 +203,16 @@ export const OwnerApprovalsPage = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {pendingRequests.map((req) => (
                   <tr key={req.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-6 py-4">
+                      <Checkbox
+                        checked={selectedIds.includes(req.id)}
+                        onCheckedChange={() => toggleSelect(req.id)}
+                      />
+                    </td>
+                    <td
+                      className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 cursor-pointer"
+                      onClick={() => setDetailsId(req.id)}
+                    >
                       {req.requestNumber || req.number}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -211,6 +277,21 @@ export const OwnerApprovalsPage = () => {
                   >
                     Solicitação
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Despesa
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Fornecedor
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Valor
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Competência
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Vencimento
+                  </th>
                   <th
                     onClick={() => toggleSort('status')}
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
@@ -232,6 +313,21 @@ export const OwnerApprovalsPage = () => {
                       {req.requestNumber || req.number}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {req.title}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {req.vendorName}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatCurrency(req.amount)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {req.competenceDate ? formatDate(req.competenceDate) : '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatDate(req.dueDate)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {req.status}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -244,6 +340,11 @@ export const OwnerApprovalsPage = () => {
           </div>
         )}
       </div>
+      <RequestDetailsModal
+        requestId={detailsId}
+        open={!!detailsId}
+        onClose={() => setDetailsId(null)}
+      />
     </div>
   );
 };

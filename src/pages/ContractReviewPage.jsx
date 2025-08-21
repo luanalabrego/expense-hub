@@ -4,6 +4,7 @@ import { useRequestsList, useApproveRequestContract, useRequestContractAdjustmen
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { formatCNPJ } from '@/utils';
 import { useConfirm } from '@/hooks/useConfirm';
+import { usePrompt } from '@/contexts/PromptContext';
 
 export const ContractReviewPage = () => {
   const { data: vendorsData, isLoading, isError } = useVendors({ status: 'contract_review', page: 1, limit: 50 });
@@ -15,6 +16,7 @@ export const ContractReviewPage = () => {
   const requestRequestAdjustments = useRequestContractAdjustments();
 
   const { confirm, ConfirmationDialog } = useConfirm();
+  const prompt = usePrompt();
 
   const handleApprove = async (id) => {
     if (await confirm('Aprovar contrato deste fornecedor?')) {
@@ -23,7 +25,7 @@ export const ContractReviewPage = () => {
   };
 
   const handleRequestAdjustments = async (id) => {
-    const notes = window.prompt('Informe as notas do jurídico:');
+    const notes = await prompt({ title: 'Informe as notas do jurídico:' });
     if (notes) {
       await requestAdjustments.mutateAsync({ id, notes });
     }
@@ -36,7 +38,7 @@ export const ContractReviewPage = () => {
   };
 
   const handleRequestAdjustmentsRequest = async (id) => {
-    const notes = window.prompt('Informe as notas do jurídico:');
+    const notes = await prompt({ title: 'Informe as notas do jurídico:' });
     if (notes) {
       await requestRequestAdjustments.mutateAsync({ id, notes });
     }

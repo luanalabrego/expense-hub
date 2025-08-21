@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { usePrompt } from '../contexts/PromptContext';
 import { useRequestsByStatus, useVerifyRequest, useReturnRequestWithError } from '../hooks/useRequests';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { formatCurrency } from '@/utils';
@@ -9,11 +10,12 @@ export const AccountingMonitorPage = () => {
   const { data, isLoading, isError } = useRequestsByStatus('pending_accounting_monitor');
   const verifyRequest = useVerifyRequest();
   const returnRequest = useReturnRequestWithError();
+  const prompt = usePrompt();
 
   const requests = data || [];
 
   const handleVerify = async (id) => {
-    const comments = window.prompt('Comentários da verificação');
+    const comments = await prompt({ title: 'Comentários da verificação' });
     await verifyRequest.mutateAsync({
       id,
       verifierId: user.id,
@@ -22,8 +24,8 @@ export const AccountingMonitorPage = () => {
     });
   };
 
-  const handleReturn = (id) => {
-    const reason = window.prompt('Motivo do retorno');
+  const handleReturn = async (id) => {
+    const reason = await prompt({ title: 'Motivo do retorno' });
     if (!reason) return;
     returnRequest.mutate({
       id,

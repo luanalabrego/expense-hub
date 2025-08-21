@@ -1,25 +1,27 @@
 import React from 'react';
 import { useRequestsList, useApproveRequest, useRejectRequest } from '../hooks/useRequests';
 import { useAuth } from '../contexts/AuthContext';
+import { usePrompt } from '../contexts/PromptContext';
 
 export const CeoApprovalsPage = () => {
   const { user } = useAuth();
   const { data, isLoading } = useRequestsList({ page: 1, limit: 50, status: 'pending_ceo_approval' });
   const approveRequest = useApproveRequest();
   const rejectRequest = useRejectRequest();
+  const prompt = usePrompt();
   const requests = data?.data || [];
 
   const formatCurrency = (value) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
-  const handleApprove = (id) => {
-    const comments = window.prompt('Comentário da aprovação');
+  const handleApprove = async (id) => {
+    const comments = await prompt({ title: 'Comentário da aprovação' });
     if (comments === null) return;
     approveRequest.mutate({ id, approverId: user.id, approverName: user.name, comments });
   };
 
-  const handleReject = (id) => {
-    const reason = window.prompt('Motivo da reprovação');
+  const handleReject = async (id) => {
+    const reason = await prompt({ title: 'Motivo da reprovação' });
     if (!reason) return;
     rejectRequest.mutate({ id, approverId: user.id, approverName: user.name, reason });
   };

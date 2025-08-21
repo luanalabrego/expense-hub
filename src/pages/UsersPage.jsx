@@ -62,7 +62,7 @@ export const UsersPage = () => {
         <h2 className="text-xl font-semibold mb-4">Cadastrar Novo Usuário</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Nome</label>
+            <label className="block text-sm font-medium text-gray-700" data-tooltip="Nome completo do usuário">Nome</label>
             <input
               name="name"
               value={form.name}
@@ -72,7 +72,7 @@ export const UsersPage = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">E-mail</label>
+            <label className="block text-sm font-medium text-gray-700" data-tooltip="E-mail corporativo">E-mail</label>
             <input
               name="email"
               type="email"
@@ -83,7 +83,7 @@ export const UsersPage = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Role</label>
+            <label className="block text-sm font-medium text-gray-700" data-tooltip="Perfil de acesso inicial">Role</label>
             <select
               name="role"
               value={form.role}

@@ -159,7 +159,7 @@ export const BudgetsPage = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Fornecedor</label>
+                <label className="block text-sm font-medium text-gray-700" data-tooltip="Fornecedor relacionado à linha">Fornecedor</label>
                 <select
                   name="vendorId"
                   value={form.vendorId}
@@ -176,7 +176,7 @@ export const BudgetsPage = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Descrição</label>
+                <label className="block text-sm font-medium text-gray-700" data-tooltip="Descrição da linha orçamentária">Descrição</label>
                 <input
                   name="description"
                   value={form.description}
@@ -187,7 +187,7 @@ export const BudgetsPage = () => {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Centro de Custo</label>
+              <label className="block text-sm font-medium text-gray-700" data-tooltip="Centro de custo responsável">Centro de Custo</label>
               <select
                 name="costCenterId"
                 value={form.costCenterId}
@@ -205,7 +205,7 @@ export const BudgetsPage = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Natureza</label>
+                <label className="block text-sm font-medium text-gray-700" data-tooltip="Indica se o custo é fixo ou variável">Natureza</label>
                 <select
                   name="nature"
                   value={form.nature}
@@ -217,7 +217,7 @@ export const BudgetsPage = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Tipo de Custo</label>
+                <label className="block text-sm font-medium text-gray-700" data-tooltip="Classificação contábil (CAPEX/OPEX/CPO)">Tipo de Custo</label>
                 <select
                   name="costType"
                   value={form.costType}
@@ -230,7 +230,7 @@ export const BudgetsPage = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Ano</label>
+                <label className="block text-sm font-medium text-gray-700" data-tooltip="Ano de referência do orçamento">Ano</label>
                 <input
                   type="number"
                   name="year"
@@ -243,7 +243,7 @@ export const BudgetsPage = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
               {Object.keys(form.months).map((month) => (
                 <div key={month}>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700" data-tooltip="Valor previsto para o mês">
                     {new Date(0, month - 1).toLocaleString('pt-BR', { month: 'short' })}
                   </label>
                   <input

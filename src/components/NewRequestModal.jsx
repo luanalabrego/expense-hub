@@ -235,27 +235,27 @@ export const NewRequestModal = ({ open, onClose }) => {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label className="block text-sm font-medium mb-1">Nome da despesa</label>
+            <label className="block text-sm font-medium mb-1" data-tooltip="Identificação da despesa">Nome da despesa</label>
             <Input value={expenseName} onChange={(e) => setExpenseName(e.target.value)} required />
           </div>
           <div className="flex items-center space-x-2 sm:col-span-2">
             <Checkbox id="extra" checked={isExtraordinary} onCheckedChange={(v) => setIsExtraordinary(!!v)} />
-            <label htmlFor="extra" className="text-sm">Solicitação extraordinária</label>
+            <label htmlFor="extra" className="text-sm" data-tooltip="Marque se o fornecedor não está cadastrado">Solicitação extraordinária</label>
           </div>
           {isExtraordinary ? (
             <>
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium mb-1">Fornecedor</label>
+                <label className="block text-sm font-medium mb-1" data-tooltip="Informe o nome do fornecedor">Fornecedor</label>
                 <Input value={vendorName} onChange={(e) => setVendorName(e.target.value)} required />
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium mb-1">Motivo da solicitação</label>
+                <label className="block text-sm font-medium mb-1" data-tooltip="Justifique a necessidade da solicitação extraordinária">Motivo da solicitação</label>
                 <Textarea value={reason} onChange={(e) => setReason(e.target.value)} required />
               </div>
             </>
           ) : (
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium mb-1">Fornecedor</label>
+              <label className="block text-sm font-medium mb-1" data-tooltip="Escolha um fornecedor existente">Fornecedor</label>
               <Select value={vendorId} onValueChange={setVendorId}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecione" />
@@ -274,15 +274,15 @@ export const NewRequestModal = ({ open, onClose }) => {
             </div>
           )}
           <div>
-            <label className="block text-sm font-medium mb-1">Número da NF</label>
+            <label className="block text-sm font-medium mb-1" data-tooltip="Número da nota fiscal relacionada">Número da NF</label>
             <Input value={invoiceNumber} onChange={(e) => setInvoiceNumber(e.target.value)} />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Valor bruto</label>
+            <label className="block text-sm font-medium mb-1" data-tooltip="Valor total da nota sem descontos">Valor bruto</label>
             <Input type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Tipo de custo</label>
+            <label className="block text-sm font-medium mb-1" data-tooltip="Classificação contábil do gasto">Tipo de custo</label>
             <Select value={costType} onValueChange={setCostType}>
               <SelectTrigger className="w-full">
                 <SelectValue />
@@ -295,7 +295,7 @@ export const NewRequestModal = ({ open, onClose }) => {
             </Select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Tipo de compra</label>
+            <label className="block text-sm font-medium mb-1" data-tooltip="Categoria da compra realizada">Tipo de compra</label>
             <Select value={purchaseType} onValueChange={setPurchaseType}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecione" />
@@ -309,19 +309,19 @@ export const NewRequestModal = ({ open, onClose }) => {
             </Select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Tipo de serviço</label>
+            <label className="block text-sm font-medium mb-1" data-tooltip="Tipo de serviço prestado">Tipo de serviço</label>
             <Input value={serviceType} onChange={(e) => setServiceType(e.target.value)} readOnly={!isExtraordinary} />
           </div>
           <div className="sm:col-span-2">
-            <label className="block text-sm font-medium mb-1">Escopo</label>
+            <label className="block text-sm font-medium mb-1" data-tooltip="Descrição resumida do escopo do serviço">Escopo</label>
             <Textarea value={scope} onChange={(e) => setScope(e.target.value)} readOnly={!isExtraordinary} />
           </div>
           <div className="sm:col-span-2">
-            <label className="block text-sm font-medium mb-1">Justificativa</label>
+            <label className="block text-sm font-medium mb-1" data-tooltip="Detalhe o motivo da solicitação">Justificativa</label>
             <Textarea value={justification} onChange={(e) => setJustification(e.target.value)} />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Centro de custo</label>
+            <label className="block text-sm font-medium mb-1" data-tooltip="Centro de custo responsável">Centro de custo</label>
             <Select value={costCenterId} onValueChange={setCostCenterId}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecione" />
@@ -335,11 +335,11 @@ export const NewRequestModal = ({ open, onClose }) => {
           </div>
           <div className="flex items-center space-x-2 sm:col-span-2">
             <Checkbox id="inBudget" checked={inBudget} onCheckedChange={(v) => setInBudget(!!v)} />
-            <label htmlFor="inBudget" className="text-sm">Dentro do orçamento</label>
+            <label htmlFor="inBudget" className="text-sm" data-tooltip="Indica se a despesa já está prevista no orçamento">Dentro do orçamento</label>
           </div>
           {inBudget && (
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium mb-1">Linha do orçamento</label>
+              <label className="block text-sm font-medium mb-1" data-tooltip="Selecione a linha do orçamento correspondente">Linha do orçamento</label>
               <Select value={budgetLineId} onValueChange={setBudgetLineId}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecione" />
@@ -359,36 +359,36 @@ export const NewRequestModal = ({ open, onClose }) => {
           )}
           {inBudget && isOverBudget && (
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium mb-1">Justificativa do estouro</label>
+              <label className="block text-sm font-medium mb-1" data-tooltip="Explique por que ultrapassa o orçamento">Justificativa do estouro</label>
               <Textarea value={overBudgetReason} onChange={(e) => setOverBudgetReason(e.target.value)} required />
             </div>
           )}
           <div className="flex items-center space-x-2 sm:col-span-2">
             <Checkbox id="recurring" checked={isRecurring} onCheckedChange={(v) => setIsRecurring(!!v)} />
-            <label htmlFor="recurring" className="text-sm">Lançamento recorrente</label>
+            <label htmlFor="recurring" className="text-sm" data-tooltip="Marque se esta despesa se repetirá periodicamente">Lançamento recorrente</label>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Data de emissão</label>
+            <label className="block text-sm font-medium mb-1" data-tooltip="Data de emissão da nota fiscal">Data de emissão</label>
             <Input type="date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} required />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Competência</label>
+            <label className="block text-sm font-medium mb-1" data-tooltip="Mês/ano de competência da despesa">Competência</label>
             <Input type="month" value={competenceDate} onChange={(e) => setCompetenceDate(e.target.value)} required />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Data de vencimento</label>
+            <label className="block text-sm font-medium mb-1" data-tooltip="Data prevista para pagamento">Data de vencimento</label>
             <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} readOnly={!isExtraordinary} required />
           </div>
           <div className="sm:col-span-2">
-            <label className="block text-sm font-medium mb-1">Boleto</label>
+            <label className="block text-sm font-medium mb-1" data-tooltip="Anexe o boleto para pagamento">Boleto</label>
             <Input type="file" onChange={(e) => setBoletoFile(e.target.files?.[0] || null)} />
           </div>
           <div className="sm:col-span-2">
-            <label className="block text-sm font-medium mb-1">NF</label>
+            <label className="block text-sm font-medium mb-1" data-tooltip="Anexe a nota fiscal">NF</label>
             <Input type="file" onChange={(e) => setNfFile(e.target.files?.[0] || null)} />
           </div>
           <div className="sm:col-span-2">
-            <label className="block text-sm font-medium mb-1">Orçamentos</label>
+            <label className="block text-sm font-medium mb-1" data-tooltip="Envie arquivos de orçamentos obtidos">Orçamentos</label>
             <Input type="file" multiple onChange={(e) => setQuotationFiles(Array.from(e.target.files || []))} />
           </div>
           <DialogFooter className="sm:col-span-2">

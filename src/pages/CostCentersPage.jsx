@@ -114,7 +114,7 @@ export const CostCentersPage = () => {
             <h2 className="text-lg font-semibold mb-4">Novo Centro de Custo</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Nome</label>
+                <label className="block text-sm font-medium text-gray-700" data-tooltip="Nome do centro de custo">Nome</label>
                 <input
                   name="name"
                   value={form.name}
@@ -124,7 +124,7 @@ export const CostCentersPage = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Gerente</label>
+                <label className="block text-sm font-medium text-gray-700" data-tooltip="Responsável principal pelo centro">Gerente</label>
                 <select
                   name="managerId"
                   value={form.managerId}
@@ -141,7 +141,7 @@ export const CostCentersPage = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Diretor</label>
+                <label className="block text-sm font-medium text-gray-700" data-tooltip="Diretor associado ao centro">Diretor</label>
                 <select
                   name="directorId"
                   value={form.directorId}

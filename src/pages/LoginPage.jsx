@@ -36,7 +36,7 @@ export const LoginPage = () => {
         {error && <p className="text-sm text-red-500">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" data-tooltip="Informe seu e-mail corporativo">Email</Label>
             <Input
               id="email"
               type="email"
@@ -46,7 +46,7 @@ export const LoginPage = () => {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
+            <Label htmlFor="password" data-tooltip="Digite sua senha de acesso">Senha</Label>
             <Input
               id="password"
               type="password"

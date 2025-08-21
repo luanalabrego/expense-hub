@@ -20,8 +20,12 @@ export const UsersPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.email) return;
-    await addUser(form);
-    setForm({ name: '', email: '', role: 'user' });
+    try {
+      await addUser(form);
+      setForm({ name: '', email: '', role: 'user' });
+    } catch (err) {
+      alert(err.message || 'Erro ao adicionar usuário');
+    }
   };
 
   const roles = Object.values(ROLES);

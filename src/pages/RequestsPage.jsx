@@ -183,21 +183,23 @@ export const RequestsPage = () => {
           >
             <Plus className="w-4 h-4 mr-2" />
             Solicitar Orçamento
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowImport(true)}
-            className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            Importar Excel
           </button>
-          <button
-            onClick={() => setShowNewRequest(true)}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nova Solicitação
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowImport(true)}
+              className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Importar Excel
+            </button>
+            <button
+              onClick={() => setShowNewRequest(true)}
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nova Solicitação
+            </button>
+          </div>
         </div>
       </div>
 

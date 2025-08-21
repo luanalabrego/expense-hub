@@ -6,7 +6,7 @@ export const CostCentersPage = () => {
   const [costCenters, setCostCenters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({ name: '', managerId: '', directorId: '', budget: 0 });
+  const [form, setForm] = useState({ name: '', managerId: '', directorId: '' });
   const { users } = useAuth();
 
   const fetchCostCenters = async () => {
@@ -35,11 +35,10 @@ export const CostCentersPage = () => {
       await createCostCenter({
         name: form.name,
         managerId: form.managerId,
-        directorId: form.directorId,
-        budget: Number(form.budget)
+        directorId: form.directorId
       });
       setShowModal(false);
-      setForm({ name: '', managerId: '', directorId: '', budget: 0 });
+      setForm({ name: '', managerId: '', directorId: '' });
       fetchCostCenters();
     } catch (error) {
       console.error('Erro ao criar centro de custo:', error);
@@ -157,18 +156,6 @@ export const CostCentersPage = () => {
                     </option>
                   ))}
                 </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Orçamento</label>
-                <input
-                  name="budget"
-                  type="number"
-                  min="0"
-                  value={form.budget}
-                  onChange={handleChange}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
               </div>
               <div className="flex justify-end space-x-2">
                 <button

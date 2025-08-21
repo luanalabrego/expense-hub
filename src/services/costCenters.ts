@@ -138,7 +138,6 @@ export const createCostCenter = async (ccData: {
   managerId: string;
   directorId: string;
   parentId?: string;
-  budget?: number;
 }): Promise<CostCenter> => {
   try {
     const code = await generateCostCenterCode();
@@ -149,7 +148,6 @@ export const createCostCenter = async (ccData: {
       managerId: ccData.managerId,
       directorId: ccData.directorId,
       parentId: ccData.parentId || null,
-      budget: ccData.budget || 0,
       spent: 0,
       committed: 0,
       status: 'active',

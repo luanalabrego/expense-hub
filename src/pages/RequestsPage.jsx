@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Edit, Eye, CheckCircle, XCircle, Clock, DollarSign } from 'lucide-react';
 import BudgetRequestModal from '../components/BudgetRequestModal';
 import { useBudgetRequests } from '../stores/budget-requests';
+import { Plus, Search, Edit, Eye, CheckCircle, XCircle, Clock, DollarSign, Upload } from 'lucide-react';
 import { useRequestsList, useRequestStats, useApproveRequest, useRejectRequest } from '../hooks/useRequests';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../stores/ui';
 import NewRequestModal from '../components/NewRequestModal';
+import ImportRequestsModal from '../components/ImportRequestsModal';
 
 export const RequestsPage = () => {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ export const RequestsPage = () => {
   const [orderBy, setOrderBy] = useState('createdAt');
   const [orderDir, setOrderDir] = useState('desc');
   const [showNewRequest, setShowNewRequest] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const approveRequest = useApproveRequest();
   const rejectRequest = useRejectRequest();
   const { error: notifyError } = useNotifications();
@@ -181,6 +183,13 @@ export const RequestsPage = () => {
           >
             <Plus className="w-4 h-4 mr-2" />
             Solicitar Orçamento
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowImport(true)}
+            className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Importar Excel
           </button>
           <button
             onClick={() => setShowNewRequest(true)}
@@ -564,6 +573,12 @@ export const RequestsPage = () => {
       </div>
       <NewRequestModal open={showNewRequest} onClose={() => setShowNewRequest(false)} />
       <BudgetRequestModal open={showBudgetModal} onClose={() => setShowBudgetModal(false)} />
+      <ImportRequestsModal
+        open={showImport}
+        onClose={() => setShowImport(false)}
+        userId={user.id}
+        userName={user.name}
+      />
     </div>
   );
 };

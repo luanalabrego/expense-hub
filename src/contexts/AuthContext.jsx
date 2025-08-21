@@ -129,7 +129,6 @@ export const AuthProvider = ({ children }) => {
     vendors: ['admin', 'finance'],
     vendorApprovals: ['admin', 'finance'],
     contractReview: ['admin', 'finance'],
-    validation: ['admin', 'finance'],
     ownerApprovals: ['admin', 'cost_center_owner'],
     financialApprovals: ['admin', 'fpa'],
     directorApprovals: ['admin', 'director'],

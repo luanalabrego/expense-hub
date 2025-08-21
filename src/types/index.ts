@@ -144,6 +144,9 @@ export interface PaymentRequest {
   scope?: string;
   justification?: string;
   inBudget?: boolean;
+  budgetLineId?: string;
+  isOverBudget?: boolean;
+  overBudgetReason?: string;
 
   // Dados fiscais
   fiscalStatus?: 'pending' | 'approved' | 'pending_adjustment';

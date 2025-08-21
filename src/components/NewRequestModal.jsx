@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUploadDocument } from '@/hooks/useDocuments';
 import * as requestsService from '@/services/requests';
 import * as quotationsService from '@/services/quotations';
+import { getBudgetLines } from '@/services/budgetLines';
 
 export const NewRequestModal = ({ open, onClose }) => {
   const { user } = useAuth();
@@ -40,6 +41,12 @@ export const NewRequestModal = ({ open, onClose }) => {
   const [nfFile, setNfFile] = useState(null);
   const [quotationFiles, setQuotationFiles] = useState([]);
   const [isRecurring, setIsRecurring] = useState(false);
+  const [budgetLines, setBudgetLines] = useState([]);
+  const [budgetLineId, setBudgetLineId] = useState('');
+  const [budgetedAmount, setBudgetedAmount] = useState(0);
+  const [spentAmount, setSpentAmount] = useState(0);
+  const [isOverBudget, setIsOverBudget] = useState(false);
+  const [overBudgetReason, setOverBudgetReason] = useState('');
 
   const resetForm = () => {
     setExpenseName('');
@@ -63,6 +70,11 @@ export const NewRequestModal = ({ open, onClose }) => {
     setNfFile(null);
     setQuotationFiles([]);
     setIsRecurring(false);
+    setBudgetLineId('');
+    setBudgetedAmount(0);
+    setSpentAmount(0);
+    setIsOverBudget(false);
+    setOverBudgetReason('');
   };
 
   const selectedVendor = vendors.find((v) => v.id === vendorId);
@@ -86,6 +98,36 @@ export const NewRequestModal = ({ open, onClose }) => {
     }
   }, [selectedVendor, isExtraordinary]);
 
+  useEffect(() => {
+    if (inBudget && budgetLines.length === 0) {
+      getBudgetLines().then(setBudgetLines).catch(console.error);
+    }
+  }, [inBudget]);
+
+  useEffect(() => {
+    if (inBudget && budgetLineId && competenceDate) {
+      const [year, month] = competenceDate.split('-').map(Number);
+      const line = budgetLines.find((b) => b.id === budgetLineId);
+      const planned = line?.months?.[month] || 0;
+      setBudgetedAmount(planned);
+      requestsService
+        .getTotalSpentByBudgetLine(budgetLineId, year, month)
+        .then((v) => setSpentAmount(v));
+    } else {
+      setBudgetedAmount(0);
+      setSpentAmount(0);
+    }
+  }, [inBudget, budgetLineId, competenceDate, budgetLines]);
+
+  useEffect(() => {
+    const amt = parseFloat(amount) || 0;
+    if (inBudget && budgetLineId) {
+      setIsOverBudget(amt + spentAmount > budgetedAmount);
+    } else {
+      setIsOverBudget(false);
+    }
+  }, [amount, spentAmount, budgetedAmount, inBudget, budgetLineId]);
+
   const uploadDocument = useUploadDocument();
 
   const handleSubmit = async (e) => {
@@ -98,6 +140,14 @@ export const NewRequestModal = ({ open, onClose }) => {
           : 1;
       if (requiredQuotations > 0 && quotationFiles.length < requiredQuotations) {
         alert(`É necessário anexar pelo menos ${requiredQuotations} orçamento(s).`);
+        return;
+      }
+      if (inBudget && !budgetLineId) {
+        alert('Selecione a linha do orçamento.');
+        return;
+      }
+      if (inBudget && isOverBudget && !overBudgetReason) {
+        alert('Explique o estouro do orçamento.');
         return;
       }
       const newRequest = await createRequest.mutateAsync({
@@ -114,6 +164,8 @@ export const NewRequestModal = ({ open, onClose }) => {
         scope,
         justification,
         inBudget,
+        budgetLineId: inBudget ? budgetLineId : undefined,
+        overBudgetReason: isOverBudget ? overBudgetReason : undefined,
         invoiceDate: invoiceDate ? new Date(invoiceDate) : undefined,
         competenceDate: competenceDate ? new Date(`${competenceDate}-01`) : undefined,
         dueDate: dueDate ? new Date(dueDate) : undefined,
@@ -285,6 +337,32 @@ export const NewRequestModal = ({ open, onClose }) => {
             <Checkbox id="inBudget" checked={inBudget} onCheckedChange={(v) => setInBudget(!!v)} />
             <label htmlFor="inBudget" className="text-sm">Dentro do orçamento</label>
           </div>
+          {inBudget && (
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium mb-1">Linha do orçamento</label>
+              <Select value={budgetLineId} onValueChange={setBudgetLineId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {budgetLines.map((b) => (
+                    <SelectItem key={b.id} value={b.id}>{b.description}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {budgetLineId && competenceDate && (
+                <div className="text-sm mt-1">
+                  Orçado: {budgetedAmount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} - Consumido: {spentAmount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </div>
+              )}
+            </div>
+          )}
+          {inBudget && isOverBudget && (
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium mb-1">Justificativa do estouro</label>
+              <Textarea value={overBudgetReason} onChange={(e) => setOverBudgetReason(e.target.value)} required />
+            </div>
+          )}
           <div className="flex items-center space-x-2 sm:col-span-2">
             <Checkbox id="recurring" checked={isRecurring} onCheckedChange={(v) => setIsRecurring(!!v)} />
             <label htmlFor="recurring" className="text-sm">Lançamento recorrente</label>

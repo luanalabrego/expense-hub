@@ -29,7 +29,7 @@ import * as bankService from './bank';
 import * as emailService from './email';
 import { createAuditLog, AUDIT_ACTIONS, AUDIT_ENTITIES } from './audit';
 import { commitBudgetAmount, spendBudgetAmount } from './budgets';
-import { findBudgetLine } from './budgetLines';
+import { getBudgetLineById } from './budgetLines';
 import type { PaymentRequest, PaginationParams, PaginatedResponse, RequestStatus, PurchaseType } from '../types';
 import * as notificationsService from './notifications';
 
@@ -95,6 +95,24 @@ export const getRequestById = async (id: string): Promise<PaymentRequest | null>
     console.error('Erro ao buscar solicitação:', error);
     throw error;
   }
+};
+
+export const getTotalSpentByBudgetLine = async (
+  budgetLineId: string,
+  year: number,
+  month: number
+): Promise<number> => {
+  const start = new Date(year, month - 1, 1);
+  const end = new Date(year, month, 1);
+  const q = query(
+    collection(db, COLLECTION_NAME),
+    where('budgetLineId', '==', budgetLineId),
+    where('inBudget', '==', true),
+    where('competenceDate', '>=', start),
+    where('competenceDate', '<', end)
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.reduce((sum, d) => sum + (d.data().amount || 0), 0);
 };
 
 // Listar solicitações com paginação
@@ -269,11 +287,16 @@ export const createRequest = async (requestData: {
   contractDocumentId?: string;
   contractStatus?: 'pending' | 'approved' | 'adjustments_requested';
   contractRequesterId?: string;
+  budgetLineId?: string;
+  overBudgetReason?: string;
 }): Promise<PaymentRequest> => {
   try {
     const requiresBudget = requestData.inBudget ?? false;
+    let isOverBudget = false;
     if (requiresBudget) {
-      // Verificar disponibilidade no orçamento
+      if (!requestData.budgetLineId) {
+        throw new Error('Linha de orçamento não selecionada.');
+      }
       const refDate =
         requestData.competenceDate ||
         requestData.invoiceDate ||
@@ -281,13 +304,17 @@ export const createRequest = async (requestData: {
         new Date();
       const year = refDate.getFullYear();
       const month = refDate.getMonth() + 1;
-      const budgetLine = await findBudgetLine(requestData.vendorId, year);
+      const budgetLine = await getBudgetLineById(requestData.budgetLineId);
       if (!budgetLine) {
-        throw new Error('Nenhum orçamento disponível para este fornecedor/período.');
+        throw new Error('Linha de orçamento não encontrada.');
       }
-      const available = budgetLine.months?.[month] || 0;
-      if (available < requestData.amount) {
-        throw new Error('Orçamento insuficiente para esta solicitação.');
+      const planned = budgetLine.months?.[month] || 0;
+      const spent = await getTotalSpentByBudgetLine(requestData.budgetLineId, year, month);
+      if (spent + requestData.amount > planned) {
+        isOverBudget = true;
+        if (!requestData.overBudgetReason) {
+          throw new Error('Justifique o estouro do orçamento.');
+        }
       }
     }
 
@@ -315,6 +342,9 @@ export const createRequest = async (requestData: {
         scope: requestData.scope || '',
         justification: requestData.justification || '',
         inBudget: requiresBudget,
+        budgetLineId: requiresBudget ? requestData.budgetLineId || null : null,
+        isOverBudget,
+        overBudgetReason: isOverBudget ? requestData.overBudgetReason || '' : '',
         invoiceDate: requestData.invoiceDate || null,
         competenceDate: requestData.competenceDate || null,
         dueDate: requestData.dueDate || null,
@@ -394,7 +424,7 @@ export const submitRequest = async (
       if (!request) throw new Error('Solicitação não encontrada');
 
       // Verificar disponibilidade no orçamento apenas quando marcado como dentro do orçamento
-      if (request.inBudget) {
+      if (request.inBudget && request.budgetLineId) {
         const refDate =
           request.competenceDate ||
           request.invoiceDate ||
@@ -402,12 +432,13 @@ export const submitRequest = async (
           new Date();
         const year = refDate.getFullYear();
         const month = refDate.getMonth() + 1;
-        const budgetLine = await findBudgetLine(request.vendorId, year);
+        const budgetLine = await getBudgetLineById(request.budgetLineId);
         if (!budgetLine) {
-          throw new Error('Nenhum orçamento disponível para este fornecedor/período.');
+          throw new Error('Linha de orçamento não encontrada.');
         }
-        const available = budgetLine.months?.[month] || 0;
-        if (available < request.amount) {
+        const planned = budgetLine.months?.[month] || 0;
+        const spent = await getTotalSpentByBudgetLine(request.budgetLineId, year, month);
+        if (spent > planned && !request.overBudgetReason) {
           throw new Error('Orçamento insuficiente para esta solicitação.');
         }
       }
@@ -447,7 +478,7 @@ export const verifyRequest = async (
     if (!request) throw new Error('Solicitação não encontrada');
 
     // Verificar disponibilidade no orçamento apenas quando marcado como dentro do orçamento
-    if (request.inBudget) {
+    if (request.inBudget && request.budgetLineId) {
       const refDate =
         request.competenceDate ||
         request.invoiceDate ||
@@ -455,12 +486,13 @@ export const verifyRequest = async (
         new Date();
       const year = refDate.getFullYear();
       const month = refDate.getMonth() + 1;
-      const budgetLine = await findBudgetLine(request.vendorId, year);
+      const budgetLine = await getBudgetLineById(request.budgetLineId);
       if (!budgetLine) {
-        throw new Error('Nenhum orçamento disponível para este fornecedor/período.');
+        throw new Error('Linha de orçamento não encontrada.');
       }
-      const available = budgetLine.months?.[month] || 0;
-      if (available < request.amount) {
+      const planned = budgetLine.months?.[month] || 0;
+      const spent = await getTotalSpentByBudgetLine(request.budgetLineId, year, month);
+      if (spent > planned && !request.overBudgetReason) {
         throw new Error('Orçamento insuficiente para esta solicitação.');
       }
     }

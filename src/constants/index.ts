@@ -20,7 +20,6 @@ export const ROLES = {
 // Status das solicitações
 export const REQUEST_STATUS = {
   PENDING_ACCOUNTING_MONITOR: 'pending_accounting_monitor',
-  PENDING_VALIDATION: 'pending_validation',
   RETURNED: 'returned',
   PENDING_OWNER_APPROVAL: 'pending_owner_approval',
   PENDING_FPA_APPROVAL: 'pending_fpa_approval',
@@ -69,7 +68,6 @@ export const ROLE_LABELS = {
 
 export const STATUS_LABELS = {
   [REQUEST_STATUS.PENDING_ACCOUNTING_MONITOR]: 'Ag. conferência contábil',
-  [REQUEST_STATUS.PENDING_VALIDATION]: 'Ag. validação',
   [REQUEST_STATUS.RETURNED]: 'Devolvida',
   [REQUEST_STATUS.PENDING_OWNER_APPROVAL]: 'Ag. aprovação do owner',
   [REQUEST_STATUS.PENDING_FPA_APPROVAL]: 'Ag. aprovação FP&A',
@@ -104,7 +102,6 @@ export const DOCUMENT_TYPE_LABELS = {
 // Cores para status
 export const STATUS_COLORS = {
   [REQUEST_STATUS.PENDING_ACCOUNTING_MONITOR]: 'teal',
-  [REQUEST_STATUS.PENDING_VALIDATION]: 'orange',
   [REQUEST_STATUS.RETURNED]: 'cyan',
   [REQUEST_STATUS.PENDING_OWNER_APPROVAL]: 'yellow',
   [REQUEST_STATUS.PENDING_FPA_APPROVAL]: 'purple',
@@ -219,7 +216,6 @@ export const ROUTES = {
     REQUESTS: '/requests',
     NEW_REQUEST: '/requests/new',
     REQUEST_DETAIL: '/requests/:id',
-    VALIDATION: '/validation',
     VENDORS: '/vendors',
   VENDOR_APPROVALS: '/vendor-approvals',
   CONTRACT_REVIEW: '/contract-review',

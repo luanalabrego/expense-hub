@@ -31,7 +31,6 @@ export const UsersPage = () => {
     vendors: 'Fornecedores',
     vendorApprovals: 'Aprovação de Fornecedores',
     contractReview: 'Revisão de Contratos',
-    validation: 'Validação',
     ownerApprovals: 'Aprovações do Owner',
     financialApprovals: 'Aprovações FP&A',
     directorApprovals: 'Aprovações do Diretor',

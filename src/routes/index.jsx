@@ -18,7 +18,6 @@ import { ReportsPage } from '../pages/ReportsPage';
 import { useAuth } from '../contexts/AuthContext';
 import { BudgetsPage } from '../pages/BudgetsPage';
 import { BudgetRequestsPage } from '../pages/BudgetRequestsPage';
-import { ValidationPage } from '../pages/ValidationPage';
 import { AccountingMonitorPage } from '../pages/AccountingMonitorPage';
 import { LoginPage } from '../pages/LoginPage';
 
@@ -36,10 +35,6 @@ export const AppRoutes = () => {
         <Route
           path="requests/:id"
           element={hasPageAccess('requests') ? <RequestDetailsPage /> : <Navigate to="/" replace />}
-        />
-        <Route
-          path="validation"
-          element={hasPageAccess('validation') ? <ValidationPage /> : <Navigate to="/" replace />}
         />
         <Route
           path="accounting-monitor"

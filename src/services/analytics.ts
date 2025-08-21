@@ -268,7 +268,6 @@ export const getRequestsByStatus = async (
     }, {} as Record<string, number>);
     
     const statusLabels = {
-      pending_validation: 'Ag. validação',
       returned: 'Devolvido',
       pending_owner_approval: 'Ag. aprovação do owner',
       pending_fpa_approval: 'Ag. aprovação FP&A',
@@ -282,7 +281,6 @@ export const getRequestsByStatus = async (
     };
 
     const statusColors = {
-      pending_validation: '#fb923c',
       returned: '#06b6d4',
       pending_owner_approval: '#f59e0b',
       pending_fpa_approval: '#a855f7',

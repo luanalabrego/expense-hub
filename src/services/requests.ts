@@ -293,7 +293,10 @@ export const createRequest = async (requestData: {
 
     // Gerar número da solicitação
     const requestNumber = await generateRequestNumber();
-    const currentApproverId = null;
+    const costCenter = requestData.costCenterId
+      ? await getCostCenterById(requestData.costCenterId)
+      : null;
+    const currentApproverId = costCenter?.managerId || null;
 
     const requestDoc = {
         requestNumber,
@@ -331,13 +334,13 @@ export const createRequest = async (requestData: {
         contractStatus: requestData.contractStatus || null,
         contractRequesterId: requestData.contractRequesterId || null,
         contractNotes: '',
-        status: 'pending_validation' as RequestStatus,
+        status: 'pending_owner_approval' as RequestStatus,
         currentApproverId,
         approvalLevel: 0,
         approvalHistory: [],
         statusHistory: [
           {
-            status: 'pending_validation',
+            status: 'pending_owner_approval',
             changedBy: requestData.requesterId,
             changedByName: requestData.requesterName,
             timestamp: new Date(),
@@ -410,23 +413,16 @@ export const submitRequest = async (
       }
 
       const now = new Date();
-      let nextStatus: RequestStatus = 'pending_owner_approval';
-      let currentApproverId: string | null = null;
-
-      if (request.status === 'returned') {
-        nextStatus = 'pending_validation';
-      } else {
-        const costCenter = request?.costCenterId
-          ? await getCostCenterById(request.costCenterId)
-          : null;
-        currentApproverId = costCenter?.managerId || null;
-      }
+      const costCenter = request?.costCenterId
+        ? await getCostCenterById(request.costCenterId)
+        : null;
+      const currentApproverId = costCenter?.managerId || null;
 
       await updateDoc(doc(db, COLLECTION_NAME, id), {
-        status: nextStatus,
+        status: 'pending_owner_approval',
         currentApproverId,
         statusHistory: [...(request?.statusHistory || []), {
-          status: nextStatus,
+          status: 'pending_owner_approval',
           changedBy: userId,
           changedByName: userName,
           timestamp: now,
@@ -444,71 +440,6 @@ export const verifyRequest = async (
   id: string,
   verifierId: string,
   verifierName: string,
-  comments?: string
-): Promise<void> => {
-  try {
-    const request = await getRequestById(id);
-    if (!request) throw new Error('Solicitação não encontrada');
-
-    const now = new Date();
-    await updateDoc(doc(db, COLLECTION_NAME, id), {
-      status: 'pending_validation',
-      statusHistory: [
-        ...(request.statusHistory || []),
-        {
-          status: 'pending_validation',
-          changedBy: verifierId,
-          changedByName: verifierName,
-          timestamp: now,
-          reason: comments || '',
-        },
-      ],
-      updatedAt: now,
-    });
-  } catch (error) {
-    console.error('Erro ao marcar solicitação como verificada:', error);
-    throw error;
-  }
-};
-
-// Retornar solicitação com erro para ajustes
-export const returnRequestWithError = async (
-  id: string,
-  verifierId: string,
-  verifierName: string,
-  reason: string
-): Promise<void> => {
-  try {
-    const request = await getRequestById(id);
-    if (!request) throw new Error('Solicitação não encontrada');
-
-    const now = new Date();
-    await updateDoc(doc(db, COLLECTION_NAME, id), {
-      status: 'pending_adjustment',
-      statusHistory: [
-        ...(request.statusHistory || []),
-        {
-          status: 'pending_adjustment',
-          changedBy: verifierId,
-          changedByName: verifierName,
-          timestamp: now,
-          reason,
-        },
-      ],
-      updatedAt: now,
-      fiscalStatus: 'pending_adjustment',
-    });
-  } catch (error) {
-    console.error('Erro ao retornar solicitação com erro:', error);
-    throw error;
-  }
-};
-
-// Validar solicitação e encaminhar para aprovação do owner
-export const validateRequest = async (
-  id: string,
-  validatorId: string,
-  validatorName: string,
   comments?: string
 ): Promise<void> => {
   try {
@@ -555,8 +486,8 @@ export const validateRequest = async (
         ...(request.statusHistory || []),
         {
           status: 'pending_owner_approval',
-          changedBy: validatorId,
-          changedByName: validatorName,
+          changedBy: verifierId,
+          changedByName: verifierName,
           timestamp: now,
           reason: comments || '',
         },
@@ -568,7 +499,40 @@ export const validateRequest = async (
       sapEmployeeId,
     });
   } catch (error) {
-    console.error('Erro ao validar solicitação:', error);
+    console.error('Erro ao marcar solicitação como verificada:', error);
+    throw error;
+  }
+};
+
+// Retornar solicitação com erro para ajustes
+export const returnRequestWithError = async (
+  id: string,
+  verifierId: string,
+  verifierName: string,
+  reason: string
+): Promise<void> => {
+  try {
+    const request = await getRequestById(id);
+    if (!request) throw new Error('Solicitação não encontrada');
+
+    const now = new Date();
+    await updateDoc(doc(db, COLLECTION_NAME, id), {
+      status: 'pending_adjustment',
+      statusHistory: [
+        ...(request.statusHistory || []),
+        {
+          status: 'pending_adjustment',
+          changedBy: verifierId,
+          changedByName: verifierName,
+          timestamp: now,
+          reason,
+        },
+      ],
+      updatedAt: now,
+      fiscalStatus: 'pending_adjustment',
+    });
+  } catch (error) {
+    console.error('Erro ao retornar solicitação com erro:', error);
     throw error;
   }
 };

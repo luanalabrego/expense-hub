@@ -270,7 +270,6 @@ export const getRequestsByStatus = async (
     const statusLabels = {
       returned: 'Devolvido',
       pending_owner_approval: 'Ag. aprovação do owner',
-      pending_fpa_approval: 'Ag. aprovação FP&A',
       pending_director_approval: 'Ag. aprovação Diretor',
       pending_cfo_approval: 'Ag. aprovação CFO',
       pending_ceo_approval: 'Ag. aprovação CEO',
@@ -283,7 +282,6 @@ export const getRequestsByStatus = async (
     const statusColors = {
       returned: '#06b6d4',
       pending_owner_approval: '#f59e0b',
-      pending_fpa_approval: '#a855f7',
       pending_director_approval: '#6366f1',
       pending_cfo_approval: '#ec4899',
       pending_ceo_approval: '#f97316',

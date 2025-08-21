@@ -12,7 +12,6 @@ const navigation = [
     { name: 'Revisão Contratos', href: '/contract-review', icon: '📑', page: 'contractReview' },
     { name: 'Monitor Contábil', href: '/accounting-monitor', icon: '📚', page: 'accountingMonitor' },
     { name: 'Aprov. Owner', href: '/owner-approvals', icon: '🧾', page: 'ownerApprovals' },
-    { name: 'Aprov. FP&A', href: '/financial-approvals', icon: '💸', page: 'financialApprovals' },
   { name: 'Aprov. Diretor', href: '/director-approvals', icon: '🧑‍💼', page: 'directorApprovals' },
   { name: 'Aprov. CFO', href: '/cfo-approvals', icon: '💼', page: 'cfoApprovals' },
   { name: 'Aprov. CEO', href: '/ceo-approvals', icon: '🏛️', page: 'ceoApprovals' },

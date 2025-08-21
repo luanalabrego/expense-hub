@@ -605,10 +605,7 @@ export const approveRequest = async (
 
     switch (request.status) {
       case 'pending_owner_approval':
-        nextStatus = amount <= 10000 ? 'pending_payment_approval' : 'pending_fpa_approval';
-        break;
-      case 'pending_fpa_approval':
-        nextStatus = 'pending_director_approval';
+        nextStatus = amount <= 10000 ? 'pending_payment_approval' : 'pending_director_approval';
         break;
       case 'pending_director_approval':
         nextStatus = amount <= 50000 ? 'pending_payment_approval' : 'pending_cfo_approval';

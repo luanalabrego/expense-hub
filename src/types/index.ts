@@ -4,7 +4,6 @@ export type Role =
   | 'finance'
   | 'cost_center_owner'
   | 'user'
-  | 'fpa'
   | 'director'
   | 'cfo'
   | 'ceo';
@@ -13,7 +12,6 @@ export type RequestStatus =
   | 'pending_accounting_monitor'
   | 'returned'
   | 'pending_owner_approval'
-  | 'pending_fpa_approval'
   | 'pending_director_approval'
   | 'pending_cfo_approval'
   | 'pending_ceo_approval'

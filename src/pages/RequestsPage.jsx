@@ -65,7 +65,6 @@ export const RequestsPage = () => {
   const getStatusColor = (status) => {
     const colors = {
       pending_owner_approval: 'bg-yellow-100 text-yellow-800',
-      pending_fpa_approval: 'bg-purple-100 text-purple-800',
       pending_director_approval: 'bg-indigo-100 text-indigo-800',
       pending_cfo_approval: 'bg-pink-100 text-pink-800',
       pending_ceo_approval: 'bg-orange-100 text-orange-800',
@@ -80,7 +79,6 @@ export const RequestsPage = () => {
   const getStatusLabel = (status) => {
     const labels = {
       pending_owner_approval: 'Ag. aprovação do owner',
-      pending_fpa_approval: 'Ag. aprovação FP&A',
       pending_director_approval: 'Ag. aprovação Diretor',
       pending_cfo_approval: 'Ag. aprovação CFO',
       pending_ceo_approval: 'Ag. aprovação CEO',
@@ -282,7 +280,6 @@ export const RequestsPage = () => {
             >
               <option value="">Todos os status</option>
               <option value="pending_owner_approval">Ag. aprovação do owner</option>
-              <option value="pending_fpa_approval">Ag. aprovação FP&A</option>
               <option value="pending_director_approval">Ag. aprovação Diretor</option>
               <option value="pending_cfo_approval">Ag. aprovação CFO</option>
               <option value="pending_ceo_approval">Ag. aprovação CEO</option>

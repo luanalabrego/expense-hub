@@ -8,7 +8,6 @@ import { VendorDossierPage } from '../pages/VendorDossierPage';
 import { ContractReviewPage } from '../pages/ContractReviewPage';
 import { UsersPage } from '../pages/UsersPage';
 import { CostCentersPage } from '../pages/CostCentersPage';
-import { FinancialApprovalsPage } from '../pages/FinancialApprovalsPage';
 import { OwnerApprovalsPage } from '../pages/OwnerApprovalsPage';
 import { DirectorApprovalsPage } from '../pages/DirectorApprovalsPage';
 import { CfoApprovalsPage } from '../pages/CfoApprovalsPage';
@@ -85,16 +84,6 @@ export const AppRoutes = () => {
           element={
             hasPageAccess('ownerApprovals') ? (
               <OwnerApprovalsPage />
-            ) : (
-              <Navigate to="/" replace />
-            )
-          }
-        />
-        <Route
-          path="financial-approvals"
-          element={
-            hasPageAccess('financialApprovals') ? (
-              <FinancialApprovalsPage />
             ) : (
               <Navigate to="/" replace />
             )

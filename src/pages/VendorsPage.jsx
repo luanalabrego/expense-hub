@@ -373,7 +373,7 @@ const NewVendorDialog = ({ open, onOpenChange }) => {
               rules={{ required: 'Nome é obrigatório' }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nome</FormLabel>
+                  <FormLabel data-tooltip="Nome do fornecedor">Nome</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -387,7 +387,7 @@ const NewVendorDialog = ({ open, onOpenChange }) => {
               rules={{ required: 'CNPJ é obrigatório' }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>CNPJ</FormLabel>
+                  <FormLabel data-tooltip="CNPJ com 14 dígitos">CNPJ</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -404,7 +404,7 @@ const NewVendorDialog = ({ open, onOpenChange }) => {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>E-mail</FormLabel>
+                  <FormLabel data-tooltip="E-mail de contato">E-mail</FormLabel>
                   <FormControl>
                     <Input type="email" {...field} />
                   </FormControl>
@@ -417,7 +417,7 @@ const NewVendorDialog = ({ open, onOpenChange }) => {
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Telefone</FormLabel>
+                  <FormLabel data-tooltip="Telefone com DDD">Telefone</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -433,7 +433,7 @@ const NewVendorDialog = ({ open, onOpenChange }) => {
               name="rating"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Rating</FormLabel>
+                  <FormLabel data-tooltip="Avaliação de 1 a 5 estrelas">Rating</FormLabel>
                   <FormControl>
                     <div className="flex space-x-1">
                       {[1, 2, 3, 4, 5].map((i) => (
@@ -457,7 +457,7 @@ const NewVendorDialog = ({ open, onOpenChange }) => {
               )}
             />
             <div>
-              <FormLabel>Tags</FormLabel>
+              <FormLabel data-tooltip="Palavras-chave para categorizar">Tags</FormLabel>
               <div className="flex flex-wrap gap-1 mb-2">
                 {tags.map((tag) => (
                   <Badge key={tag} variant="secondary">
@@ -498,7 +498,7 @@ const NewVendorDialog = ({ open, onOpenChange }) => {
             name="paymentTerms"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Prazo de Pagamento</FormLabel>
+                <FormLabel data-tooltip="Condição de pagamento (ex.: 30 dias)">Prazo de Pagamento</FormLabel>
                 <FormControl>
                   <Input {...field} />
                 </FormControl>
@@ -510,7 +510,7 @@ const NewVendorDialog = ({ open, onOpenChange }) => {
             name="serviceType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Tipo de Serviço</FormLabel>
+                <FormLabel data-tooltip="Serviço principal prestado">Tipo de Serviço</FormLabel>
                 <FormControl>
                   <Input {...field} />
                 </FormControl>
@@ -522,7 +522,7 @@ const NewVendorDialog = ({ open, onOpenChange }) => {
             name="scope"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Escopo</FormLabel>
+                <FormLabel data-tooltip="Descrição do escopo acordado">Escopo</FormLabel>
                 <FormControl>
                   <Textarea {...field} />
                 </FormControl>
@@ -540,13 +540,13 @@ const NewVendorDialog = ({ open, onOpenChange }) => {
                     onCheckedChange={field.onChange}
                   />
                 </FormControl>
-                <FormLabel className="mb-0">Possui contrato?</FormLabel>
+                <FormLabel className="mb-0" data-tooltip="Marque se existe contrato vigente">Possui contrato?</FormLabel>
               </FormItem>
             )}
           />
           {form.watch('hasContract') && (
             <div>
-              <FormLabel>Arquivo do Contrato</FormLabel>
+              <FormLabel data-tooltip="Anexe o arquivo do contrato">Arquivo do Contrato</FormLabel>
               <Input
                 type="file"
                 onChange={(e) => setContractFile(e.target.files?.[0] || null)}
@@ -558,7 +558,7 @@ const NewVendorDialog = ({ open, onOpenChange }) => {
             name="observations"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Observações</FormLabel>
+                <FormLabel data-tooltip="Informações adicionais">Observações</FormLabel>
                 <FormControl>
                   <Textarea {...field} />
                 </FormControl>

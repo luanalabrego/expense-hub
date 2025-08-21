@@ -49,34 +49,34 @@ const BudgetRequestModal = ({ open, onClose }) => {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium">Título</label>
+            <label className="block text-sm font-medium" data-tooltip="Título do pedido de orçamento">Título</label>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} required />
           </div>
           <div>
-            <label className="block text-sm font-medium">Descrição</label>
+            <label className="block text-sm font-medium" data-tooltip="Detalhe o que deseja adquirir">Descrição</label>
             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} required />
           </div>
           <div className="flex items-center space-x-2">
             <Checkbox checked={inBudget} onCheckedChange={(v) => setInBudget(!!v)} id="inBudget" />
-            <label htmlFor="inBudget" className="text-sm">Está em orçamento?</label>
+            <label htmlFor="inBudget" className="text-sm" data-tooltip="Indica se o gasto está previsto">Está em orçamento?</label>
           </div>
           {inBudget ? (
             <div>
-              <label className="block text-sm font-medium">Linha de orçamento</label>
+              <label className="block text-sm font-medium" data-tooltip="Informe a linha do orçamento existente">Linha de orçamento</label>
               <Input value={budgetLine} onChange={(e) => setBudgetLine(e.target.value)} />
             </div>
           ) : (
             <div>
-              <label className="block text-sm font-medium">Explicação</label>
+              <label className="block text-sm font-medium" data-tooltip="Justifique por que não está no orçamento">Explicação</label>
               <Textarea value={explanation} onChange={(e) => setExplanation(e.target.value)} />
             </div>
           )}
           <div>
-            <label className="block text-sm font-medium">Anexos</label>
+            <label className="block text-sm font-medium" data-tooltip="Anexe documentos relevantes">Anexos</label>
             <Input type="file" multiple onChange={(e) => setAttachments(Array.from(e.target.files || []))} />
           </div>
           <div>
-            <label className="block text-sm font-medium">Sugestão de fornecedores</label>
+            <label className="block text-sm font-medium" data-tooltip="Liste possíveis fornecedores">Sugestão de fornecedores</label>
             <Textarea value={supplierSuggestions} onChange={(e) => setSupplierSuggestions(e.target.value)} />
           </div>
           <DialogFooter>

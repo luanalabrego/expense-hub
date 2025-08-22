@@ -108,7 +108,7 @@ export const getTotalSpentByBudgetLine = async (
     collection(db, COLLECTION_NAME),
     where('budgetLineId', '==', budgetLineId),
     where('inBudget', '==', true),
-    where('status', 'in', ['pending_payment_approval', 'paid']),
+    where('status', 'in', ['pending_payment_approval', 'pending_payment', 'paid']),
     where('competenceDate', '>=', start),
     where('competenceDate', '<', end)
   );
@@ -617,6 +617,9 @@ export const approveRequest = async (
       case 'pending_ceo_approval':
         nextStatus = 'pending_payment_approval';
         break;
+      case 'pending_payment_approval':
+        nextStatus = 'pending_payment';
+        break;
     }
 
     const approvalEntry = {
@@ -651,7 +654,7 @@ export const approveRequest = async (
       sapEmployeeId,
     };
 
-    if (nextStatus === 'pending_payment_approval') {
+    if (nextStatus === 'pending_payment') {
       updateData.approvedAt = now;
     }
 
@@ -944,7 +947,10 @@ export const cancelRequest = async (
     });
 
     // Se estava pendente de pagamento, liberar valor comprometido
-    if (request.status === 'pending_payment_approval' && request.costCenterId) {
+    if (
+      ['pending_payment_approval', 'pending_payment'].includes(request.status) &&
+      request.costCenterId
+    ) {
       const costCenterRef = doc(db, 'cost-centers', request.costCenterId);
       batch.update(costCenterRef, {
         committed: increment(-request.amount),

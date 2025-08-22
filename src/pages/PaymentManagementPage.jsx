@@ -10,7 +10,7 @@ export const PaymentManagementPage = () => {
   const { user } = useAuth();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const { data, isLoading } = useRequestsList({ page: 1, limit: 50, status: 'pending_payment_approval' });
+  const { data, isLoading } = useRequestsList({ page: 1, limit: 50, status: 'pending_payment' });
   const { mutate: markAsPaid } = useMarkAsPaid();
   const { mutate: cancelRequest } = useCancelRequest();
   const requests = data?.data || [];

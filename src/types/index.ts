@@ -16,6 +16,7 @@ export type RequestStatus =
   | 'pending_cfo_approval'
   | 'pending_ceo_approval'
   | 'pending_payment_approval'
+  | 'pending_payment'
   | 'pending_adjustment'
   | 'rejected'
   | 'cancelled'

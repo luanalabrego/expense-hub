@@ -12,6 +12,7 @@ import { OwnerApprovalsPage } from '../pages/OwnerApprovalsPage';
 import { DirectorApprovalsPage } from '../pages/DirectorApprovalsPage';
 import { CfoApprovalsPage } from '../pages/CfoApprovalsPage';
 import { CeoApprovalsPage } from '../pages/CeoApprovalsPage';
+import { FinanceApprovalsPage } from '../pages/FinanceApprovalsPage';
 import { PaymentManagementPage } from '../pages/PaymentManagementPage';
 import { ReportsPage } from '../pages/ReportsPage';
 import { useAuth } from '../contexts/AuthContext';
@@ -115,6 +116,16 @@ export const AppRoutes = () => {
           element={
             hasPageAccess('ceoApprovals') ? (
               <CeoApprovalsPage />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route
+          path="finance-approvals"
+          element={
+            hasPageAccess('financeApprovals') ? (
+              <FinanceApprovalsPage />
             ) : (
               <Navigate to="/" replace />
             )

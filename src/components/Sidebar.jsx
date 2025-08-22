@@ -15,6 +15,7 @@ const navigation = [
   { name: 'Aprov. Diretor', href: '/director-approvals', icon: '🧑‍💼', page: 'directorApprovals' },
   { name: 'Aprov. CFO', href: '/cfo-approvals', icon: '💼', page: 'cfoApprovals' },
   { name: 'Aprov. CEO', href: '/ceo-approvals', icon: '🏛️', page: 'ceoApprovals' },
+  { name: 'Aprov. Financeiro', href: '/finance-approvals', icon: '💲', page: 'financeApprovals' },
   { name: 'Pagamentos', href: '/payments', icon: '💳', page: 'payments' },
   { name: 'Relatórios', href: '/reports', icon: '📊', page: 'reports' },
   { name: 'Orçamento', href: '/budgets', icon: '🗓️', page: 'budgets' },

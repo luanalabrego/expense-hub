@@ -140,6 +140,7 @@ export const AuthProvider = ({ children }) => {
     directorApprovals: ['admin', 'director'],
     cfoApprovals: ['admin', 'cfo'],
     ceoApprovals: ['admin', 'ceo'],
+    financeApprovals: ['admin', 'finance'],
     users: ['admin', 'finance'],
     'cost-centers': ['admin', 'finance', 'cost_center_owner'],
     payments: ['admin', 'finance'],

@@ -699,6 +699,7 @@ export const generateSeedRequests = () => {
     'pending_cfo_approval',
     'pending_ceo_approval',
     'pending_payment_approval',
+    'pending_payment',
     'paid',
     'rejected',
     'cancelled',
@@ -736,7 +737,7 @@ export const generateSeedRequests = () => {
       dueDate: status !== 'draft' ? randomDate(new Date(), new Date(2024, 11, 31)) : null,
       notes: `Observações da solicitação ${i}`,
       attachments: [],
-      approvals: status === 'pending_payment_approval' || status === 'paid' ? [
+      approvals: ['pending_payment_approval', 'pending_payment', 'paid'].includes(status) ? [
         {
           level: 1,
           approverId: 'approver-001',

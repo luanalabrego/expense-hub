@@ -8,6 +8,7 @@ const statusLabels = {
   pending_cfo_approval: 'Ag. aprovação CFO',
   pending_ceo_approval: 'Ag. aprovação CEO',
   pending_payment_approval: 'Ag. aprovação de pagamento',
+  pending_payment: 'Ag. pagamento',
   rejected: 'Rejeitado',
   cancelled: 'Cancelado',
   paid: 'Pagamento realizado',

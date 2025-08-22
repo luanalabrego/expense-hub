@@ -69,6 +69,7 @@ export const RequestsPage = () => {
       pending_cfo_approval: 'bg-pink-100 text-pink-800',
       pending_ceo_approval: 'bg-orange-100 text-orange-800',
       pending_payment_approval: 'bg-purple-100 text-purple-800',
+      pending_payment: 'bg-blue-100 text-blue-800',
       rejected: 'bg-red-100 text-red-800',
       cancelled: 'bg-gray-200 text-gray-800',
       paid: 'bg-green-100 text-green-800',
@@ -83,6 +84,7 @@ export const RequestsPage = () => {
       pending_cfo_approval: 'Ag. aprovação CFO',
       pending_ceo_approval: 'Ag. aprovação CEO',
       pending_payment_approval: 'Ag. aprovação de pagamento',
+      pending_payment: 'Ag. pagamento',
       rejected: 'Rejeitado',
       cancelled: 'Cancelado',
       paid: 'Pagamento realizado',
@@ -218,7 +220,7 @@ export const RequestsPage = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Ag. pagamento</p>
-              <p className="text-2xl font-bold">{stats?.byStatus?.pending_payment_approval ?? 0}</p>
+              <p className="text-2xl font-bold">{stats?.byStatus?.pending_payment ?? 0}</p>
             </div>
           </div>
         </div>
@@ -264,6 +266,7 @@ export const RequestsPage = () => {
               <option value="pending_cfo_approval">Ag. aprovação CFO</option>
               <option value="pending_ceo_approval">Ag. aprovação CEO</option>
               <option value="pending_payment_approval">Ag. aprovação de pagamento</option>
+              <option value="pending_payment">Ag. pagamento</option>
               <option value="rejected">Rejeitado</option>
               <option value="cancelled">Cancelado</option>
               <option value="paid">Pagamento realizado</option>

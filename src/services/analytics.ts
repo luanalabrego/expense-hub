@@ -140,9 +140,9 @@ export const getDashboardKPIs = async (
     // Calcular KPIs financeiros
     const totalRequests = requests.length;
     const totalAmount = requests.reduce((sum, r) => sum + r.amount, 0);
-    const approvedRequests = requests.filter(r => ['pending_payment_approval', 'paid'].includes(r.status));
+    const approvedRequests = requests.filter(r => ['pending_payment', 'paid'].includes(r.status));
     const pendingRequests = requests.filter(
-      r => r.status.startsWith('pending_') && r.status !== 'pending_payment_approval'
+      r => r.status.startsWith('pending_') && !['pending_payment_approval', 'pending_payment'].includes(r.status)
     );
     const rejectedRequests = requests.filter(r => ['rejected', 'cancelled'].includes(r.status));
     const paidRequests = requests.filter(r => r.status === 'paid');
@@ -274,6 +274,7 @@ export const getRequestsByStatus = async (
       pending_cfo_approval: 'Ag. aprovação CFO',
       pending_ceo_approval: 'Ag. aprovação CEO',
       pending_payment_approval: 'Ag. aprovação de pagamento',
+      pending_payment: 'Ag. pagamento',
       rejected: 'Rejeitado',
       cancelled: 'Cancelado',
       paid: 'Pagamento realizado',
@@ -286,6 +287,7 @@ export const getRequestsByStatus = async (
       pending_cfo_approval: '#ec4899',
       pending_ceo_approval: '#f97316',
       pending_payment_approval: '#3b82f6',
+      pending_payment: '#8b5cf6',
       rejected: '#ef4444',
       cancelled: '#6b7280',
       paid: '#10b981',
@@ -366,7 +368,7 @@ export const getTimeSeriesData = async (
       acc[periodKey].requests += 1;
       acc[periodKey].amount += request.amount;
       
-      if (['pending_payment_approval', 'paid'].includes(request.status)) {
+      if (['pending_payment', 'paid'].includes(request.status)) {
         acc[periodKey].approved += 1;
       } else if (['rejected', 'cancelled'].includes(request.status)) {
         acc[periodKey].rejected += 1;
@@ -391,7 +393,7 @@ export const getPaymentForecast = async (
   try {
     let requestsQuery = query(
       collection(db, 'payment-requests'),
-      where('status', '==', 'pending_payment_approval'),
+      where('status', '==', 'pending_payment'),
       orderBy('dueDate', 'asc')
     );
 

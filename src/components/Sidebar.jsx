@@ -19,7 +19,7 @@ const navigation = [
   { name: 'Pagamentos', href: '/payments', icon: '💳', page: 'payments' },
   { name: 'Relatórios', href: '/reports', icon: '📊', page: 'reports' },
   { name: 'Orçamento', href: '/budgets', icon: '🗓️', page: 'budgets' },
-  { name: 'Solic. Orçamentos', href: '/budget-requests', icon: '📄', page: 'budgetRequests' },
+  { name: 'Solicitações de Orçamento', href: '/budget-requests', icon: '📄', page: 'budgetRequests' },
   { name: 'Parâmetros', href: '/settings', icon: '⚙️', page: 'settings' },
   { name: 'Usuários', href: '/users', icon: '👥', page: 'users' },
 ];

@@ -5,7 +5,6 @@ import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Label } from '../components/ui/label';
-import logo from '../assets/react.svg';
 
 export const LoginPage = () => {
   const { login, isAuthenticated, isLoading } = useAuth();
@@ -34,7 +33,7 @@ export const LoginPage = () => {
     <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
       <Card className="w-full max-w-4xl flex flex-col md:flex-row overflow-hidden p-0 gap-0">
         <div className="flex items-center justify-center w-full md:w-1/2 bg-gradient-to-b from-black to-pink-900 p-6">
-          <img src={logo} alt="Logo" className="w-40" />
+          <h1 className="text-4xl font-bold text-white">Expense On</h1>
         </div>
         <div className="w-full md:w-1/2 p-8 space-y-6 bg-white">
           <h1 className="text-2xl font-semibold text-center text-pink-900">Seja Bem Vindo</h1>

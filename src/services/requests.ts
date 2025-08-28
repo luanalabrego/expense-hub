@@ -118,6 +118,33 @@ export const getTotalSpentByBudgetLine = async (
   return snapshot.docs.reduce((sum, d) => sum + (d.data().amount || 0), 0);
 };
 
+export const getRequestsByBudgetLine = async (
+  budgetLineId: string
+): Promise<PaymentRequest[]> => {
+  const q = query(
+    collection(db, COLLECTION_NAME),
+    where('budgetLineId', '==', budgetLineId),
+    where('inBudget', '==', true),
+    where('status', 'in', ['pending_payment_approval', 'pending_payment', 'paid'])
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      createdAt: data.createdAt?.toDate() || new Date(),
+      updatedAt: data.updatedAt?.toDate() || new Date(),
+      dueDate: data.dueDate?.toDate() || null,
+      invoiceDate: data.invoiceDate?.toDate() || null,
+      competenceDate: data.competenceDate?.toDate() || null,
+      approvedAt: data.approvedAt?.toDate() || null,
+      rejectedAt: data.rejectedAt?.toDate() || null,
+      paidAt: data.paidAt?.toDate() || null,
+    } as PaymentRequest;
+  });
+};
+
 // Listar solicitações com paginação
 export const getRequests = async (
   params: PaginationParams & {

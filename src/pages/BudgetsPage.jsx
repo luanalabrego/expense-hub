@@ -9,7 +9,10 @@ import {
   deleteBudgetLine,
   findBudgetLineByKey,
 } from '@/services/budgetLines';
-import { getTotalSpentByBudgetLine } from '@/services/requests';
+import {
+  getTotalSpentByBudgetLine,
+  getRequestsByBudgetLine,
+} from '@/services/requests';
 import * as XLSX from 'xlsx';
 import {
   Dialog,
@@ -63,6 +66,7 @@ export const BudgetsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [results, setResults] = useState({});
+  const [expenses, setExpenses] = useState({});
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -74,25 +78,40 @@ export const BudgetsPage = () => {
   }, []);
 
   useEffect(() => {
-    if (showResults) {
-      const fetchResults = async () => {
-        const res = {};
-        for (const item of items) {
-          if (!item.id) continue;
-          const monthsData = {};
-          for (const m of Object.keys(emptyMonths)) {
-            monthsData[m] = await getTotalSpentByBudgetLine(
-              item.id,
-              item.year,
-              Number(m)
-            );
-          }
-          res[item.id] = monthsData;
-        }
+    if (!showResults) return;
+
+    const fetchResults = async () => {
+      const res = {};
+      const exp = {};
+
+      try {
+        await Promise.all(
+          items
+            .filter((item) => item.id)
+            .map(async (item) => {
+              const monthKeys = Object.keys(emptyMonths);
+              const monthValues = await Promise.all(
+                monthKeys.map((m) =>
+                  getTotalSpentByBudgetLine(item.id, item.year, Number(m))
+                )
+              );
+
+              res[item.id] = monthKeys.reduce((acc, key, idx) => {
+                acc[key] = monthValues[idx];
+                return acc;
+              }, {});
+
+              exp[item.id] = await getRequestsByBudgetLine(item.id);
+            })
+        );
         setResults(res);
-      };
-      fetchResults();
-    }
+        setExpenses(exp);
+      } catch (err) {
+        console.error('Erro ao carregar resultados', err);
+      }
+    };
+
+    fetchResults();
   }, [showResults, items]);
 
   const handleChange = (e) => {
@@ -262,6 +281,8 @@ export const BudgetsPage = () => {
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Orçamento');
     XLSX.writeFile(workbook, 'orcamento.xlsx');
   };
+
+  const totalColumns = 6 + Object.keys(emptyMonths).length + (canEdit ? 1 : 0);
 
   return (
     <div className="space-y-6">
@@ -465,63 +486,126 @@ export const BudgetsPage = () => {
             </tr>
           </thead>
           <tbody>
-            {items.map((item, idx) => (
-              <tr key={item.id || idx} className="border-t">
-                <td className="px-2 py-2">{getVendorName(item.vendorId)}</td>
-                <td className="px-2 py-2">{item.description}</td>
-                <td className="px-2 py-2">{getCostCenterName(item.costCenterId)}</td>
-                <td className="px-2 py-2 capitalize">{item.nature}</td>
-                <td className="px-2 py-2">{item.costType}</td>
-                <td className="px-2 py-2">{item.year}</td>
-                {Object.keys(emptyMonths).map((m) => (
-                  <td key={m} className="px-2 py-2 text-right">
-                    <div className="flex flex-col items-end">
-                      <span>
-                        {item.months[m].toLocaleString('pt-BR', {
-                          style: 'currency',
-                          currency: 'BRL',
-                        })}
-                      </span>
-                      {showResults && results[item.id] && (
-                        <span className="text-xs text-gray-500">
-                          {results[item.id][m].toLocaleString('pt-BR', {
-                            style: 'currency',
-                            currency: 'BRL',
-                          })}{' '}
-                          (
-                          {item.months[m]
-                            ? Math.round(
-                                (results[item.id][m] / item.months[m]) * 100
-                              )
-                            : 0}
-                          %)
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                ))}
-                {canEdit && (
-                  <td className="px-2 py-2 text-right space-x-2">
-                    <button
-                      onClick={() => handleEdit(idx)}
-                      className="text-blue-600 hover:underline"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => handleDelete(idx)}
-                      className="text-red-600 hover:underline"
-                    >
-                      Excluir
-                    </button>
-                  </td>
-                )}
-              </tr>
-            ))}
+            {items.map((item, idx) => {
+              const totalBudget = Object.values(item.months).reduce(
+                (sum, v) => sum + v,
+                0
+              );
+              const totalSpent = Object.values(results[item.id] || {}).reduce(
+                (sum, v) => sum + v,
+                0
+              );
+              const attainment = totalBudget
+                ? Math.round(((totalBudget - totalSpent) / totalBudget) * 100)
+                : 100;
+              return (
+                <React.Fragment key={item.id || idx}>
+                  <tr className="border-t">
+                    <td className="px-2 py-2">{getVendorName(item.vendorId)}</td>
+                    <td className="px-2 py-2">{item.description}</td>
+                    <td className="px-2 py-2">{getCostCenterName(item.costCenterId)}</td>
+                    <td className="px-2 py-2 capitalize">{item.nature}</td>
+                    <td className="px-2 py-2">{item.costType}</td>
+                    <td className="px-2 py-2">{item.year}</td>
+                    {Object.keys(emptyMonths).map((m) => (
+                      <td key={m} className="px-2 py-2 text-right">
+                        <div className="flex flex-col items-end">
+                          <span>
+                            {item.months[m].toLocaleString('pt-BR', {
+                              style: 'currency',
+                              currency: 'BRL',
+                            })}
+                          </span>
+                          {showResults && results[item.id] && (
+                            <span className="text-xs text-gray-500">
+                              {results[item.id][m].toLocaleString('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL',
+                              })}{' '}
+                              (
+                              {item.months[m]
+                                ? Math.round(
+                                    (results[item.id][m] / item.months[m]) * 100
+                                  )
+                                : 0}
+                              %)
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    ))}
+                    {canEdit && (
+                      <td className="px-2 py-2 text-right space-x-2">
+                        <button
+                          onClick={() => handleEdit(idx)}
+                          className="text-blue-600 hover:underline"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleDelete(idx)}
+                          className="text-red-600 hover:underline"
+                        >
+                          Excluir
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                  {showResults && (
+                    <tr className="bg-gray-50">
+                      <td colSpan={totalColumns} className="px-2 py-2">
+                        <div className="space-y-1">
+                          {expenses[item.id] && expenses[item.id].length > 0 ? (
+                            expenses[item.id].map((exp) => {
+                              const date = exp.competenceDate
+                                ? new Date(exp.competenceDate)
+                                : null;
+                              return (
+                                <div
+                                  key={exp.id}
+                                  className="flex justify-between text-sm"
+                                >
+                                  <span>
+                                    {exp.description}
+                                    {date
+                                      ? ` (${date.toLocaleDateString('pt-BR')})`
+                                      : ''}
+                                  </span>
+                                  <span>
+                                    {exp.amount.toLocaleString('pt-BR', {
+                                      style: 'currency',
+                                      currency: 'BRL',
+                                    })}
+                                  </span>
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <div className="text-sm text-gray-500">
+                              Nenhuma despesa lançada
+                            </div>
+                          )}
+                          <div className="flex justify-between text-sm font-semibold border-t pt-1 mt-1">
+                            <span>Total gasto</span>
+                            <span>
+                              {totalSpent.toLocaleString('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL',
+                              })}{' '}
+                              (Atingimento: {attainment}%)
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              );
+            })}
             {items.length === 0 && (
               <tr>
                 <td
-                  colSpan={canEdit ? 18 : 17}
+                  colSpan={totalColumns}
                   className="px-2 py-4 text-center text-gray-500"
                 >
                   Nenhuma linha adicionada

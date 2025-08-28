@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveVendors } from '@/hooks/useVendors';
 import { useActiveCostCenters } from '@/hooks/useCostCenters';
@@ -60,6 +60,7 @@ export const BudgetsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [results, setResults] = useState({});
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -118,6 +119,66 @@ export const BudgetsPage = () => {
   };
 
   const toggleResults = () => setShowResults((prev) => !prev);
+
+  const handleExcelUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const data = await file.arrayBuffer();
+    const workbook = XLSX.read(data, { type: 'array' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    const [, ...lines] = rows;
+    const monthNames = [
+      'jan',
+      'fev',
+      'mar',
+      'abr',
+      'mai',
+      'jun',
+      'jul',
+      'ago',
+      'set',
+      'out',
+      'nov',
+      'dez',
+    ];
+    const getVendorIdByName = (name) =>
+      vendors.find((v) => v.name === name)?.id || '';
+    const getCostCenterIdByName = (name) =>
+      costCenters.find((c) => c.name === name)?.id || '';
+    const createdItems = [];
+    for (const line of lines) {
+      if (line.length === 0) continue;
+      const [
+        fornecedor,
+        descricao,
+        centroCusto,
+        natureza,
+        tipo,
+        ano,
+        ...months
+      ] = line;
+      const newItem = {
+        vendorId: getVendorIdByName(fornecedor),
+        description: descricao || '',
+        costCenterId: getCostCenterIdByName(centroCusto),
+        nature: natureza || 'fixo',
+        costType: tipo || 'OPEX',
+        year: Number(ano) || new Date().getFullYear(),
+        months: monthNames.reduce((acc, _, idx) => {
+          acc[idx + 1] = Number(months[idx]) || 0;
+          return acc;
+        }, {}),
+      };
+      const created = await createBudgetLine({
+        ...newItem,
+        createdBy: user.id,
+      });
+      createdItems.push(created);
+    }
+    setItems((prev) => [...prev, ...createdItems]);
+    e.target.value = '';
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -179,6 +240,13 @@ export const BudgetsPage = () => {
 
   return (
     <div className="space-y-6">
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept=".xlsx"
+        className="hidden"
+        onChange={handleExcelUpload}
+      />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Orçamento</h1>
@@ -198,15 +266,23 @@ export const BudgetsPage = () => {
             Baixar Excel
           </button>
           {canEdit && (
-            <button
-              onClick={() => {
-                resetForm();
-                setIsModalOpen(true);
-              }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              Registrar novo orçamento
-            </button>
+            <>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+              >
+                Upload Excel
+              </button>
+              <button
+                onClick={() => {
+                  resetForm();
+                  setIsModalOpen(true);
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                Adicionar linha
+              </button>
+            </>
           )}
         </div>
       </div>

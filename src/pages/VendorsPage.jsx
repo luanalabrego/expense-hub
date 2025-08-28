@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { Plus, Search, MoreHorizontal, Edit, UserX, UserCheck, Shield, ShieldOff, Star, Send } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Plus, Search, MoreHorizontal, Edit, UserX, UserCheck, Shield, ShieldOff, Star, Send, Upload } from 'lucide-react';
 import { useVendors, useDeactivateVendor, useReactivateVendor, useBlockVendor, useUnblockVendor, useCreateVendor, useSendVendorToContractReview } from '@/hooks/useVendors';
 import { checkVendorCompliance } from '@/services/vendorCompliance';
+import { checkTaxIdExists } from '@/services/vendors';
+import * as XLSX from 'xlsx';
 import { formatCNPJ, formatPhone, formatDate } from '@/utils';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +31,8 @@ export const VendorsPage = () => {
   const unblockVendor = useUnblockVendor();
   const sendToLegal = useSendVendorToContractReview();
   const [isNewVendorOpen, setIsNewVendorOpen] = useState(false);
+  const createVendor = useCreateVendor();
+  const fileInputRef = useRef(null);
 
   const { confirm, ConfirmationDialog } = useConfirm();
 
@@ -62,6 +66,40 @@ export const VendorsPage = () => {
     }
   };
 
+  const handleBulkUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheet = workbook.SheetNames[0];
+      const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheet]);
+      for (const row of rows) {
+        const name = row['Nome']?.toString().trim();
+        const taxId = row['CNPJ']?.toString().replace(/\D/g, '');
+        if (!name || !taxId) continue;
+        const exists = await checkTaxIdExists(taxId);
+        if (exists) continue;
+        await createVendor.mutateAsync({
+          name,
+          taxId,
+          email: row['Email']?.toString() || '',
+          phone: row['Telefone']?.toString() || '',
+          tags: typeof row['Tags'] === 'string' ? row['Tags'].split(',').map(t => t.trim()).filter(Boolean) : [],
+          categories: typeof row['Categorias'] === 'string' ? row['Categorias'].split(',').map(t => t.trim()).filter(Boolean) : [],
+          paymentTerms: row['PrazoPagamento']?.toString() || '',
+          serviceType: row['TipoServico']?.toString() || '',
+          scope: row['Escopo']?.toString() || '',
+          observations: row['Observacoes']?.toString() || '',
+        });
+      }
+    } catch (err) {
+      console.error('Erro ao importar fornecedores:', err);
+    } finally {
+      e.target.value = '';
+    }
+  };
+
   const vendors = vendorsData?.data ?? [];
 
   return (
@@ -72,13 +110,29 @@ export const VendorsPage = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Fornecedores</h1>
         {hasAnyRole(['admin', 'finance']) && (
-          <button
-            onClick={() => setIsNewVendorOpen(true)}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Fornecedor
-          </button>
+          <div className="flex gap-2">
+            <input
+              type="file"
+              accept=".xlsx,.xls"
+              ref={fileInputRef}
+              onChange={handleBulkUpload}
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Upload em Massa
+            </button>
+            <button
+              onClick={() => setIsNewVendorOpen(true)}
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Novo Fornecedor
+            </button>
+          </div>
         )}
       </div>
 

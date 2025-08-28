@@ -41,6 +41,8 @@ export const RequestDetailsPage = () => {
 
   if (isLoading) return <div>Carregando...</div>;
   if (!request) return <div>Solicitação não encontrada</div>;
+  const sortedHistory =
+    request.statusHistory?.slice().sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)) || [];
 
   return (
     <div className="space-y-6">
@@ -63,9 +65,9 @@ export const RequestDetailsPage = () => {
           <p><strong>Recorrente:</strong> {request.isRecurring ? 'Sim' : 'Não'}</p>
           <p><strong>Status atual:</strong> {statusLabels[request.status] || request.status}</p>
         </div>
-        <h2 className="text-xl font-semibold mb-2">Histórico de Status</h2>
+        <h2 className="text-xl font-semibold mb-2">Histórico de Aprovações</h2>
         <ul className="space-y-2">
-          {request.statusHistory?.map((entry, idx) => (
+          {sortedHistory.map((entry, idx) => (
             <li key={idx} className="border rounded p-2">
               <div className="text-sm font-medium">{statusLabels[entry.status] || entry.status}</div>
               <div className="text-xs text-gray-500">

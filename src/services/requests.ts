@@ -86,10 +86,12 @@ export const getRequestById = async (id: string): Promise<PaymentRequest | null>
       approvedAt: data.approvedAt?.toDate() || null,
       rejectedAt: data.rejectedAt?.toDate() || null,
       paidAt: data.paidAt?.toDate() || null,
-      statusHistory: (data.statusHistory || []).map((h: any) => ({
-        ...h,
-        timestamp: h.timestamp?.toDate ? h.timestamp.toDate() : new Date(h.timestamp),
-      })),
+      statusHistory: (data.statusHistory || [])
+        .map((h: any) => ({
+          ...h,
+          timestamp: h.timestamp?.toDate ? h.timestamp.toDate() : new Date(h.timestamp),
+        }))
+        .sort((a, b) => a.timestamp - b.timestamp),
     } as PaymentRequest;
   } catch (error) {
     console.error('Erro ao buscar solicitação:', error);

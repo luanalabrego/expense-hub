@@ -1,10 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { formatCurrency, formatDate } from '@/utils';
+import { formatCurrency, formatDate, formatDateTime } from '@/utils';
 import { useRequest } from '@/hooks/useRequests';
 import { useCostCenter } from '@/hooks/useCostCenters';
 import { useCategory } from '@/hooks/useCategories';
 import { getBudgetLineById } from '@/services/budgetLines';
+
+const statusLabels = {
+  pending_owner_approval: 'Ag. aprovação do owner',
+  pending_director_approval: 'Ag. aprovação Diretor',
+  pending_cfo_approval: 'Ag. aprovação CFO',
+  pending_ceo_approval: 'Ag. aprovação CEO',
+  pending_payment_approval: 'Ag. aprovação de pagamento',
+  pending_payment: 'Ag. pagamento',
+  rejected: 'Rejeitado',
+  cancelled: 'Cancelado',
+  paid: 'Pagamento realizado',
+};
 
 const RequestDetailsModal = ({ requestId, open, onClose }) => {
   const { data: request, isLoading } = useRequest(requestId);
@@ -12,6 +24,8 @@ const RequestDetailsModal = ({ requestId, open, onClose }) => {
   const { data: category } = useCategory(request?.categoryId || '');
   const [budgetLine, setBudgetLine] = useState(null);
   const [preview, setPreview] = useState(null);
+  const sortedHistory =
+    request?.statusHistory?.slice().sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)) || [];
 
   useEffect(() => {
     if (request?.budgetLineId) {
@@ -102,6 +116,28 @@ const RequestDetailsModal = ({ requestId, open, onClose }) => {
                         >
                           {`Anexo ${index + 1}`}
                         </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {sortedHistory.length > 0 && (
+                <div>
+                  <span className="font-medium">Histórico de Aprovações:</span>
+                  <ul className="mt-2 space-y-2 max-h-60 overflow-y-auto">
+                    {sortedHistory.map((entry, idx) => (
+                      <li key={idx} className="border rounded p-2">
+                        <div className="text-sm font-medium">
+                          {statusLabels[entry.status] || entry.status}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {entry.changedByName} - {formatDateTime(entry.timestamp)}
+                        </div>
+                        {entry.reason && (
+                          <div className="text-xs text-gray-600 mt-1">
+                            Motivo: {entry.reason}
+                          </div>
+                        )}
                       </li>
                     ))}
                   </ul>

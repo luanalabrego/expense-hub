@@ -399,7 +399,9 @@ export const RequestsPage = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{request.vendorName || ''}</div>
-                        <div className="text-sm text-gray-500">{request.costCenterName || request.costCenterId || ''}</div>
+                        {request.costCenterName && (
+                          <div className="text-sm text-gray-500">{request.costCenterName}</div>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{request.purchaseType || '-'}</div>

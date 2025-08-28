@@ -40,6 +40,12 @@ const RequestDetailsModal = ({ requestId, open, onClose }) => {
 
   const closePreview = () => setPreview(null);
 
+  const refDate =
+    request?.competenceDate || request?.invoiceDate || request?.dueDate || null;
+  const month = refDate ? new Date(refDate).getMonth() + 1 : null;
+  const budgetedAmount =
+    budgetLine && month ? budgetLine.months?.[month] || 0 : null;
+
   return (
     <>
       <Dialog open={open} onOpenChange={onClose}>
@@ -68,8 +74,13 @@ const RequestDetailsModal = ({ requestId, open, onClose }) => {
                   <span className="font-medium">Categoria:</span> {category?.name || request.categoryId}
                 </div>
                 <div>
-                  <span className="font-medium">Valor:</span> {formatCurrency(request.amount)}
+                  <span className="font-medium">Valor Solicitado:</span> {formatCurrency(request.amount)}
                 </div>
+                {request.inBudget && (
+                  <div>
+                    <span className="font-medium">Valor Orçado:</span> {budgetedAmount !== null ? formatCurrency(budgetedAmount) : '-'}
+                  </div>
+                )}
                 <div>
                   <span className="font-medium">Competência:</span> {request.competenceDate ? formatDate(request.competenceDate) : '-'}
                 </div>
@@ -95,6 +106,11 @@ const RequestDetailsModal = ({ requestId, open, onClose }) => {
                 {request.inBudget && (
                   <div className="sm:col-span-2">
                     <span className="font-medium">Orçamento:</span> {budgetLine?.description || request.budgetLineId}
+                  </div>
+                )}
+                {request.isOverBudget && request.overBudgetReason && (
+                  <div className="sm:col-span-2">
+                    <span className="font-medium">Justificativa do Estouro:</span> {request.overBudgetReason}
                   </div>
                 )}
               </div>

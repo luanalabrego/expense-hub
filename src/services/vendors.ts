@@ -193,7 +193,7 @@ export const createVendor = async (vendorData: {
 }): Promise<Vendor> => {
   try {
     const code = await generateVendorCode();
-    const vendorDoc = {
+    const vendorDoc: Record<string, unknown> = {
       code,
       name: vendorData.name,
       taxId: vendorData.taxId,
@@ -213,12 +213,13 @@ export const createVendor = async (vendorData: {
       legalNotes: vendorData.legalNotes || '',
       contractRequesterId: vendorData.contractRequesterId || '',
       status: vendorData.status || 'pending',
-      compliance: vendorData.compliance
-        ? { ...vendorData.compliance }
-        : undefined,
       createdAt: new Date(),
       updatedAt: new Date()
     };
+
+    if (vendorData.compliance) {
+      vendorDoc.compliance = { ...vendorData.compliance };
+    }
 
     const docRef = await addDoc(collection(db, COLLECTION_NAME), vendorDoc);
 
@@ -238,8 +239,11 @@ export const updateVendor = async (
   updates: Partial<Omit<Vendor, 'id' | 'createdAt' | 'code'>>
 ): Promise<void> => {
   try {
+    const cleanedUpdates = Object.fromEntries(
+      Object.entries(updates).filter(([, value]) => value !== undefined)
+    );
     const updateData = {
-      ...updates,
+      ...cleanedUpdates,
       updatedAt: new Date()
     };
 

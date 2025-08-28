@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRequestsList, useMarkAsPaid, useCancelRequest } from '../hooks/useRequests';
 import { useAuth } from '../contexts/AuthContext';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '../components/ui/chart';
-import { usePaymentForecast } from '../hooks/useAnalytics';
+import { usePaymentForecast, usePaymentHistory } from '../hooks/useAnalytics';
 import { usePrompt } from '../contexts/PromptContext';
 
 export const PaymentManagementPage = () => {
@@ -20,6 +20,26 @@ export const PaymentManagementPage = () => {
     startDate: startDate ? new Date(startDate) : undefined,
     endDate: endDate ? new Date(endDate) : undefined,
   });
+
+  const { data: historyData = [] } = usePaymentHistory({
+    startDate: startDate ? new Date(startDate) : undefined,
+    endDate: endDate ? new Date(endDate) : undefined,
+  });
+
+  const chartData = useMemo(() => {
+    const map = {};
+    historyData.forEach(item => {
+      map[item.date] = { date: item.date, paid: item.amount, forecast: 0 };
+    });
+    forecastData.forEach(item => {
+      if (!map[item.date]) {
+        map[item.date] = { date: item.date, paid: 0, forecast: item.amount };
+      } else {
+        map[item.date].forecast = item.amount;
+      }
+    });
+    return Object.values(map).sort((a, b) => new Date(a.date) - new Date(b.date));
+  }, [historyData, forecastData]);
 
   const formatCurrency = (value) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -75,19 +95,24 @@ export const PaymentManagementPage = () => {
         <ChartContainer
           className="w-full"
           config={{
-            amount: {
+            forecast: {
               label: 'Valor Previsto',
               color: 'hsl(var(--chart-1))',
             },
+            paid: {
+              label: 'Valor Pago',
+              color: 'hsl(var(--chart-2))',
+            },
           }}
         >
-          <LineChart data={forecastData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+          <LineChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" />
             <YAxis />
             <ChartTooltip content={<ChartTooltipContent />} />
             <ChartLegend content={<ChartLegendContent />} />
-            <Line type="monotone" dataKey="amount" stroke="var(--color-amount)" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="forecast" stroke="var(--color-forecast)" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="paid" stroke="var(--color-paid)" strokeWidth={2} dot={false} />
           </LineChart>
         </ChartContainer>
       </div>

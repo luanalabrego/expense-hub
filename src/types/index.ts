@@ -54,6 +54,7 @@ export interface User {
 
 export interface Vendor {
   id: string;
+  code: string;
   name: string;
   taxId: string; // CNPJ
   email?: string;

@@ -7,19 +7,20 @@ import {
   orderBy,
   writeBatch,
   doc,
-  Timestamp 
+  Timestamp
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { 
-  Vendor, 
+import type {
+  Vendor,
   CostCenter, 
   Category, 
   PaymentRequest, 
   User,
   ImportResult,
   ImportError,
-  ExportParams 
+  ExportParams
 } from '../types';
+import { generateVendorCode } from './vendors';
 
 // Tipos para importação/exportação
 export interface ImportOptions {
@@ -298,8 +299,10 @@ const importVendors = async (data: Record<string, any>[], userId: string): Promi
         });
         continue;
       }
-      
+      const code = await generateVendorCode();
+
       const vendorData: Omit<Vendor, 'id'> = {
+        code,
         name: row.name,
         taxId: row.taxId,
         email: row.email || '',

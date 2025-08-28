@@ -78,28 +78,41 @@ export const BudgetsPage = () => {
   }, []);
 
   useEffect(() => {
-    if (showResults) {
-      const fetchResults = async () => {
-        const res = {};
-        const exp = {};
-        for (const item of items) {
-          if (!item.id) continue;
-          const monthsData = {};
-          for (const m of Object.keys(emptyMonths)) {
-            monthsData[m] = await getTotalSpentByBudgetLine(
-              item.id,
-              item.year,
-              Number(m)
-            );
-          }
-          res[item.id] = monthsData;
-          exp[item.id] = await getRequestsByBudgetLine(item.id);
-        }
+    if (!showResults) return;
+
+    const fetchResults = async () => {
+      const res = {};
+      const exp = {};
+
+      try {
+        await Promise.all(
+          items
+            .filter((item) => item.id)
+            .map(async (item) => {
+              const monthKeys = Object.keys(emptyMonths);
+              const monthValues = await Promise.all(
+                monthKeys.map((m) =>
+                  getTotalSpentByBudgetLine(item.id, item.year, Number(m))
+                )
+              );
+
+              res[item.id] = monthKeys.reduce((acc, key, idx) => {
+                acc[key] = monthValues[idx];
+                return acc;
+              }, {});
+
+              exp[item.id] = await getRequestsByBudgetLine(item.id);
+            })
+        );
         setResults(res);
         setExpenses(exp);
-      };
-      fetchResults();
-    }
+      } catch (err) {
+        console.error('Erro ao carregar resultados', err);
+      }
+    };
+
+    fetchResults();
+
   }, [showResults, items]);
 
   const handleChange = (e) => {
@@ -539,34 +552,41 @@ export const BudgetsPage = () => {
                       </td>
                     )}
                   </tr>
-                  {showResults && expenses[item.id] && expenses[item.id].length > 0 && (
+                  {showResults && (
                     <tr className="bg-gray-50">
                       <td colSpan={totalColumns} className="px-2 py-2">
                         <div className="space-y-1">
-                          {expenses[item.id].map((exp) => {
-                            const date = exp.competenceDate
-                              ? new Date(exp.competenceDate)
-                              : null;
-                            return (
-                              <div
-                                key={exp.id}
-                                className="flex justify-between text-sm"
-                              >
-                                <span>
-                                  {exp.description}
-                                  {date
-                                    ? ` (${date.toLocaleDateString('pt-BR')})`
-                                    : ''}
-                                </span>
-                                <span>
-                                  {exp.amount.toLocaleString('pt-BR', {
-                                    style: 'currency',
-                                    currency: 'BRL',
-                                  })}
-                                </span>
-                              </div>
-                            );
-                          })}
+                          {expenses[item.id] && expenses[item.id].length > 0 ? (
+                            expenses[item.id].map((exp) => {
+                              const date = exp.competenceDate
+                                ? new Date(exp.competenceDate)
+                                : null;
+                              return (
+                                <div
+                                  key={exp.id}
+                                  className="flex justify-between text-sm"
+                                >
+                                  <span>
+                                    {exp.description}
+                                    {date
+                                      ? ` (${date.toLocaleDateString('pt-BR')})`
+                                      : ''}
+                                  </span>
+                                  <span>
+                                    {exp.amount.toLocaleString('pt-BR', {
+                                      style: 'currency',
+                                      currency: 'BRL',
+                                    })}
+                                  </span>
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <div className="text-sm text-gray-500">
+                              Nenhuma despesa lançada
+                            </div>
+                          )}
+
                           <div className="flex justify-between text-sm font-semibold border-t pt-1 mt-1">
                             <span>Total gasto</span>
                             <span>

@@ -61,6 +61,17 @@ export const usePaymentForecast = (
   });
 };
 
+// Hook para obter histórico de pagamentos
+export const usePaymentHistory = (
+  filters: { startDate?: Date; endDate?: Date } = {}
+) => {
+  return useQuery({
+    queryKey: ['analytics', 'payment-history', filters],
+    queryFn: () => analyticsService.getPaymentHistory(filters),
+    ...queryOptions.dynamic,
+  });
+};
+
 // Hook para obter top fornecedores
 export const useTopVendors = (
   limit: number = 10,

@@ -84,6 +84,13 @@ export interface PaymentForecastData {
   count: number;
 }
 
+export interface PaymentHistoryData {
+  date: string;
+  paidDate: Date;
+  amount: number;
+  count: number;
+}
+
 export interface CostCenterAnalysis {
   costCenterId: string;
   costCenterName: string;
@@ -423,6 +430,54 @@ export const getPaymentForecast = async (
     return Object.values(grouped).sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
   } catch (error) {
     console.error('Erro ao obter previsão de pagamentos:', error);
+    throw error;
+  }
+};
+
+export const getPaymentHistory = async (
+  filters: { startDate?: Date; endDate?: Date } = {}
+): Promise<PaymentHistoryData[]> => {
+  try {
+    let requestsQuery = query(
+      collection(db, 'payment-requests'),
+      where('status', '==', 'paid'),
+      orderBy('paidAt', 'asc')
+    );
+
+    if (filters.startDate) {
+      requestsQuery = query(
+        requestsQuery,
+        where('paidAt', '>=', Timestamp.fromDate(filters.startDate))
+      );
+    }
+    if (filters.endDate) {
+      requestsQuery = query(
+        requestsQuery,
+        where('paidAt', '<=', Timestamp.fromDate(filters.endDate))
+      );
+    }
+
+    const snapshot = await getDocs(requestsQuery);
+    const requests = snapshot.docs.map(doc => ({
+      ...doc.data(),
+      paidAt: doc.data().paidAt?.toDate() || new Date(),
+    })) as PaymentRequest[];
+
+    const grouped = requests.reduce((acc, request) => {
+      const key = request.paidAt.toISOString().split('T')[0];
+      if (!acc[key]) {
+        acc[key] = { date: key, paidDate: new Date(key), amount: 0, count: 0 };
+      }
+      acc[key].amount += request.amount;
+      acc[key].count += 1;
+      return acc;
+    }, {} as Record<string, PaymentHistoryData>);
+
+    return Object.values(grouped).sort(
+      (a, b) => a.paidDate.getTime() - b.paidDate.getTime()
+    );
+  } catch (error) {
+    console.error('Erro ao obter histórico de pagamentos:', error);
     throw error;
   }
 };

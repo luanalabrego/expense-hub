@@ -60,7 +60,6 @@ export interface Vendor {
   email?: string;
   phone?: string;
   tags: string[]; // ex: ['critico']
-  rating?: number;
   blocked: boolean;
   contacts: Contact[];
   categories: string[];

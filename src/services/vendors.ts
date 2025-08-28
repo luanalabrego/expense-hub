@@ -165,7 +165,6 @@ export const createVendor = async (vendorData: {
   taxId: string;
   email?: string;
   phone?: string;
-  rating?: number;
   tags?: string[];
   paymentTerms?: string;
   serviceType?: string;
@@ -203,7 +202,6 @@ export const createVendor = async (vendorData: {
       tags: vendorData.tags || [],
       contacts: vendorData.contacts || [],
       categories: vendorData.categories || [],
-      rating: vendorData.rating ?? 0,
       blocked: vendorData.blocked ?? false,
       paymentTerms: vendorData.paymentTerms || '',
       serviceType: vendorData.serviceType || '',
@@ -398,23 +396,6 @@ export const getActiveVendors = async (): Promise<Vendor[]> => {
       .sort((a, b) => a.name.localeCompare(b.name)) as Vendor[];
   } catch (error) {
     console.error('Erro ao buscar fornecedores ativos:', error);
-    throw error;
-  }
-};
-
-// Atualizar rating do fornecedor
-export const updateVendorRating = async (id: string, rating: number): Promise<void> => {
-  try {
-    if (rating < 0 || rating > 5) {
-      throw new Error('Rating deve estar entre 0 e 5');
-    }
-
-    await updateDoc(doc(db, COLLECTION_NAME, id), {
-      rating,
-      updatedAt: new Date()
-    });
-  } catch (error) {
-    console.error('Erro ao atualizar rating do fornecedor:', error);
     throw error;
   }
 };

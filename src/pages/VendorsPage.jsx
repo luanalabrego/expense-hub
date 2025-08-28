@@ -195,7 +195,6 @@ export const VendorsPage = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CNPJ</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">E-mail</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telefone</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tags</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Criado em</th>
@@ -217,20 +216,6 @@ export const VendorsPage = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {vendor.phone ? formatPhone(vendor.phone) : ''}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex space-x-1">
-                        {[1, 2, 3, 4, 5].map((i) => (
-                          <Star
-                            key={i}
-                            className={`w-4 h-4 ${
-                              vendor.rating && i <= vendor.rating
-                                ? 'text-yellow-400 fill-yellow-400'
-                                : 'text-gray-300'
-                            }`}
-                          />
-                        ))}
-                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-wrap gap-1">
@@ -347,7 +332,6 @@ const NewVendorDialog = ({ open, onOpenChange }) => {
       taxId: '',
       email: '',
       phone: '',
-      rating: 0,
       paymentTerms: '',
       serviceType: '',
       scope: '',
@@ -398,7 +382,6 @@ const NewVendorDialog = ({ open, onOpenChange }) => {
       taxId: taxIdClean,
       email: values.email || '',
       phone: values.phone ? values.phone.replace(/\D/g, '') : '',
-      rating: values.rating,
       tags,
       paymentTerms: values.paymentTerms,
       serviceType: values.serviceType,
@@ -485,34 +468,6 @@ const NewVendorDialog = ({ open, onOpenChange }) => {
                     />
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="rating"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel data-tooltip="Avaliação de 1 a 5 estrelas">Rating</FormLabel>
-                  <FormControl>
-                    <div className="flex space-x-1">
-                      {[1, 2, 3, 4, 5].map((i) => (
-                        <button
-                          type="button"
-                          key={i}
-                          onClick={() => field.onChange(i)}
-                        >
-                          <Star
-                            className={`w-5 h-5 ${
-                              i <= field.value
-                                ? 'text-yellow-400 fill-yellow-400'
-                                : 'text-gray-300'
-                            }`}
-                          />
-                        </button>
-                      ))}
-                    </div>
-                  </FormControl>
                 </FormItem>
               )}
             />

@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { LoadingSpinner } from './ui/loading-spinner';
 import { useVendor } from '@/hooks/useVendors';
 import { useDocumentsByEntity } from '@/hooks/useDocuments';
+import { useUser } from '@/hooks/useUsers';
 import { formatCNPJ } from '@/utils';
 
 export const VendorDetailsModal = ({
@@ -18,6 +19,7 @@ export const VendorDetailsModal = ({
 }) => {
   const { data: vendor, isLoading: vendorLoading } = useVendor(vendorId || '');
   const { data: docsData, isLoading: docsLoading } = useDocumentsByEntity('vendor', vendorId || '');
+  const { data: requester } = useUser(vendor?.contractRequesterId || '');
   const documents = docsData ?? [];
 
   return (
@@ -57,6 +59,9 @@ export const VendorDetailsModal = ({
               )}
               {vendor.observations && (
                 <div><span className="font-semibold">Observações: </span>{vendor.observations}</div>
+              )}
+              {requester?.email && (
+                <div><span className="font-semibold">Solicitante: </span>{requester.email}</div>
               )}
             </div>
             <div className="mt-4">

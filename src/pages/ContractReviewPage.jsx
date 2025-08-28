@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useVendors, useApproveVendorContract, useRequestVendorContractAdjustments } from '@/hooks/useVendors';
 import { useRequestsList, useApproveRequestContract, useRequestContractAdjustments } from '@/hooks/useRequests';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { formatCNPJ } from '@/utils';
 import { useConfirm } from '@/hooks/useConfirm';
 import { usePrompt } from '@/contexts/PromptContext';
+import RequestDetailsModal from '@/components/RequestDetailsModal';
 
 export const ContractReviewPage = () => {
   const { data: vendorsData, isLoading, isError } = useVendors({ status: 'contract_review', page: 1, limit: 50 });
@@ -17,6 +18,7 @@ export const ContractReviewPage = () => {
 
   const { confirm, ConfirmationDialog } = useConfirm();
   const prompt = usePrompt();
+  const [detailsId, setDetailsId] = useState(null);
 
   const handleApprove = async (id) => {
     if (await confirm('Aprovar contrato deste fornecedor?')) {
@@ -127,7 +129,11 @@ export const ContractReviewPage = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {requests.map((req) => (
-                  <tr key={req.id} className="hover:bg-gray-50">
+                  <tr
+                    key={req.id}
+                    onClick={() => setDetailsId(req.id)}
+                    className="hover:bg-gray-50 cursor-pointer"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {req.requestNumber}
                     </td>
@@ -136,14 +142,20 @@ export const ContractReviewPage = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                       <button
-                        onClick={() => handleApproveRequest(req.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleApproveRequest(req.id);
+                        }}
                         className="px-3 py-1 bg-green-600 text-white rounded-md"
                         disabled={approveRequestContract.isPending}
                       >
                         Aprovar
                       </button>
                       <button
-                        onClick={() => handleRequestAdjustmentsRequest(req.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRequestAdjustmentsRequest(req.id);
+                        }}
                         className="px-3 py-1 bg-yellow-600 text-white rounded-md"
                         disabled={requestRequestAdjustments.isPending}
                       >
@@ -158,6 +170,11 @@ export const ContractReviewPage = () => {
         )}
       </div>
     </div>
+    <RequestDetailsModal
+      requestId={detailsId}
+      open={!!detailsId}
+      onClose={() => setDetailsId(null)}
+    />
     <ConfirmationDialog />
     </>
   );

@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useRequestsList, useApproveRequest, useRejectRequest } from '../hooks/useRequests';
 import { useAuth } from '../contexts/AuthContext';
 import { usePrompt } from '../contexts/PromptContext';
-import { useNavigate } from 'react-router-dom';
+import RequestDetailsModal from '@/components/RequestDetailsModal';
 
 export const DirectorApprovalsPage = () => {
   const { user } = useAuth();
@@ -10,7 +10,7 @@ export const DirectorApprovalsPage = () => {
   const approveRequest = useApproveRequest();
   const rejectRequest = useRejectRequest();
   const prompt = usePrompt();
-  const navigate = useNavigate();
+  const [detailsId, setDetailsId] = useState(null);
   const requests = data?.data || [];
 
   const formatCurrency = (value) =>
@@ -26,10 +26,6 @@ export const DirectorApprovalsPage = () => {
     const reason = await prompt({ title: 'Motivo da reprovação' });
     if (!reason) return;
     rejectRequest.mutate({ id, approverId: user.id, approverName: user.name, reason });
-  };
-
-  const handleRowClick = (id) => {
-    navigate(`/director-approvals/${id}`);
   };
 
   return (
@@ -57,7 +53,7 @@ export const DirectorApprovalsPage = () => {
               requests.map((req) => (
                 <tr
                   key={req.id}
-                  onClick={() => handleRowClick(req.id)}
+                  onClick={() => setDetailsId(req.id)}
                   className="cursor-pointer hover:bg-gray-50"
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -99,6 +95,11 @@ export const DirectorApprovalsPage = () => {
           <div className="p-6 text-center text-sm text-gray-500">Nenhuma solicitação pendente.</div>
         )}
       </div>
+      <RequestDetailsModal
+        requestId={detailsId}
+        open={!!detailsId}
+        onClose={() => setDetailsId(null)}
+      />
     </div>
   );
 };

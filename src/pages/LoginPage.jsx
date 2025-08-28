@@ -5,6 +5,7 @@ import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Label } from '../components/ui/label';
+import logo from '../assets/react.svg';
 
 export const LoginPage = () => {
   const { login, isAuthenticated, isLoading } = useAuth();
@@ -30,35 +31,49 @@ export const LoginPage = () => {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <Card className="w-full max-w-sm p-6 space-y-4">
-        <h1 className="text-xl font-semibold text-center">Login</h1>
-        {error && <p className="text-sm text-red-500">{error}</p>}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email" data-tooltip="Informe seu e-mail corporativo">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
+      <Card className="w-full max-w-4xl flex flex-col md:flex-row overflow-hidden p-0 gap-0">
+        <div className="flex items-center justify-center w-full md:w-1/2 bg-gradient-to-b from-black to-pink-900 p-6">
+          <img src={logo} alt="Logo" className="w-40" />
+        </div>
+        <div className="w-full md:w-1/2 p-8 space-y-6 bg-white">
+          <h1 className="text-2xl font-semibold text-center text-pink-900">Seja Bem Vindo</h1>
+          {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" data-tooltip="Informe seu e-mail corporativo">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password" data-tooltip="Digite sua senha de acesso">Senha</Label>
+              <Input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full bg-pink-900 hover:bg-pink-950 text-white"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Entrando...' : 'Entrar'}
+            </Button>
+          </form>
+          <div className="text-right">
+            <a href="#" className="text-sm text-pink-900 hover:underline">
+              Esqueceu sua senha?
+            </a>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="password" data-tooltip="Digite sua senha de acesso">Senha</Label>
-            <Input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Entrando...' : 'Entrar'}
-          </Button>
-        </form>
+        </div>
       </Card>
     </div>
   );

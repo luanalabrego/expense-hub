@@ -35,10 +35,9 @@ const emptyMonths = {
 
 // Componente da página de Orçamento
 export const BudgetsPage = () => {
-  const { user } = useAuth();
-  // Permite que usuários com papel "finance" também editem o orçamento
-  const canEdit =
-    user.role === 'cost_center_owner' || user.role === 'finance';
+  const { user, hasAnyRole } = useAuth();
+  // Permite que usuários com papel "finance", "cost_center_owner" ou "admin" editem o orçamento
+  const canEdit = hasAnyRole(['cost_center_owner', 'finance', 'admin']);
   const { data: vendorsData } = useActiveVendors();
   const { data: costCentersData } = useActiveCostCenters();
   const vendors = vendorsData || [];

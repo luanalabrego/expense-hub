@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { useRequest } from '@/hooks/useRequests';
 
 const statusLabels = {
@@ -34,7 +34,10 @@ const formatDateTime = (date) =>
 
 export const RequestDetailsPage = () => {
   const { id } = useParams();
+  const location = useLocation();
   const { data: request, isLoading } = useRequest(id);
+
+  const backPath = location.pathname.split('/').slice(0, -1).join('/') || '/requests';
 
   if (isLoading) return <div>Carregando...</div>;
   if (!request) return <div>Solicitação não encontrada</div>;
@@ -43,7 +46,7 @@ export const RequestDetailsPage = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Solicitação {request.requestNumber}</h1>
-        <Link to="/requests" className="text-blue-600 hover:underline text-sm">
+        <Link to={backPath} className="text-blue-600 hover:underline text-sm">
           Voltar
         </Link>
       </div>

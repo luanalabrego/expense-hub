@@ -22,6 +22,30 @@ import { createOrUpdateVendor } from './sap';
 
 const COLLECTION_NAME = 'vendors';
 
+// Gerar código sequencial para fornecedores
+export const generateVendorCode = async (): Promise<string> => {
+  const q = query(
+    collection(db, COLLECTION_NAME),
+    where('code', '>=', 'VD'),
+    where('code', '<', 'VE'),
+    orderBy('code', 'desc'),
+    limit(1)
+  );
+
+  const snapshot = await getDocs(q);
+  let nextNumber = 1;
+
+  if (!snapshot.empty) {
+    const lastCode = snapshot.docs[0].data().code as string;
+    const match = lastCode.match(/VD(\d+)/);
+    if (match) {
+      nextNumber = parseInt(match[1], 10) + 1;
+    }
+  }
+
+  return `VD${String(nextNumber).padStart(3, '0')}`;
+};
+
 // Obter fornecedor por ID
 export const getVendorById = async (id: string): Promise<Vendor | null> => {
   try {
@@ -114,6 +138,7 @@ export const getVendors = async (
         vendor.name.toLowerCase().includes(searchLower) ||
         vendor.taxId.includes(params.search!) ||
         vendor.email?.toLowerCase().includes(searchLower) ||
+        vendor.code?.toLowerCase().includes(searchLower) ||
         vendor.tags?.some(tag => tag.toLowerCase().includes(searchLower))
       );
     }
@@ -168,7 +193,9 @@ export const createVendor = async (vendorData: {
   };
 }): Promise<Vendor> => {
   try {
+    const code = await generateVendorCode();
     const vendorDoc = {
+      code,
       name: vendorData.name,
       taxId: vendorData.taxId,
       email: vendorData.email || '',
@@ -209,8 +236,8 @@ export const createVendor = async (vendorData: {
 
 // Atualizar fornecedor
 export const updateVendor = async (
-  id: string, 
-  updates: Partial<Omit<Vendor, 'id' | 'createdAt'>>
+  id: string,
+  updates: Partial<Omit<Vendor, 'id' | 'createdAt' | 'code'>>
 ): Promise<void> => {
   try {
     const updateData = {

@@ -102,6 +102,16 @@ export const AppRoutes = () => {
           }
         />
         <Route
+          path="director-approvals/:id"
+          element={
+            hasPageAccess('directorApprovals') ? (
+              <RequestDetailsPage />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route
           path="cfo-approvals"
           element={
             hasPageAccess('cfoApprovals') ? (

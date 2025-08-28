@@ -2,6 +2,7 @@ import React from 'react';
 import { useRequestsList, useApproveRequest, useRejectRequest } from '../hooks/useRequests';
 import { useAuth } from '../contexts/AuthContext';
 import { usePrompt } from '../contexts/PromptContext';
+import { useNavigate } from 'react-router-dom';
 
 export const DirectorApprovalsPage = () => {
   const { user } = useAuth();
@@ -9,6 +10,7 @@ export const DirectorApprovalsPage = () => {
   const approveRequest = useApproveRequest();
   const rejectRequest = useRejectRequest();
   const prompt = usePrompt();
+  const navigate = useNavigate();
   const requests = data?.data || [];
 
   const formatCurrency = (value) =>
@@ -24,6 +26,10 @@ export const DirectorApprovalsPage = () => {
     const reason = await prompt({ title: 'Motivo da reprovação' });
     if (!reason) return;
     rejectRequest.mutate({ id, approverId: user.id, approverName: user.name, reason });
+  };
+
+  const handleRowClick = (id) => {
+    navigate(`/director-approvals/${id}`);
   };
 
   return (
@@ -49,7 +55,11 @@ export const DirectorApprovalsPage = () => {
               </tr>
             ) : (
               requests.map((req) => (
-                <tr key={req.id}>
+                <tr
+                  key={req.id}
+                  onClick={() => handleRowClick(req.id)}
+                  className="cursor-pointer hover:bg-gray-50"
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{req.requestNumber || req.number}</div>
                     <div className="text-sm text-gray-500 truncate max-w-xs">{req.description}</div>
@@ -62,13 +72,19 @@ export const DirectorApprovalsPage = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                     <button
-                      onClick={() => handleApprove(req.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleApprove(req.id);
+                      }}
                       className="text-green-600 hover:text-green-900"
                     >
                       Aprovar
                     </button>
                     <button
-                      onClick={() => handleReject(req.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleReject(req.id);
+                      }}
                       className="text-red-600 hover:text-red-900"
                     >
                       Reprovar

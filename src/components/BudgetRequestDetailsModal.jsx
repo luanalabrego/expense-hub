@@ -4,6 +4,7 @@ import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Button } from './ui/button';
 import { useBudgetRequests } from '@/stores/budget-requests';
+import { parseCurrency } from '@/utils';
 
 const BudgetRequestDetailsModal = ({ request, open, onClose }) => {
   const updateStatus = useBudgetRequests((s) => s.updateStatus);
@@ -38,7 +39,7 @@ const BudgetRequestDetailsModal = ({ request, open, onClose }) => {
     addBudget(request.id, {
       supplierName: budgetForm.supplierName,
       cnpj: budgetForm.cnpj,
-      value: parseFloat(budgetForm.value) || 0,
+      value: parseCurrency(budgetForm.value) || 0,
       paymentMethod: budgetForm.paymentMethod,
       paymentTerms: budgetForm.paymentTerms,
       attachment: budgetForm.attachment,

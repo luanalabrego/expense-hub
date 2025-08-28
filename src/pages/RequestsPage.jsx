@@ -130,6 +130,15 @@ export const RequestsPage = () => {
     return labels[status] || '-';
   };
 
+  const getBudgetStatusColor = (status) => {
+    const colors = {
+      Pendente: 'bg-yellow-100 text-yellow-800',
+      'Em Andamento': 'bg-blue-100 text-blue-800',
+      Aprovado: 'bg-green-100 text-green-800',
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+  };
+
   const handleApprove = async (id) => {
     const comments = await prompt({ title: 'Comentário da aprovação' });
     if (comments === null) return;
@@ -496,32 +505,40 @@ export const RequestsPage = () => {
 
       {/* Solicitações de Orçamento */}
       <div className="mt-10">
-        <h2 className="text-xl font-bold mb-2">Solicitações de Orçamento</h2>
-        <table className="min-w-full bg-white border">
-          <thead>
-            <tr className="bg-gray-50">
-              <th className="px-4 py-2 text-left">ID</th>
-              <th className="px-4 py-2 text-left">Título</th>
-              <th className="px-4 py-2 text-left">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {budgetRequests.map((r) => (
-              <tr key={r.id} className="border-t">
-                <td className="px-4 py-2">{r.id}</td>
-                <td className="px-4 py-2">{r.title}</td>
-                <td className="px-4 py-2">{r.status}</td>
-              </tr>
-            ))}
-            {budgetRequests.length === 0 && (
-              <tr>
-                <td colSpan={3} className="px-4 py-8 text-center text-gray-500">
-                  Nenhuma solicitação de orçamento
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+        <h2 className="text-xl font-bold mb-4">Solicitações de Orçamento</h2>
+        <div className="bg-white rounded-lg border overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Título</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {budgetRequests.map((r) => (
+                  <tr key={r.id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{r.id}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{r.title}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getBudgetStatusColor(r.status)}`}>
+                        {r.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {budgetRequests.length === 0 && (
+                  <tr>
+                    <td colSpan={3} className="px-6 py-8 text-center text-gray-500">
+                      Nenhuma solicitação de orçamento
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       {/* Paginação */}

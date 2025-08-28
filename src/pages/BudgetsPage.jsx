@@ -142,10 +142,11 @@ export const BudgetsPage = () => {
       'dez',
     ];
     const getVendorIdByName = (name) =>
-      vendors.find((v) => v.name === name)?.id || '';
+      vendors.find((v) => v.name?.trim().toLowerCase() === name)?.id || '';
     const getCostCenterIdByName = (name) =>
       costCenters.find((c) => c.name === name)?.id || '';
     const createdItems = [];
+    const ignoredLines = [];
     for (const line of lines) {
       if (line.length === 0) continue;
       const [
@@ -157,8 +158,16 @@ export const BudgetsPage = () => {
         ano,
         ...months
       ] = line;
+      const normalizedVendor = (fornecedor || '').trim().toLowerCase();
+      const vendorId = getVendorIdByName(normalizedVendor);
+      if (!vendorId) {
+        const reason = `Fornecedor "${fornecedor}" não encontrado`;
+        console.error(reason);
+        ignoredLines.push(reason);
+        continue;
+      }
       const newItem = {
-        vendorId: getVendorIdByName(fornecedor),
+        vendorId,
         description: descricao || '',
         costCenterId: getCostCenterIdByName(centroCusto),
         nature: natureza || 'fixo',
@@ -176,6 +185,9 @@ export const BudgetsPage = () => {
       createdItems.push(created);
     }
     setItems((prev) => [...prev, ...createdItems]);
+    if (ignoredLines.length) {
+      alert(`Algumas linhas foram ignoradas:\n${ignoredLines.join('\n')}`);
+    }
     e.target.value = '';
   };
 

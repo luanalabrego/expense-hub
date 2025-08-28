@@ -304,28 +304,6 @@ export const useRequestMoreInfoVendor = () => {
   });
 };
 
-// Hook para atualizar rating
-export const useUpdateVendorRating = () => {
-  const queryClient = useQueryClient();
-  const { success, error } = useNotifications();
-
-  return useMutation({
-    mutationFn: ({ id, rating }: { id: string; rating: number }) =>
-      vendorsService.updateVendorRating(id, rating),
-    onSuccess: (_, { id }) => {
-      // Invalidar queries relacionadas
-      queryClient.invalidateQueries({ queryKey: queryKeys.vendors });
-      queryClient.invalidateQueries({ queryKey: queryKeys.vendor(id) });
-      
-      success('Rating atualizado com sucesso!');
-    },
-    onError: (err: any) => {
-      console.error('Erro ao atualizar rating:', err);
-      error('Erro ao atualizar rating', err.message || 'Tente novamente.');
-    },
-  });
-};
-
 // Hook para verificar se CNPJ existe
 export const useCheckTaxIdExists = () => {
   return useMutation({

@@ -2,7 +2,7 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useVendor } from '@/hooks/useVendors';
 import { useRequests } from '@/hooks/useRequests';
-import { useEntityTimeline } from '@/hooks/useAudit';
+import { useAuditLogsByEntity } from '@/hooks/useAudit';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { formatCNPJ, formatCurrency, formatDate } from '@/utils';
 
@@ -14,10 +14,10 @@ export const VendorDossierPage = () => {
     limit: 20,
     vendorId: id,
   });
-  const { data: timelineData, isLoading: timelineLoading } = useEntityTimeline(
+  const { data: logsData, isLoading: logsLoading } = useAuditLogsByEntity(
     'vendor',
     id || '',
-    20
+    50
   );
 
   if (isLoading) {
@@ -33,7 +33,8 @@ export const VendorDossierPage = () => {
   }
 
   const requests = requestsData?.data ?? [];
-  const timeline = timelineData ?? [];
+  const logs = logsData ?? [];
+  const approvalHistory = logs.filter((log) => /approve|reject/i.test(log.action));
 
   return (
     <div className="space-y-6">
@@ -92,25 +93,67 @@ export const VendorDossierPage = () => {
       <section>
         <h2 className="text-xl font-semibold mb-4">Histórico de Aprovações</h2>
         <div className="bg-white rounded-lg border overflow-hidden">
-          {timelineLoading ? (
+          {logsLoading ? (
             <div className="flex justify-center py-6">
               <LoadingSpinner size="lg" />
             </div>
-          ) : timeline.length === 0 ? (
+          ) : approvalHistory.length === 0 ? (
             <div className="text-center py-6">Nenhum registro encontrado</div>
           ) : (
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ação</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuário</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {timeline.map((log) => (
+                {approvalHistory.map((log) => (
                   <tr key={log.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {log.action}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {log.actorName || log.actorEmail || log.actorId}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatDate(log.timestamp)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-xl font-semibold mb-4">Logs de Auditoria</h2>
+        <div className="bg-white rounded-lg border overflow-hidden">
+          {logsLoading ? (
+            <div className="flex justify-center py-6">
+              <LoadingSpinner size="lg" />
+            </div>
+          ) : logs.length === 0 ? (
+            <div className="text-center py-6">Nenhum log encontrado</div>
+          ) : (
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ação</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuário</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {logs.map((log) => (
+                  <tr key={log.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {log.action}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {log.actorName || log.actorEmail || log.actorId}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {formatDate(log.timestamp)}

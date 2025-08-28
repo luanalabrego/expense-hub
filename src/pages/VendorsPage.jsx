@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Search, MoreHorizontal, Edit, UserX, UserCheck, Shield, ShieldOff, Star, Send, Upload } from 'lucide-react';
 import { useVendors, useDeactivateVendor, useReactivateVendor, useBlockVendor, useUnblockVendor, useCreateVendor, useSendVendorToContractReview } from '@/hooks/useVendors';
 import { checkVendorCompliance } from '@/services/vendorCompliance';
@@ -19,6 +20,7 @@ import { useConfirm } from '@/hooks/useConfirm';
 
 export const VendorsPage = () => {
   const { hasAnyRole, user } = useAuth();
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
@@ -203,7 +205,11 @@ export const VendorsPage = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {vendors.map((vendor) => (
-                  <tr key={vendor.id} className="hover:bg-gray-50">
+                  <tr
+                    key={vendor.id}
+                    onClick={() => navigate(`/vendors/${vendor.id}`)}
+                    className="hover:bg-gray-50 cursor-pointer"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{vendor.code}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {vendor.name}
@@ -246,7 +252,10 @@ export const VendorsPage = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {formatDate(vendor.createdAt)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <td
+                      className="px-6 py-4 whitespace-nowrap text-sm font-medium"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       {hasAnyRole(['admin', 'finance']) && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>

@@ -76,6 +76,9 @@ const RequestDetailsModal = ({ requestId, open, onClose }) => {
                 <div>
                   <span className="font-medium">Valor Solicitado:</span> {formatCurrency(request.amount)}
                 </div>
+                <div>
+                  <span className="font-medium">Valor Orçado:</span> {budgetedAmount !== null ? formatCurrency(budgetedAmount) : '-'}
+                </div>
                 {request.inBudget && (
                   <div>
                     <span className="font-medium">Valor Orçado:</span> {budgetedAmount !== null ? formatCurrency(budgetedAmount) : '-'}
@@ -103,7 +106,7 @@ const RequestDetailsModal = ({ requestId, open, onClose }) => {
                 <div>
                   <span className="font-medium">Em Orçamento:</span> {request.inBudget ? 'Sim' : 'Não'}
                 </div>
-                {request.inBudget && (
+                {request.budgetLineId && (
                   <div className="sm:col-span-2">
                     <span className="font-medium">Orçamento:</span> {budgetLine?.description || request.budgetLineId}
                   </div>

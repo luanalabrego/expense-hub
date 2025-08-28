@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BudgetRequestModal from '../components/BudgetRequestModal';
 import { useBudgetRequests } from '../stores/budget-requests';
-import { Plus, Search, Edit, Eye, CheckCircle, XCircle, Clock, DollarSign, Upload } from 'lucide-react';
-import { useRequestsList, useRequestStats, useApproveRequest, useRejectRequest } from '../hooks/useRequests';
+import { Plus, Search, Edit, Eye, CheckCircle, Clock, DollarSign, Upload, Trash } from 'lucide-react';
+import { useRequestsList, useRequestStats, useDeleteRequest } from '../hooks/useRequests';
 import { useAuth } from '../contexts/AuthContext';
-import { usePrompt } from '../contexts/PromptContext';
+import { useConfirm } from '@/hooks/useConfirm';
 import { useNotifications } from '../stores/ui';
 import NewRequestModal from '../components/NewRequestModal';
 import ImportRequestsModal from '../components/ImportRequestsModal';
@@ -23,13 +23,12 @@ export const RequestsPage = () => {
   const [showNewRequest, setShowNewRequest] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [detailsId, setDetailsId] = useState(null);
-  const approveRequest = useApproveRequest();
-  const rejectRequest = useRejectRequest();
-  const prompt = usePrompt();
   const { error: notifyError } = useNotifications();
   const { requests: budgetRequests } = useBudgetRequests();
   const [showBudgetModal, setShowBudgetModal] = useState(false);
   const isBasicUser = user?.roles?.includes('user');
+  const deleteRequest = useDeleteRequest();
+  const { confirm, ConfirmationDialog } = useConfirm();
   const { data, isLoading, isError, error } = useRequestsList({
     page,
     limit,
@@ -139,29 +138,14 @@ export const RequestsPage = () => {
     return colors[status] || 'bg-gray-100 text-gray-800';
   };
 
-  const handleApprove = async (id) => {
-    const comments = await prompt({ title: 'Comentário da aprovação' });
-    if (comments === null) return;
-    approveRequest.mutate({
-      id,
-      approverId: user.id,
-      approverName: user.name,
-      comments,
-    });
-  };
-
-  const handleReject = async (id) => {
-    const reason = await prompt({ title: 'Motivo da reprovação' });
-    if (!reason) return;
-    rejectRequest.mutate({
-      id,
-      approverId: user.id,
-      approverName: user.name,
-      reason,
-    });
+  const handleDelete = async (id) => {
+    if (await confirm('Tem certeza que deseja excluir esta solicitação?')) {
+      deleteRequest.mutate(id);
+    }
   };
 
   return (
+    <>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
@@ -445,32 +429,20 @@ export const RequestsPage = () => {
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          {!isBasicUser && request.status === 'pending_owner_approval' && (
-                            <>
+                          {request.status === 'pending_owner_approval' &&
+                            (request.statusHistory?.length || 0) <= 1 && (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleApprove(request.id);
-                                }}
-                                className="text-green-600 hover:text-green-900 disabled:opacity-50"
-                                title="Aprovar"
-                                disabled={approveRequest.isPending}
-                              >
-                                <CheckCircle className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleReject(request.id);
+                                  handleDelete(request.id);
                                 }}
                                 className="text-red-600 hover:text-red-900 disabled:opacity-50"
-                                title="Rejeitar"
-                                disabled={rejectRequest.isPending}
+                                title="Excluir"
+                                disabled={deleteRequest.isPending}
                               >
-                                <XCircle className="w-4 h-4" />
+                                <Trash className="w-4 h-4" />
                               </button>
-                            </>
-                          )}
+                            )}
                           {(!isBasicUser || request.status === 'pending_owner_approval') && (
                             <button
                               onClick={(e) => {
@@ -579,6 +551,8 @@ export const RequestsPage = () => {
         onClose={() => setDetailsId(null)}
       />
     </div>
+    <ConfirmationDialog />
+    </>
   );
 };
 

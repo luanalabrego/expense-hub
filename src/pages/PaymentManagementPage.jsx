@@ -5,6 +5,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '../components/ui/chart';
 import { usePaymentForecast, usePaymentHistory } from '../hooks/useAnalytics';
 import { usePrompt } from '../contexts/PromptContext';
+import RequestDetailsModal from '@/components/RequestDetailsModal';
 
 export const PaymentManagementPage = () => {
   const { user } = useAuth();
@@ -15,6 +16,7 @@ export const PaymentManagementPage = () => {
   const { mutate: cancelRequest } = useCancelRequest();
   const requests = data?.data || [];
   const prompt = usePrompt();
+  const [detailsId, setDetailsId] = useState(null);
 
   const { data: forecastData = [] } = usePaymentForecast({
     startDate: startDate ? new Date(startDate) : undefined,
@@ -134,7 +136,11 @@ export const PaymentManagementPage = () => {
               </tr>
             ) : (
               requests.map((req) => (
-                <tr key={req.id}>
+                <tr
+                  key={req.id}
+                  onClick={() => setDetailsId(req.id)}
+                  className="cursor-pointer hover:bg-gray-50"
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{req.requestNumber || req.number}</div>
                     <div className="text-sm text-gray-500 truncate max-w-xs">{req.description}</div>
@@ -147,13 +153,19 @@ export const PaymentManagementPage = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                     <button
-                      onClick={() => handlePaid(req.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePaid(req.id);
+                      }}
                       className="text-blue-600 hover:text-blue-900"
                     >
                       Pagamento Realizado
                     </button>
                     <button
-                      onClick={() => handleCancel(req.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCancel(req.id);
+                      }}
                       className="text-red-600 hover:text-red-900"
                     >
                       Cancelar
@@ -168,6 +180,11 @@ export const PaymentManagementPage = () => {
           <div className="p-6 text-center text-sm text-gray-500">Nenhuma despesa pendente.</div>
         )}
       </div>
+      <RequestDetailsModal
+        requestId={detailsId}
+        open={!!detailsId}
+        onClose={() => setDetailsId(null)}
+      />
     </div>
   );
 };

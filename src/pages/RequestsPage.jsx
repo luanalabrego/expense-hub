@@ -9,6 +9,7 @@ import { usePrompt } from '../contexts/PromptContext';
 import { useNotifications } from '../stores/ui';
 import NewRequestModal from '../components/NewRequestModal';
 import ImportRequestsModal from '../components/ImportRequestsModal';
+import RequestDetailsModal from '@/components/RequestDetailsModal';
 
 export const RequestsPage = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ export const RequestsPage = () => {
   const [orderDir, setOrderDir] = useState('desc');
   const [showNewRequest, setShowNewRequest] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [detailsId, setDetailsId] = useState(null);
   const approveRequest = useApproveRequest();
   const rejectRequest = useRejectRequest();
   const prompt = usePrompt();
@@ -371,7 +373,11 @@ export const RequestsPage = () => {
                     </tr>
                   ))
                 : requests.map((request) => (
-                    <tr key={request.id} className="hover:bg-gray-50">
+                    <tr
+                      key={request.id}
+                      onClick={() => setDetailsId(request.id)}
+                      className="hover:bg-gray-50 cursor-pointer"
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
                           <div className="text-sm font-medium text-gray-900">
@@ -419,7 +425,10 @@ export const RequestsPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
                           <button
-                            onClick={() => navigate(`/requests/${request.id}`)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDetailsId(request.id);
+                            }}
                             className="text-blue-600 hover:text-blue-900"
                             title="Visualizar"
                           >
@@ -428,7 +437,10 @@ export const RequestsPage = () => {
                           {!isBasicUser && request.status === 'pending_owner_approval' && (
                             <>
                               <button
-                                onClick={() => handleApprove(request.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleApprove(request.id);
+                                }}
                                 className="text-green-600 hover:text-green-900 disabled:opacity-50"
                                 title="Aprovar"
                                 disabled={approveRequest.isPending}
@@ -436,7 +448,10 @@ export const RequestsPage = () => {
                                 <CheckCircle className="w-4 h-4" />
                               </button>
                               <button
-                                onClick={() => handleReject(request.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleReject(request.id);
+                                }}
                                 className="text-red-600 hover:text-red-900 disabled:opacity-50"
                                 title="Rejeitar"
                                 disabled={rejectRequest.isPending}
@@ -447,7 +462,10 @@ export const RequestsPage = () => {
                           )}
                           {(!isBasicUser || request.status === 'pending_owner_approval') && (
                             <button
-                              onClick={() => navigate(`/requests/${request.id}/edit`)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/requests/${request.id}/edit`);
+                              }}
                               className="text-gray-600 hover:text-gray-900"
                               title="Editar"
                             >
@@ -535,6 +553,11 @@ export const RequestsPage = () => {
         onClose={() => setShowImport(false)}
         userId={user.id}
         userName={user.name}
+      />
+      <RequestDetailsModal
+        requestId={detailsId}
+        open={!!detailsId}
+        onClose={() => setDetailsId(null)}
       />
     </div>
   );

@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useRequestsList, useApproveRequest, useRejectRequest } from '../hooks/useRequests';
 import { useAuth } from '../contexts/AuthContext';
 import { usePrompt } from '../contexts/PromptContext';
+import RequestDetailsModal from '@/components/RequestDetailsModal';
 
 export const CeoApprovalsPage = () => {
   const { user } = useAuth();
@@ -9,6 +10,7 @@ export const CeoApprovalsPage = () => {
   const approveRequest = useApproveRequest();
   const rejectRequest = useRejectRequest();
   const prompt = usePrompt();
+  const [detailsId, setDetailsId] = useState(null);
   const requests = data?.data || [];
 
   const formatCurrency = (value) =>
@@ -49,7 +51,11 @@ export const CeoApprovalsPage = () => {
               </tr>
             ) : (
               requests.map((req) => (
-                <tr key={req.id}>
+                <tr
+                  key={req.id}
+                  onClick={() => setDetailsId(req.id)}
+                  className="cursor-pointer hover:bg-gray-50"
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{req.requestNumber || req.number}</div>
                     <div className="text-sm text-gray-500 truncate max-w-xs">{req.description}</div>
@@ -62,13 +68,19 @@ export const CeoApprovalsPage = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                     <button
-                      onClick={() => handleApprove(req.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleApprove(req.id);
+                      }}
                       className="text-green-600 hover:text-green-900"
                     >
                       Aprovar
                     </button>
                     <button
-                      onClick={() => handleReject(req.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleReject(req.id);
+                      }}
                       className="text-red-600 hover:text-red-900"
                     >
                       Reprovar
@@ -83,6 +95,11 @@ export const CeoApprovalsPage = () => {
           <div className="p-6 text-center text-sm text-gray-500">Nenhuma solicitação pendente.</div>
         )}
       </div>
+      <RequestDetailsModal
+        requestId={detailsId}
+        open={!!detailsId}
+        onClose={() => setDetailsId(null)}
+      />
     </div>
   );
 };

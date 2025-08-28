@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { usePrompt } from '../contexts/PromptContext';
 import { useRequestsByStatus, useVerifyRequest, useReturnRequestWithError } from '../hooks/useRequests';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { formatCurrency } from '@/utils';
+import RequestDetailsModal from '@/components/RequestDetailsModal';
 
 export const AccountingMonitorPage = () => {
   const { user } = useAuth();
@@ -11,6 +12,7 @@ export const AccountingMonitorPage = () => {
   const verifyRequest = useVerifyRequest();
   const returnRequest = useReturnRequestWithError();
   const prompt = usePrompt();
+  const [detailsId, setDetailsId] = useState(null);
 
   const requests = data || [];
 
@@ -62,7 +64,11 @@ export const AccountingMonitorPage = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {requests.map((req) => (
-                  <tr key={req.id} className="hover:bg-gray-50">
+                  <tr
+                    key={req.id}
+                    onClick={() => setDetailsId(req.id)}
+                    className="hover:bg-gray-50 cursor-pointer"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {req.requestNumber || req.number}
                     </td>
@@ -74,14 +80,20 @@ export const AccountingMonitorPage = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                       <button
-                        onClick={() => handleVerify(req.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleVerify(req.id);
+                        }}
                         className="px-3 py-1 bg-green-600 text-white rounded-md"
                         disabled={verifyRequest.isPending}
                       >
                         Verificar
                       </button>
                       <button
-                        onClick={() => handleReturn(req.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleReturn(req.id);
+                        }}
                         className="px-3 py-1 bg-red-600 text-white rounded-md"
                         disabled={returnRequest.isPending}
                       >
@@ -95,6 +107,11 @@ export const AccountingMonitorPage = () => {
           </div>
         )}
       </div>
+      <RequestDetailsModal
+        requestId={detailsId}
+        open={!!detailsId}
+        onClose={() => setDetailsId(null)}
+      />
     </div>
   );
 };

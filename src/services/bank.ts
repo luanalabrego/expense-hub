@@ -18,6 +18,8 @@ export const processBankPayment = async (
   await new Promise(resolve => setTimeout(resolve, 100));
   return {
     protocol: `PROTO-${Date.now()}`,
-    receiptUrl: `https://bank.example.com/receipts/${params.requestId}`,
+    // O domínio original era fictício e causava erro de resolução
+    // Retornamos um placeholder acessível para simular o comprovante bancário
+    receiptUrl: `https://placehold.co/600x400?text=Comprovante+${params.requestId}`,
   };
 };

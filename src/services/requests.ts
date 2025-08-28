@@ -967,6 +967,24 @@ export const cancelRequest = async (
   }
 };
 
+// Excluir solicitação
+export const deleteRequest = async (id: string): Promise<void> => {
+  try {
+    const request = await getRequestById(id);
+    if (!request) throw new Error('Solicitação não encontrada');
+
+    const historyLength = request.statusHistory?.length || 0;
+    if (request.status !== 'pending_owner_approval' || historyLength > 1) {
+      throw new Error('Solicitação não pode ser excluída');
+    }
+
+    await deleteDoc(doc(db, COLLECTION_NAME, id));
+  } catch (error) {
+    console.error('Erro ao excluir solicitação:', error);
+    throw error;
+  }
+};
+
 // Aprovar contrato da solicitação
 export const approveRequestContract = async (id: string): Promise<void> => {
   try {

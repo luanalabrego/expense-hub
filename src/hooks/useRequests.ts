@@ -363,6 +363,24 @@ export const useCancelRequest = () => {
   });
 };
 
+// Hook para excluir solicitação
+export const useDeleteRequest = () => {
+  const queryClient = useQueryClient();
+  const { success, error } = useNotifications();
+
+  return useMutation({
+    mutationFn: (id: string) => requestsService.deleteRequest(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.requests });
+      success('Solicitação excluída com sucesso!');
+    },
+    onError: (err: any) => {
+      console.error('Erro ao excluir solicitação:', err);
+      error('Erro ao excluir solicitação', err.message || 'Tente novamente.');
+    },
+  });
+};
+
 // Hook para aprovar contrato da solicitação
 export const useApproveRequestContract = () => {
   const queryClient = useQueryClient();

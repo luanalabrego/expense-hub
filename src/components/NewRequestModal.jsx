@@ -322,6 +322,10 @@ export const NewRequestModal = ({ open, onClose }) => {
             <Textarea value={justification} onChange={(e) => setJustification(e.target.value)} />
           </div>
           <div>
+            <label className="block text-sm font-medium mb-1" data-tooltip="Mês/ano de competência da despesa">Competência</label>
+            <Input type="month" value={competenceDate} onChange={(e) => setCompetenceDate(e.target.value)} required />
+          </div>
+          <div>
             <label className="block text-sm font-medium mb-1" data-tooltip="Centro de custo responsável">Centro de custo</label>
             <Select value={costCenterId} onValueChange={setCostCenterId}>
               <SelectTrigger className="w-full">
@@ -371,10 +375,6 @@ export const NewRequestModal = ({ open, onClose }) => {
           <div>
             <label className="block text-sm font-medium mb-1" data-tooltip="Data de emissão da nota fiscal">Data de emissão</label>
             <Input type="date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} required />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1" data-tooltip="Mês/ano de competência da despesa">Competência</label>
-            <Input type="month" value={competenceDate} onChange={(e) => setCompetenceDate(e.target.value)} required />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1" data-tooltip="Data prevista para pagamento">Data de vencimento</label>

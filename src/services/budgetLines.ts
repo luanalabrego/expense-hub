@@ -58,6 +58,30 @@ export const findBudgetLine = async (
   } as BudgetLine;
 };
 
+export const findBudgetLineByKey = async (
+  vendorId: string,
+  description: string,
+  costCenterId: string,
+  year: number
+): Promise<BudgetLine | null> => {
+  const q = query(
+    collection(db, COLLECTION_NAME),
+    where('vendorId', '==', vendorId),
+    where('description', '==', description),
+    where('costCenterId', '==', costCenterId),
+    where('year', '==', year)
+  );
+  const snapshot = await getDocs(q);
+  if (snapshot.empty) return null;
+  const d = snapshot.docs[0];
+  return {
+    id: d.id,
+    ...d.data(),
+    createdAt: d.data().createdAt?.toDate ? d.data().createdAt.toDate() : undefined,
+    updatedAt: d.data().updatedAt?.toDate ? d.data().updatedAt.toDate() : undefined,
+  } as BudgetLine;
+};
+
 export const createBudgetLine = async (
   data: Omit<BudgetLine, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<BudgetLine> => {

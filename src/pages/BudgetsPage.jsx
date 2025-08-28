@@ -7,6 +7,7 @@ import {
   createBudgetLine,
   updateBudgetLine,
   deleteBudgetLine,
+  findBudgetLineByKey,
 } from '@/services/budgetLines';
 import { getTotalSpentByBudgetLine } from '@/services/requests';
 import * as XLSX from 'xlsx';
@@ -17,6 +18,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { useNotifications } from '@/stores/ui';
 
 const emptyMonths = {
   1: 0,
@@ -36,6 +38,7 @@ const emptyMonths = {
 // Componente da página de Orçamento
 export const BudgetsPage = () => {
   const { user, hasAnyRole } = useAuth();
+  const { warning } = useNotifications();
   // Permite que usuários com papel "finance", "cost_center_owner" ou "admin" editem o orçamento
   const canEdit = hasAnyRole(['cost_center_owner', 'finance', 'admin']);
   const { data: vendorsData } = useActiveVendors();
@@ -178,6 +181,16 @@ export const BudgetsPage = () => {
           return acc;
         }, {}),
       };
+      const existing = await findBudgetLineByKey(
+        newItem.vendorId,
+        newItem.description,
+        newItem.costCenterId,
+        newItem.year
+      );
+      if (existing) {
+        warning('Linha ignorada por duplicidade', `${descricao} - ${fornecedor} / ${centroCusto} (${ano})`);
+        continue;
+      }
       const created = await createBudgetLine({
         ...newItem,
         createdBy: user.id,

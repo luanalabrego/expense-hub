@@ -8,6 +8,17 @@ export const formatCurrency = (value: number): string => {
   return new Intl.NumberFormat(LOCALE, FORMAT.CURRENCY_OPTIONS).format(value);
 };
 
+// Conversão de moeda (pt-BR) para número
+export const parseCurrency = (value: string | number): number => {
+  if (typeof value === 'number') return value;
+  const normalized = value
+    .replace(/\./g, '')
+    .replace(',', '.')
+    .replace(/[^\d.-]/g, '');
+  const parsed = parseFloat(normalized);
+  return isNaN(parsed) ? 0 : parsed;
+};
+
 // Formatação de número
 export const formatNumber = (value: number): string => {
   return new Intl.NumberFormat(LOCALE, FORMAT.NUMBER_OPTIONS).format(value);

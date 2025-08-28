@@ -12,15 +12,16 @@ import {
 import { db } from './firebase';
 import type {
   Vendor,
-  CostCenter, 
-  Category, 
-  PaymentRequest, 
+  CostCenter,
+  Category,
+  PaymentRequest,
   User,
   ImportResult,
   ImportError,
   ExportParams
 } from '../types';
 import { generateVendorCode } from './vendors';
+import { parseCurrency } from '@/utils';
 
 // Tipos para importação/exportação
 export interface ImportOptions {
@@ -194,7 +195,7 @@ const validateImportData = (
       if (cellValue && cellValue.trim() !== '') {
         switch (column.type) {
           case 'number':
-            const numValue = parseFloat(cellValue);
+            const numValue = parseCurrency(cellValue);
             if (isNaN(numValue)) {
               errors.push({
                 row: i + 1,

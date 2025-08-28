@@ -13,6 +13,7 @@ import { useUploadDocument } from '@/hooks/useDocuments';
 import * as requestsService from '@/services/requests';
 import * as quotationsService from '@/services/quotations';
 import { getBudgetLines } from '@/services/budgetLines';
+import { parseCurrency } from '@/utils';
 
 export const NewRequestModal = ({ open, onClose }) => {
   const { user } = useAuth();
@@ -120,7 +121,7 @@ export const NewRequestModal = ({ open, onClose }) => {
   }, [inBudget, budgetLineId, competenceDate, budgetLines]);
 
   useEffect(() => {
-    const amt = parseFloat(amount) || 0;
+    const amt = parseCurrency(amount) || 0;
     if (inBudget && budgetLineId) {
       setIsOverBudget(amt + spentAmount > budgetedAmount);
     } else {
@@ -135,7 +136,7 @@ export const NewRequestModal = ({ open, onClose }) => {
     try {
       const requiredQuotations = isRecurring
         ? 0
-        : (parseFloat(amount) || 0) > 10000
+        : (parseCurrency(amount) || 0) > 10000
           ? 3
           : 1;
       if (requiredQuotations > 0 && quotationFiles.length < requiredQuotations) {
@@ -152,7 +153,7 @@ export const NewRequestModal = ({ open, onClose }) => {
       }
       const newRequest = await createRequest.mutateAsync({
         description: expenseName,
-        amount: parseFloat(amount) || 0,
+        amount: parseCurrency(amount) || 0,
         invoiceNumber,
         vendorId: isExtraordinary ? '' : vendorId,
         vendorName: isExtraordinary ? vendorName : selectedVendor?.name || '',

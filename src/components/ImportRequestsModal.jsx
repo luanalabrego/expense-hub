@@ -7,6 +7,7 @@ import * as XLSX from 'xlsx';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/services/firebase';
 import * as requestsService from '@/services/requests';
+import { parseCurrency } from '@/utils';
 
 const REQUIRED_COLUMNS = [
   'title',
@@ -66,7 +67,7 @@ export const ImportRequestsModal = ({ open, onClose, userId, userName }) => {
 
         await requestsService.createRequest({
           description: row.title || row.description,
-          amount: parseFloat(row.amount),
+          amount: parseCurrency(row.amount),
           vendorId: vendorDoc.id,
           vendorName: vendorDoc.data().name,
           costCenterId,

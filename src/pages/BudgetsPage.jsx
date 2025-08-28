@@ -19,6 +19,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { useNotifications } from '@/stores/ui';
+import { parseCurrency } from '@/utils';
 
 const emptyMonths = {
   1: 0,
@@ -102,7 +103,7 @@ export const BudgetsPage = () => {
   const handleMonthChange = (month, value) => {
     setForm((prev) => ({
       ...prev,
-      months: { ...prev.months, [month]: Number(value) },
+      months: { ...prev.months, [month]: parseCurrency(value) },
     }));
   };
 
@@ -177,7 +178,7 @@ export const BudgetsPage = () => {
         costType: tipo || 'OPEX',
         year: Number(ano) || new Date().getFullYear(),
         months: monthNames.reduce((acc, _, idx) => {
-          acc[idx + 1] = Number(months[idx]) || 0;
+          acc[idx + 1] = parseCurrency(months[idx]) || 0;
           return acc;
         }, {}),
       };

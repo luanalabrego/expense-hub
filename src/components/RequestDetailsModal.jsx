@@ -45,6 +45,8 @@ const RequestDetailsModal = ({ requestId, open, onClose }) => {
   const month = refDate ? new Date(refDate).getMonth() + 1 : null;
   const budgetedAmount =
     budgetLine && month ? budgetLine.months?.[month] || 0 : null;
+  const difference =
+    budgetedAmount !== null ? request.amount - budgetedAmount : null;
 
   return (
     <>
@@ -76,11 +78,19 @@ const RequestDetailsModal = ({ requestId, open, onClose }) => {
                 <div>
                   <span className="font-medium">Valor Solicitado:</span> {formatCurrency(request.amount)}
                 </div>
-                {request.inBudget && (
-                  <div>
-                    <span className="font-medium">Valor Orçado:</span> {budgetedAmount !== null ? formatCurrency(budgetedAmount) : '-'}
-                  </div>
-                )}
+                <div>
+                  <span className="font-medium">Valor Orçado:</span> {budgetedAmount !== null ? formatCurrency(budgetedAmount) : '-'}
+                </div>
+                <div>
+                  <span className="font-medium">Diferença:</span>{' '}
+                  {difference !== null ? (
+                    <span className={difference > 0 ? 'text-red-600 font-bold' : ''}>
+                      {formatCurrency(difference)}
+                    </span>
+                  ) : (
+                    '-'
+                  )}
+                </div>
                 <div>
                   <span className="font-medium">Competência:</span> {request.competenceDate ? formatDate(request.competenceDate) : '-'}
                 </div>
@@ -103,7 +113,7 @@ const RequestDetailsModal = ({ requestId, open, onClose }) => {
                 <div>
                   <span className="font-medium">Em Orçamento:</span> {request.inBudget ? 'Sim' : 'Não'}
                 </div>
-                {request.inBudget && (
+                {request.budgetLineId && (
                   <div className="sm:col-span-2">
                     <span className="font-medium">Orçamento:</span> {budgetLine?.description || request.budgetLineId}
                   </div>

@@ -112,6 +112,7 @@ export const BudgetsPage = () => {
     };
 
     fetchResults();
+
   }, [showResults, items]);
 
   const handleChange = (e) => {
@@ -585,6 +586,7 @@ export const BudgetsPage = () => {
                               Nenhuma despesa lançada
                             </div>
                           )}
+
                           <div className="flex justify-between text-sm font-semibold border-t pt-1 mt-1">
                             <span>Total gasto</span>
                             <span>

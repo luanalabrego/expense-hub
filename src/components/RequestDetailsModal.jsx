@@ -79,6 +79,11 @@ const RequestDetailsModal = ({ requestId, open, onClose }) => {
                 <div>
                   <span className="font-medium">Valor Orçado:</span> {budgetedAmount !== null ? formatCurrency(budgetedAmount) : '-'}
                 </div>
+                {request.inBudget && (
+                  <div>
+                    <span className="font-medium">Valor Orçado:</span> {budgetedAmount !== null ? formatCurrency(budgetedAmount) : '-'}
+                  </div>
+                )}
                 <div>
                   <span className="font-medium">Competência:</span> {request.competenceDate ? formatDate(request.competenceDate) : '-'}
                 </div>

@@ -8,17 +8,17 @@ export const Layout = () => {
   const { sidebarOpen, sidebarCollapsed } = useUIStore();
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 overflow-x-hidden">
       {/* Sidebar */}
       <Sidebar />
       
       {/* Conteúdo principal */}
       <div 
         className={cn(
-          "flex-1 flex flex-col transition-all duration-300",
-          sidebarOpen && !sidebarCollapsed && "ml-64",
-          sidebarOpen && sidebarCollapsed && "ml-16",
-          !sidebarOpen && "ml-0"
+          "flex-1 flex flex-col transition-all duration-300 w-full",
+          sidebarOpen && !sidebarCollapsed && "pl-64",
+          sidebarOpen && sidebarCollapsed && "pl-16",
+          !sidebarOpen && "pl-0"
         )}
       >
         {/* Header */}
